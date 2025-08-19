@@ -51,7 +51,6 @@ C-right = "move_next_word_start"
 C-left = "move_prev_word_end"
 tab = "move_parent_node_end"
 S-tab = "move_parent_node_start"
-C-r = ":reload-all"
 
 [keys.insert]
 # j = { j = "normal_mode" }
@@ -87,3 +86,4 @@ W = ":set soft-wrap.enable true"
 c = ":pipe correct-english"
 a = ":pipe word-diff apply"
 n = "@%s"
+t = ":pipe $\"<user>\n($in)</user>\""
