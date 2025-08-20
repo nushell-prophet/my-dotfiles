@@ -6,13 +6,15 @@ export def copy [] {
 
     cp ~/.config/nushell/autoload/ nushell -r
 
-    cp ~/.config/wezterm/ . -r
-
-    cp ~/.config/helix/ . -r
-
-    cp ~/.config/zellij/ . -r
-
-    cp ~/.config/ghostty/ . -r
-
-    cp ~/.config/broot/ . -r
+    [
+        '~/.config/wezterm/'
+        '~/.config/helix/'
+        '~/.config/zellij/'
+        '~/.config/ghostty/'
+        '~/.config/broot/'
+    ]
+    | each {
+        path expand
+        | if ($in | path exists) { cp $in . -r }
+    }
 }

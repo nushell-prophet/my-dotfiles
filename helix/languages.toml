@@ -8,3 +8,5 @@ indent = { tab-width = 4, unit = "    " }
 [[language]]
 name = "markdown"
 indent = { tab-width = 4, unit = "    " }
+formatter = { command = 'prettier', args = [ "--parser", "markdown", "--prose-wrap", "never" ] }
+auto-format = false
