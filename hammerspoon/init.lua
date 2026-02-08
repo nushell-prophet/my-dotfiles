@@ -1,5 +1,3 @@
----@diagnostic disable: undefined-global
-
 -- Complete init.lua
 -- This file implements two sets of functionality:
 -- 1. Keyboard layout switching using left/right ⌘ keys.
@@ -42,9 +40,6 @@ flagsWatcher = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, function(
   local flags = evt:getFlags()
   local code = evt:getKeyCode()
   if code ~= 0x36 and code ~= 0x37 then return false end
-  if hyper and hyper.isActive and hyper:isActive() then
-    return false
-  end
   local isCmd = flags.cmd
   
   if not isCmd then
@@ -64,7 +59,8 @@ flagsWatcher = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, function(
     -- When Command is pressed, update state based on keyCode.
     if code == 0x37 then
       leftCmdDown = true
-      -- Switch to English immediately on left Cmd press
+      -- Switch to English immediately on press so Cmd+key shortcuts use English keycodes;
+      -- the release handler (line 49) also switches but is a no-op thanks to setLayout guard
       log("Left Cmd pressed → switching to English immediately")
       setLayout(englishLayout)
     elseif code == 0x36 then
@@ -81,74 +77,46 @@ end)
 flagsWatcher:start()
 
 -- Eventtap to catch any key press (non-Command) when Command is down.
-keyWatcher = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
+keyDownWatcher = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
+  local keyCode = evt:getKeyCode()
+  local flags = evt:getFlags()
+
+  -- Cancel layout switch if any key is pressed while Cmd is held
   if leftCmdDown or rightCmdDown then
     ignoreCmd = true
     log("KeyDown event: Non-Command key detected, cancelling layout switch")
   end
-  return false
-end)
-keyWatcher:start()
 
-log("Initial layout: " .. hs.keycodes.currentLayout())
-
--- ESC key handler to switch to English layout
-escWatcher = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
-  local keyCode = evt:getKeyCode()
-  local flags = evt:getFlags()
-
-  -- Check if ESC key (keyCode 53) is pressed without modifiers
+  -- ESC without modifiers → switch to English
   if keyCode == 53 and not (flags.cmd or flags.alt or flags.ctrl or flags.shift) then
     log("ESC pressed → switching to English layout")
     hs.timer.doAfter(0.001, function() setLayout(englishLayout) end)
   end
 
-  return false
-end)
-escWatcher:start()
-
--- Ctrl + Shift + Space to switch to English layout (pass-through)
-ctrlShiftSpaceWatcher = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
-  local keyCode = evt:getKeyCode()
-  local flags = evt:getFlags()
-
-  -- Check if Space key (keyCode 49) is pressed with Ctrl + Shift
+  -- Ctrl + Shift + Space → switch to English
   if keyCode == 49 and flags.ctrl and flags.shift and not flags.cmd and not flags.alt then
     log("Ctrl + Shift + Space pressed → switching to English layout")
     hs.timer.doAfter(0.001, function() setLayout(englishLayout) end)
   end
 
-  return false  -- pass the key combination through to other applications
-end)
-ctrlShiftSpaceWatcher:start()
+  -- Replace № with #
+  local char = evt:getCharacters()
+  if char == "№" then
+    hs.eventtap.keyStrokes("#")
+    return true
+  end
 
--- ~/.hammerspoon/init.lua
+  return false
+end)
+keyDownWatcher:start()
+
+log("Initial layout: " .. hs.keycodes.currentLayout())
 
 -- Bit masks for remapped modifier key and hyper key modifiers
 local flagMasks = hs.eventtap.event.rawFlagMasks
 -- Use right ⌘ both as a standalone‑layout switch *and* as the Hyper trigger
 local originalKeyMask = flagMasks["deviceRightCommand"] -- right command
 local hyperKeyMask = flagMasks["control"] | flagMasks["alternate"] | flagMasks["command"] | flagMasks["shift"]
-
--- Create a global listener to monitor keyboard events
-local events = { hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp }
-KeyEventListener = hs.eventtap.new(events, function(event)
-  -- Filter out irrelevant data from the event's modifier flags
-  -- https://www.hammerspoon.org/docs/hs.eventtap.event.html#rawFlagMasks
-  local flags = event:rawFlags() & 0xdffffeff
-
-  -- Check if the keyboard event includes the desired modifier key to remap
-  -- If so, update the event's modifier flags to use hyper key modifiers
-  if flags & originalKeyMask ~= 0 then
-    -- Only remap to hyper when no other modifiers (alt, ctrl, shift) are held,
-    -- so combinations like right_cmd+alt+esc pass through normally
-    local otherMods = flagMasks["alternate"] | flagMasks["control"] | flagMasks["shift"]
-    if (flags & otherMods) == 0 then
-      event:rawFlags(hyperKeyMask)
-    end
-  end
-  return false   -- propagate every event
-end):start()
 
 local hyperMods = { "cmd", "alt", "ctrl", "shift" }
 -- Application shortcuts (bundle IDs for maximum speed)
@@ -180,15 +148,29 @@ for key, arrow in pairs(navKeys) do
     function() hs.eventtap.keyStroke({}, arrow, 0) end)
 end
 
-------------------------------------------------------------------
--- Text replacement: № → #
-------------------------------------------------------------------
-textReplacer = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
-  local char = evt:getCharacters()
-  if char == "№" then
-    hs.eventtap.keyStrokes("#")
-    return true  -- suppress the original № character
+-- Build a set of keycodes that have hyper bindings
+local hyperBoundKeys = {}
+for key, _ in pairs(shortcuts) do
+  local code = hs.keycodes.map[key]
+  if code then hyperBoundKeys[code] = true end
+end
+for key, _ in pairs(navKeys) do
+  local code = hs.keycodes.map[key]
+  if code then hyperBoundKeys[code] = true end
+end
+
+-- Remap right_cmd to hyper only for keys with hyper bindings
+local events = { hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp }
+KeyEventListener = hs.eventtap.new(events, function(event)
+  -- Strip non-coalesced event marker (bit 29) and device-dependent bit (bit 8)
+  -- that macOS injects into rawFlags but aren't real modifier state
+  local flags = event:rawFlags() & 0xdffffeff
+  if flags & originalKeyMask ~= 0 then
+    local otherMods = flagMasks["alternate"] | flagMasks["control"] | flagMasks["shift"]
+    if (flags & otherMods) == 0 and hyperBoundKeys[event:getKeyCode()] then
+      event:rawFlags(hyperKeyMask)
+    end
   end
   return false
-end)
-textReplacer:start()
+end):start()
+
