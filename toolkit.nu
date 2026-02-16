@@ -65,8 +65,8 @@ def glob-base [pattern: string] {
 }
 
 # Read paths-default.csv, expand globs, and derive repo paths
-def open-configs [] {
-    open paths-default.csv
+def open-configs [paths_file: string = 'paths-default.csv'] {
+    open $paths_file
     | get full-path
     | each {|pattern|
         let expanded = $pattern | path expand --no-symlink
@@ -102,12 +102,12 @@ def open-local-configs [] {
 }
 
 # Merge local and default configs, applying ignore/update status and deduplication
-def assemble-paths [] {
+def assemble-paths [paths_file: string = 'paths-default.csv'] {
     let local_statuses = open-local-configs
     | where status =~ '^update|ignore'
     | select full-path status
 
-    open-configs
+    open-configs $paths_file
     | join --left $local_statuses full-path
     | where status? != ignore
 }
@@ -154,8 +154,10 @@ export def push-to-machine [
     --create-dirs # in case of missing directories - create them in place
     --force # overwrite files with uncommitted changes
     --dry-run # show diff of what would change without copying
+    --docker # use paths-docker.csv for Docker sandbox setup
 ] {
-    let paths = assemble-paths
+    let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
+    let paths = assemble-paths $paths_file
     | where {|i| $i.path-in-repo | path exists }
 
     if $dry_run { show-push-diff $paths; return }
