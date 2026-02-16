@@ -123,6 +123,7 @@ $env.PATH = (
         ($env.NUPM_HOME | path join "scripts")
         ($env.NUPM_HOME | path join "modules")
         '/opt/homebrew/opt/curl/bin'
+        '/Users/user/.docker/bin'
         '/Users/user/.cargo/bin'
         '/Users/user/miniconda3/bin'
         '/Users/user/miniconda3/condabin'
