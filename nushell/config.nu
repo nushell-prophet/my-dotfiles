@@ -650,6 +650,6 @@ $env.config.menus ++= [
 # This captures the baseline state before loading additional modules
 # 
 # mind that there is another invocation in
-# /Users/user/.config/nushell/autoload/zzz_ignore_vars.nu
+# ~/.config/nushell/autoload/zzz_ignore_vars.nu
 $env.ignore-env-vars = (scope variables | get name)
 source $"($nu.home-dir)/.cargo/env.nu"

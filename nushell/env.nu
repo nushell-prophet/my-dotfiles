@@ -123,21 +123,21 @@ $env.PATH = (
         ($env.NUPM_HOME | path join "scripts")
         ($env.NUPM_HOME | path join "modules")
         '/opt/homebrew/opt/curl/bin'
-        '/Users/user/.docker/bin'
-        '/Users/user/.cargo/bin'
-        '/Users/user/miniconda3/bin'
-        '/Users/user/miniconda3/condabin'
+        '~/.docker/bin'
+        '~/.cargo/bin'
+        '~/miniconda3/bin'
+        '~/miniconda3/condabin'
         '/opt/homebrew/bin'
         '/opt/homebrew/sbin'
         '/usr/local/bin'
         '/usr/local/go/bin'
-        '/Users/user/go/bin'
-        '/Users/user/.local/bin'
-        '/Users/user/.config/nvm'
-        '/Users/user/.config/nvm/versions/node/v22.17.0/bin'
-        '/Users/user/Applications/WezTerm.app/Contents/MacOS'
-        '/Users/user/Applications/kitty.app/Contents/MacOS'
-        '/Users/user/.claude/local/'
+        '~/go/bin'
+        '~/.local/bin'
+        '~/.config/nvm'
+        '~/.config/nvm/versions/node/v22.17.0/bin'
+        '~/Applications/WezTerm.app/Contents/MacOS'
+        '~/Applications/kitty.app/Contents/MacOS'
+        '~/.claude/local/'
     ]
     | str trim
     | where {|i| $i | path exists }
