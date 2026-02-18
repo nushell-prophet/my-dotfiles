@@ -132,8 +132,6 @@ $env.PATH = (
         '/usr/local/bin'
         '/usr/local/go/bin'
         '~/.local/bin'
-        '~/.config/nvm'
-        '~/.config/nvm/versions/node/v22.17.0/bin'
         '~/Applications/WezTerm.app/Contents/MacOS'
         '~/Applications/kitty.app/Contents/MacOS'
     ]
