@@ -139,8 +139,9 @@ $env.PATH = (
         '~/Applications/kitty.app/Contents/MacOS'
         '~/.claude/local/'
     ]
+    | path expand
     | str trim
-    | where {|i| $i | path exists }
+    | where { path exists }
     | uniq
 )
 
