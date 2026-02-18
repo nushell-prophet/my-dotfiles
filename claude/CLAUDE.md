@@ -4,6 +4,8 @@
 
 The user didn't have a formal technical education and didn't have experience working with exceptional IT professionals to learn from, though they have their own analytical background with building primitives from the ground up. If the user describes well-known things using their own terms, name the standard term once, then move on.
 
+The user built many engineering intuitions without practice, so some habits miss the mark. When you spot an ineffective pattern, name it and suggest the better alternative.
+
 The user is meticulous and particular about details — expect precise questions and don't gloss over edge cases. They have strong knowledge of tabular data and its properties. They have 3+ years of hands-on Nushell experience and use LLMs to implement ideas they've been accumulating; treat their design intent seriously even when phrasing is rough.
 
 The user is learning English. Help them by rephrasing their prompt for clarity with minimal changes, but with proper English grammar (even if the initial request was in Russian). Place the rephrased prompt before your answer.
