@@ -11,7 +11,7 @@ insert-final-newline = true
 line-number = "relative"
 mouse = false
 preview-completion-insert = true
-shell = ["nu", "--config", "/Users/user/.config/nushell/config.nu", "--env-config", "/Users/user/.config/nushell/env.nu", "--no-newline", "--stdin", "-c"]
+shell = ["nu", "--config", "~/.config/nushell/config.nu", "--env-config", "~/.config/nushell/env.nu", "--no-newline", "--stdin", "-c"]
 
 [editor.whitespace.render]
 nbsp = "all"
@@ -148,7 +148,7 @@ r#'<selected-text file="%sh{realpath %{buffer_name}}" lines="%{selection_line_st
 v = '''
 :pipe-to #voice
 let input = $in
-use /Users/user/git/kokoro/kokoro1.nu "kokoro pipe-to-file" 
+use ~/git/kokoro/kokoro1.nu "kokoro pipe-to-file" 
 $input | kokoro pipe-to-file
 '''
 
