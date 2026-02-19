@@ -140,9 +140,6 @@ n = ":append-output date now | format date %%J-%%Q" # timestamp
 p = ":pipe pandoc --from markdown --to markdown"
 t = ':pipe $"<user>\n($in)</user>"'
 
-# On Linux (e.g. Docker sandbox), install an OSC 52 shim as `pbcopy`:
-#   printf '#!/bin/sh\ndata=$(cat | base64 | tr -d '"'"'\\n'"'"')\nprintf '"'"'\\033]52;c;%%s\\a'"'"' "$data" > /dev/tty' > /usr/local/bin/pbcopy && chmod +x /usr/local/bin/pbcopy
-# Inside Zellij: ensure `copy_command` is NOT set, so Zellij forwards OSC 52 natively.
 s = [ '''
 :pipe-to #xml-coordinate-references→
 r#'<selected-text file="%sh{realpath %{buffer_name}}" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
