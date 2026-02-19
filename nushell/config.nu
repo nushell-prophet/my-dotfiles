@@ -652,4 +652,3 @@ $env.config.menus ++= [
 # mind that there is another invocation in
 # ~/.config/nushell/autoload/zzz_ignore_vars.nu
 $env.ignore-env-vars = (scope variables | get name)
-source $"($nu.home-dir)/.cargo/env.nu"
