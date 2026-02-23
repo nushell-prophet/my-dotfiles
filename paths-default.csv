@@ -23,3 +23,4 @@ full-path
 ~/.config/zellij/layouts/compact-bar-up.kdl
 ~/.config/zellij/layouts/compact-bar-up.swap.kdl
 ~/.config/zellij/todo-nu/**/*
+~/.config/visidata/config.py
