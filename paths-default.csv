@@ -6,7 +6,7 @@ full-path
 ~/.claude/agents/*.md
 ~/.claude/commands/*.md
 ~/.claude/output-styles/**/*
-~/.claude/skills/jj-ai-guide/**/*
+~/.claude/skills/**/*.md
 ~/.config/ghostty/config
 ~/.hammerspoon/init.lua
 ~/.config/helix/config-no-wrap.toml
