@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(jj status:*), Bash(jj diff:*), Bash(jj restore:*), Bash(jj commit:*), Bash(jj describe:*), Bash(jj log:*), Read, Edit
-description: Split unrelated changes within a single file into separate commits
+description: Split unrelated changes within a single file into separate commits (use only when explicitly requested; git is the default workflow)
 ---
 
 ## Context

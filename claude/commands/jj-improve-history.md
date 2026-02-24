@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(jj:*), Read, Edit
-description: Improve jj commit messages while preserving original authorship
+description: Improve jj commit messages while preserving original authorship (use only when explicitly requested; git is the default workflow)
 argument-hint: [base-revision]
 ---
 

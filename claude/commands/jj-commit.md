@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(jj status:*), Bash(jj commit:*), Bash(jj diff:*), Bash(jj describe:*), Bash(jj squash:*), Bash(jj new:*), Bash(jj log:*), Bash(jj file list:*), Bash(jj file track:*), Bash(jj file untrack:*), Bash(jj metaedit:*)
-description: Create a jj commit
+description: Create a jj commit (use only when explicitly requested; git is the default workflow)
 ---
 
 ## Context
