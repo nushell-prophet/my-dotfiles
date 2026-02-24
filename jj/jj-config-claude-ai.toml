@@ -1,0 +1,33 @@
+"$schema" = "https://jj-vcs.github.io/jj/latest/config-schema.json"
+
+[user]
+name = "Claude"
+email = "claude@anthropic.com"
+
+[ui]
+color = "never"
+conflict-marker-style = "diff"
+default-command = "log"
+diff-editor = ":builtin"
+diff-formatter = ":git"
+editor = "true"  # non-interactive: skips editor prompts
+merge-editor = ":builtin"
+paginate = "never"
+
+[snapshot]
+auto-track = "all()"
+
+[template-aliases]
+json = "json()"
+csv = 'commit_id ++ "," ++ description ++ "," ++ author.email()'
+simple = 'commit_id ++ " " ++ description'
+
+[revset-aliases]
+work = 'mine() & author_date(after:"1 week ago")'
+recent = 'author_date(after:"yesterday")'
+problems = "conflicts() | divergent() | empty()"
+
+[git]
+private-commits = 'description(glob:"*WIP*") | description(glob:"*tmp*")'
+push = "all"
+fetch = "all"
