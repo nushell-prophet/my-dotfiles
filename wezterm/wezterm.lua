@@ -262,7 +262,7 @@ wezterm.on('user-var-changed', function(window, pane, name, value)
   if name == "ZEN_MODE" then
     overrides.font_size = value == "on" and local_settings.zen_font_size or nil
   elseif name == "SANDBOX_MODE" then
-    overrides.colors = value == "on" and { background = '#1a1b2e' } or nil
+    overrides.colors = value == "on" and { background = '#0d0d0d' } or nil
   end
   window:set_config_overrides(overrides)
 end)
