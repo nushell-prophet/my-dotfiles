@@ -13,9 +13,9 @@ export def lstd [] {
         | split row -r "---\n?"
         | get 1?
         | try { from yaml | get status -o }
-        | default "черновик"
+        | default "draft"
     }
-    | where status not-in ["выполнено" "отклонено"]
+    | where status not-in ["completed" "rejected"]
     | get name
     | to text
     | fzf --reverse --preview 'bat --wrap=auto --terminal-width=$FZF_PREVIEW_COLUMNS --style=numbers --color=always {}' --bind 'ctrl-e:execute-silent(zellij edit {})'
