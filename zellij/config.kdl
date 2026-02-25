@@ -141,7 +141,7 @@ keybinds clear-defaults=true {
         bind "Super n" { NewPane; }
         bind "Super t" { NewTab; }
         bind "Super alt t" { NewTab {
-               cwd "/Users/user/temp/"
+               cwd "~/temp/"
                name "temp"
            }
         }
@@ -167,7 +167,7 @@ keybinds clear-defaults=true {
             DumpScreen "/tmp/zellij-screen.txt" {
                 full true
             };
-            Run "nu" "-c" "open /tmp/zellij-screen.txt | hx --config /Users/user/.config/helix/config-no-wrap.toml" {
+            Run "nu" "-c" "open /tmp/zellij-screen.txt | hx --config ~/.config/helix/config-no-wrap.toml" {
                 close_on_exit true
                 floating true
                 x "1%"
@@ -215,7 +215,7 @@ keybinds clear-defaults=true {
         }
 
         bind "Super e" {
-            Run "/Users/user/.config/zellij/todo-nu/todo-hx.nu" {
+            Run "todo-hx" {
                 close_on_exit true
 //                cwd "tasks"
                 name "new-todo"
@@ -462,7 +462,7 @@ default_layout "compact-bar-up"
 // Path to the default editor to use to edit pane scrollbuffer
 // Default: $EDITOR or $VISUAL
 //
-scrollback_editor "/opt/homebrew/bin/hx --config /Users/user/.config/helix/config-no-wrap.toml"
+scrollback_editor "/opt/homebrew/bin/hx --config ~/.config/helix/config-no-wrap.toml"
 
 // When attaching to an existing session with other users,
 // should the session be mirrored (true)
