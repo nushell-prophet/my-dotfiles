@@ -180,10 +180,10 @@ export def push-to-machine [
      ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
     ] | each {|s|
         let target = $s.target | path expand
-        let link = $s.link | path expand
+        let link = $s.link | path expand --no-symlink
         if ($target | path exists) {
             mkdir ($link | path dirname)
-            ^ln -sf $target $link
+            ^ln -sfn $target $link
         }
     }
 }
