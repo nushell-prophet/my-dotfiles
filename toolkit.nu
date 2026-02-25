@@ -174,6 +174,18 @@ export def push-to-machine [
     | compact
     | flatten
     | each { cp $in.path-in-repo $in.full-path }
+
+    # Create symlinks for PATH-accessible commands
+    [[target link];
+     ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
+    ] | each {|s|
+        let target = $s.target | path expand
+        let link = $s.link | path expand
+        if ($target | path exists) {
+            mkdir ($link | path dirname)
+            ^ln -sf $target $link
+        }
+    }
 }
 
 # Scan tracked directories for new config files and update paths-local.csv
