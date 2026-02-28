@@ -1,7 +1,12 @@
+# Lazygit sets TERM=dumb in its pager PTY, so delta can't auto-detect truecolor.
+# --true-color=always: forces delta to emit 24-bit color for syntax highlighting.
+# --minus/plus-style 256-color: lazygit's ANSI parser drops truecolor backgrounds
+#   (48;2;R;G;B) but handles 256-palette backgrounds (48;5;N) correctly.
+#   Without these, hunk backgrounds disappear inside lazygit.
 git:
   pagers:
     - colorArg: always
-      pager: delta --dark --paging=never --line-numbers --side-by-side --wrap-max-lines unlimited
+      pager: delta --dark --paging=never --true-color=always --minus-style='syntax 52' --plus-style='syntax 22' --line-numbers --side-by-side --wrap-max-lines unlimited
 customCommands:
   - key: 'E'
     context: 'files'
