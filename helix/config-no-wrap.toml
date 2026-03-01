@@ -12,10 +12,7 @@ mouse = false
 preview-completion-insert = true
 shell = [
     "nu",
-    "--config",
-    "/Users/user/.config/nushell/config.nu",
-    "--env-config",
-    "/Users/user/.config/nushell/env.nu",
+    "--login",
     "--no-newline",
     "--stdin",
     "-c",
