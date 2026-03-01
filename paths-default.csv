@@ -7,7 +7,6 @@ full-path
 ~/.claude/commands/*.md
 ~/.claude/output-styles/**/*
 ~/.claude/skills/**/*.md
-~/.config/ghostty/config
 ~/.hammerspoon/init.lua
 ~/.config/helix/config-no-wrap.toml
 ~/.config/helix/config.toml
