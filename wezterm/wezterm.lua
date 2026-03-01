@@ -115,8 +115,17 @@ config.set_environment_variables = ok and env_vars or {}
 -- ============================================================================
 -- APPEARANCE
 -- ============================================================================
--- Font configuration
-config.font = wezterm.font { family = 'ZedMono Nerd Font', stretch = 'Expanded' }
+-- Font configuration with fallback chain
+-- WezTerm skips unavailable fonts and uses the next available one
+config.font = wezterm.font_with_fallback {
+  { family = 'ZedMono Nerd Font', stretch = 'Expanded' },
+  'JetBrains Mono',
+  'Fira Code',
+  'Cascadia Code',
+  'Menlo',
+  'Consolas',
+  'Courier New',
+}
 config.font_size = local_settings.font_size
 
 -- Color settings
