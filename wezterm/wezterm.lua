@@ -122,6 +122,7 @@ config.font = wezterm.font_with_fallback {
   'JetBrains Mono',
   'Fira Code',
   'Cascadia Code',
+  'Iosevka',
   'Menlo',
   'Consolas',
   'Courier New',
