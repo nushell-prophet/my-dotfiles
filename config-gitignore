@@ -1,0 +1,9 @@
+helix/runtime/*
+nvim
+zed/prompts/prompts-library-db.0.mdb
+lazygit/state.yml
+zellij/plugins
+aichat/messages.md
+nvm/
+/jj/repos
+/cagent/.cagent_first_run

@@ -1,0 +1,16 @@
+local/
+statsig/
+todos/
+shell-snapshots
+debug
+projects
+plans
+history.jsonl
+cache/
+**/*cache*
+tasks/
+/file-history
+/usage-data
+/usage-data-back
+/backups
+/.claude/settings.local.json

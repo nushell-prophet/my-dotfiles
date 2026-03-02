@@ -12,6 +12,14 @@
 #   fill-candidates          - Find new config files to potentially track
 #   cleanup-paths-not-in-csv - List repo files not tracked in CSV
 
+const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv config-gitignore claude-gitignore]
+
+const gitignore_deploys = [
+    [repo_file target_dir];
+    [config-gitignore ~/.config]
+    [claude-gitignore ~/.claude]
+]
+
 export def main [] { }
 
 # Check if a file has uncommitted changes in its git repository
@@ -119,7 +127,12 @@ export def pull-from-machine [
     let paths = assemble-paths
     | where {|i| $i.full-path | path exists }
 
+    let gitignore_targets = $gitignore_deploys
+    | where { ($in.target_dir | path expand --no-symlink | path join '.gitignore') | path exists }
+    | each {|e| {file: $e.repo_file} }
+
     if not $force and (check-dirty-files $paths path-in-repo "repo files") { return }
+    if not $force and (check-dirty-files $gitignore_targets file "repo files") { return }
 
     $paths
     | group-by { $in.path-in-repo | path dirname }
@@ -128,6 +141,12 @@ export def pull-from-machine [
     }
     | flatten
     | each { cp $in.full-path $in.path-in-repo }
+
+    # Pull .gitignore files from config directories
+    $gitignore_deploys | each {|entry|
+        let src = ($entry.target_dir | path expand --no-symlink | path join '.gitignore')
+        if ($src | path exists) { cp $src $entry.repo_file }
+    }
 }
 
 # Show diff preview for a list of paths (repo → machine)
@@ -160,9 +179,37 @@ export def push-to-machine [
     let paths = assemble-paths $paths_file
     | where {|i| $i.path-in-repo | path exists }
 
-    if $dry_run { show-push-diff $paths; return }
+    if $dry_run {
+        show-push-diff $paths
+        $gitignore_deploys | each {|entry|
+            let target_dir = $entry.target_dir | path expand --no-symlink
+            if not ($entry.repo_file | path exists) { return }
+            let git_dir = $target_dir | path join '.git'
+            if not ($git_dir | path exists) {
+                print $"\n=== ($target_dir) ==="
+                print $"(ansi yellow)→ git init will be run(ansi reset)"
+            }
+            let target_file = $target_dir | path join '.gitignore'
+            if ($target_file | path exists) {
+                let diff = ^git diff --no-index $target_file $entry.repo_file | complete
+                if ($diff.stdout | is-not-empty) {
+                    print $"\n=== ($target_file) ==="
+                    $diff.stdout | lines | skip 4 | str join (char newline) | print
+                }
+            } else {
+                print $"\n=== ($target_file) ==="
+                print $"(ansi yellow)→ NEW FILE will be created(ansi reset)"
+            }
+        }
+        return
+    }
+
+    let gitignore_targets = $gitignore_deploys
+    | each {|e| {file: ($e.target_dir | path expand --no-symlink | path join '.gitignore')} }
+    | where { $in.file | path exists }
 
     if not $force and (check-dirty-files $paths full-path "destination files") { return }
+    if not $force and (check-dirty-files $gitignore_targets file "destination files") { return }
 
     $paths
     | group-by { $in.full-path | path dirname }
@@ -185,6 +232,18 @@ export def push-to-machine [
             mkdir ($link | path dirname)
             ^ln -sfn $target $link
         }
+    }
+
+    # Initialize git repos and deploy .gitignore for config directories
+    $gitignore_deploys | each {|entry|
+        let target_dir = $entry.target_dir | path expand --no-symlink
+        if not ($entry.repo_file | path exists) { return }
+        if not ($target_dir | path exists) {
+            if $create_dirs { mkdir $target_dir } else { return }
+        }
+        let git_dir = $target_dir | path join '.git'
+        if not ($git_dir | path exists) { ^git init $target_dir }
+        cp $entry.repo_file ($target_dir | path join '.gitignore')
     }
 }
 
@@ -237,8 +296,6 @@ export def fill-candidates [] {
     | default '' status
     | save -f paths-local.csv
 }
-
-const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv]
 
 # List repo files not tracked in any paths-*.csv, optionally delete them
 export def cleanup-paths-not-in-csv [
