@@ -238,13 +238,24 @@ export def fill-candidates [] {
     | save -f paths-local.csv
 }
 
-const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv]
+const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv]
 
-# List files in the repo that are not tracked in paths-default.csv
-export def cleanup-paths-not-in-csv [] {
+# List repo files not tracked in any paths-*.csv, optionally delete them
+export def cleanup-paths-not-in-csv [
+    --delete # git rm orphan files instead of just listing them
+] {
     let exist_paths = glob **/* --exclude $excluded_locals --no-dir
 
-    let paths_in_csv = open-configs | get path-in-repo
+    let paths_in_csv = glob paths-*.csv
+    | each { open-configs $in | get path-in-repo }
+    | flatten
+    | uniq
 
-    $exist_paths | path relative-to (pwd) | where $it not-in $paths_in_csv
+    let orphans = $exist_paths | path relative-to (pwd) | where $it not-in $paths_in_csv
+
+    if $delete and ($orphans | is-not-empty) {
+        $orphans | each { ^git rm $in }
+    } else {
+        $orphans
+    }
 }
