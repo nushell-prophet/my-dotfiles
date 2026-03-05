@@ -127,6 +127,8 @@ config.font = wezterm.font_with_fallback {
   'Consolas',
   'Courier New',
 }
+-- Font configuration
+-- brew install --cask font-zed-mono-nerd-font
 config.font_size = local_settings.font_size
 
 -- Color settings
@@ -173,12 +175,14 @@ config.disable_default_key_bindings = true
 config.keys = {
   { key = ' ', mods = 'SHIFT|CTRL', action = wezterm.action.QuickSelect },
   { key = 'x', mods = 'SHIFT|CTRL', action = wezterm.action.ActivateCopyMode },
+  { key = 'p', mods = 'SHIFT|CTRL', action = wezterm.action.ActivateCommandPalette },
   { key = 'v', mods = 'CMD',        action = wezterm.action.PasteFrom 'Clipboard' },
   { key = '=', mods = 'CMD',        action = wezterm.action.IncreaseFontSize },
   { key = '-', mods = 'CMD',        action = wezterm.action.DecreaseFontSize },
   { key = '0', mods = 'CMD',        action = wezterm.action.ResetFontSize },
   { key = 'q', mods = 'CMD',        action = wezterm.action.QuitApplication },
 
+  -- I use those keybidings here to check that to fix Wezterms cmd+shift passing for zellij.
   -- cmd+shift+a
   { key = 'a', mods = 'CMD|SHIFT',  action = wezterm.action.SendString '\x1b[97;10u' },
   -- cmd+shift+b
