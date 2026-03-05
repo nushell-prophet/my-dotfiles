@@ -118,7 +118,7 @@ config.set_environment_variables = ok and env_vars or {}
 -- Font configuration with fallback chain
 -- WezTerm skips unavailable fonts and uses the next available one
 config.font = wezterm.font_with_fallback {
-  { family = 'ZedMono Nerd Font', stretch = 'Expanded' },
+  { family = 'ZedMono Nerd Font', stretch = 'Expanded' }, -- brew install --cask font-zed-mono-nerd-font
   'JetBrains Mono',
   'Fira Code',
   'Cascadia Code',
