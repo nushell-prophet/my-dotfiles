@@ -517,8 +517,8 @@ support_kitty_keyboard_protocol true
 //
 // show_startup_tips false
 
-ui {
-    pane_frames {
-        hide_session_name true
-    }
-}
+// ui {
+//     pane_frames {
+//         hide_session_name true
+//     }
+// }
