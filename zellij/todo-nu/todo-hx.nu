@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
-const self = path self | path dirname | path join todo.nu
+const todo = path self | path expand | path dirname | path join todo.nu
 
-use todo.nu create-todo
+use $todo create-todo
 
 create-todo
