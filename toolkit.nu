@@ -174,6 +174,7 @@ export def push-to-machine [
     --force # overwrite files with uncommitted changes
     --dry-run # show diff of what would change without copying
     --docker # use paths-docker.csv for Docker sandbox setup
+    --commit-changes # git add + commit in target directories after push
 ] {
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
     let paths = assemble-paths $paths_file
@@ -244,6 +245,18 @@ export def push-to-machine [
         let git_dir = $target_dir | path join '.git'
         if not ($git_dir | path exists) { ^git init $target_dir }
         cp $entry.repo_file ($target_dir | path join '.gitignore')
+    }
+
+    if $commit_changes {
+        $gitignore_deploys | each {|entry|
+            let target_dir = $entry.target_dir | path expand --no-symlink
+            if not ($target_dir | path join '.git' | path exists) { return }
+            ^git -C $target_dir add -A
+            let status = ^git -C $target_dir status --porcelain | complete
+            if ($status.stdout | str trim | is-not-empty) {
+                ^git -C $target_dir commit -m "push-to-machine"
+            }
+        }
     }
 }
 
