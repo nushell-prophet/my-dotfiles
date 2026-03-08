@@ -1,5 +1,5 @@
 ---
-name: Keep a Changelog
+name: keep-a-changelog
 description: >
   This skill should be used when the user asks to "create a changelog",
   "add a changelog entry", "update the changelog", "release a new version",
@@ -101,6 +101,48 @@ Check `CHANGELOG.md` for format compliance. Report issues:
 - Entries not starting with `- `
 
 Report findings as a checklist with pass/fail indicators. Offer to fix any issues found.
+
+## Writing Style — Don't Dump Git Logs
+
+A changelog is for **humans**, not machines. Every entry must be written from the user's perspective, describing what changed for them — not what happened in the code.
+
+### Rewrite, don't copy
+
+When deriving entries from git history, **never** paste commit messages verbatim. Rewrite them:
+
+- **BAD**: `fix: correct Rule 5 (Big X smushing) string literals in smush-char` (commit message)
+- **GOOD**: `Incorrect horizontal smushing with Big X (Rule 5)` (user-visible bug)
+
+- **BAD**: `feat: use par-each for faster font showcase rendering` (implementation detail)
+- **GOOD**: _(omit — internal optimization, not user-facing)_
+
+- **BAD**: `Rename setup → setup-fonts, make compile private` (code-level refactor)
+- **GOOD**: `Rename \`setup\` to \`setup-fonts\`` (only the part the user sees)
+
+### What belongs
+
+- Features and behaviors the user interacts with
+- Bugs the user could have encountered
+- Breaking changes to commands, flags, APIs, or config
+- Performance improvements the user would notice
+
+### What doesn't belong
+
+- Internal refactors, variable renames, code reorganization
+- Implementation details (function names, data structures, algorithms)
+- Build/CI changes invisible to the user
+- Multiple entries for what is really one user-facing change — merge them
+
+### Merge related entries
+
+If several commits contribute to one feature, write **one** entry:
+
+- **BAD**: Three entries for "add gradient support", "add gradient presets", "add gradient tab completion"
+- **GOOD**: One entry: `ANSI color and gradient support with named presets`
+
+### Initial releases have no Fixed/Changed
+
+The first release (`0.0.1`, `1.0.0`, etc.) is all new — nothing was "fixed" or "changed" from the user's perspective. Use only `### Added`.
 
 ## Key Rules
 
