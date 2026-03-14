@@ -4,7 +4,7 @@
 #   (48;2;R;G;B) but handles 256-palette backgrounds (48;5;N) correctly.
 #   Without these, hunk backgrounds disappear inside lazygit.
 # Docker sandbox has no system clipboard. We use the pbcopy OSC 52 shim
-# installed in the Dockerfile (see ai-sandbox/Dockerfile, ai-sandbox/pbcopy).
+# installed in the Dockerfile (see cozy/Dockerfile, cozy/pbcopy).
 os:
   copyToClipboardCmd: printf {{text}} | pbcopy
 git:
