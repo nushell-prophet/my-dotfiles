@@ -1,9 +1,9 @@
 # Nushell Environment Config File
 
 def create_left_prompt [] {
-    let dir = do -i { $env.PWD | path relative-to $nu.home-path }
+    let dir = do -i { pwd | path relative-to $nu.home-dir }
     | match $in {
-        null => $env.PWD
+        null => (pwd)
         '' => '~'
         $relative_pwd => ([~ $relative_pwd] | path join)
     }
