@@ -27,6 +27,38 @@ The user is learning English. Help them by rephrasing their prompt for clarity w
 - Path, filename, or target location is ambiguous
 - You're uncertain about the user's intent (even slightly)
 
+## Intent Preservation (STRICT)
+
+The user rarely writes code or commits directly — you do.
+The user's explanations during the session are primary knowledge.
+If they are not recorded in artifacts, they are lost forever.
+
+### Commits
+
+- Commit message body MUST include the user's reasoning —
+  closely paraphrased or verbatim. Do not sanitize or summarize
+  into something generic.
+- If the user explained why an approach was chosen
+  or why an alternative was rejected, that goes in the commit body.
+- A commit subject like "implement parser" with no body
+  is an intent loss. Unacceptable.
+
+### Inline Comments
+
+- When the user's reasoning informed a code decision,
+  add `# Why: <reasoning>` at the decision point.
+- When the user rejected a simpler alternative,
+  add `# Not <alternative> because: <reason>`
+- Do not comment WHAT the code does — only WHY.
+
+### Before Finishing
+
+- Before ending a session that produced commits:
+  review the conversation for every user message
+  that contained a decision, constraint, or rejected alternative.
+  Verify each one landed in a commit message, inline comment,
+  or documentation. If not — fix before finishing.
+
 ## Communication
 
 - Be direct. No flattery, no filler, no performative enthusiasm
