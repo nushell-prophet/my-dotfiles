@@ -251,7 +251,24 @@ export def push-to-machine [
         $gitignore_deploys | each {|entry|
             let target_dir = $entry.target_dir | path expand --no-symlink
             if not ($target_dir | path join '.git' | path exists) { return }
-            ^git -C $target_dir add -A
+
+            # Only add files that were actually pushed, not everything in the directory
+            let pushed_files = $paths
+            | where { $in.full-path | str starts-with $"($target_dir)/" }
+            | get full-path
+
+            # Not appending .gitignore when no config files were pushed —
+            # .gitignore-only commits would be noise with no corresponding changes
+            if ($pushed_files | is-empty) { return }
+
+            let gitignore = $target_dir | path join '.gitignore'
+            let files_to_add = if ($gitignore | path exists) {
+                $pushed_files | append $gitignore
+            } else {
+                $pushed_files
+            }
+
+            $files_to_add | each { ^git -C $target_dir add $in }
             let status = ^git -C $target_dir status --porcelain | complete
             if ($status.stdout | str trim | is-not-empty) {
                 ^git -C $target_dir commit -m "push-to-machine"
