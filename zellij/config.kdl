@@ -515,7 +515,8 @@ support_kitty_keyboard_protocol true
 // Whether to show startup tips on session start
 // Default: true
 //
-// show_startup_tips false
+// Tips in docker might glitch because of resolution and block entry
+show_startup_tips false
 
 // ui {
 //     pane_frames {
