@@ -140,7 +140,7 @@ keybinds clear-defaults=true {
         bind "Super Shift l" { GoToNextTab; }
         bind "Super n" { NewPane; }
         bind "Super t" { NewTab; }
-        bind "Super alt t" { NewTab {
+        bind "Super Alt t" { NewTab {
                cwd "~/temp/"
                name "temp"
            }
@@ -190,7 +190,7 @@ keybinds clear-defaults=true {
         //     }
         // }
 
-        bind "Super alt l" {
+        bind "Super Alt l" {
 //            Write 0x1B; // escape button
             Run "lazygit" {
                 close_on_exit true
@@ -203,7 +203,7 @@ keybinds clear-defaults=true {
 //            WriteChars "rl";
         }
 
-        bind "Super alt b" {
+        bind "Super Alt b" {
             Run "broot" {
                 close_on_exit true
                 floating true
