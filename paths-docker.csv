@@ -17,7 +17,6 @@ full-path
 ~/.config/nushell/config.nu
 ~/.config/nushell/env.nu
 ~/.config/zellij/config.kdl
-~/.config/zellij/config-windows.kdl
 ~/.config/zellij/layouts/compact-bar-up.kdl
 ~/.config/zellij/layouts/compact-bar-up.swap.kdl
 ~/.config/zellij/todo-nu/**/*
