@@ -54,8 +54,9 @@ Add entries under `## [Unreleased]` in the appropriate category subsection.
 1. Read the existing `CHANGELOG.md`
 2. Determine the correct category (Added, Changed, Deprecated, Removed, Fixed, Security)
 3. Create the category heading under `[Unreleased]` if it doesn't exist yet — maintain standard category order
-4. Append the entry as a markdown list item: `- Description of change`
-5. Keep entries concise and human-readable — start with a capital letter, no trailing period
+4. Append the entry as a markdown list item: `- Description of change (commit_hash)`
+5. Every entry MUST include the short git commit hash (7 chars) that introduced the functionality, appended in parentheses. If multiple commits contributed, list all: `(abc1234, def5678)`. Use `git log` to find the right commit.
+6. Keep entries concise and human-readable — start with a capital letter, no trailing period
 
 When the user doesn't specify a category, infer it from context:
 - New feature/capability → Added
@@ -150,6 +151,7 @@ The first release (`0.0.1`, `1.0.0`, etc.) is all new — nothing was "fixed" or
 - **Always** keep versions in reverse chronological order (latest first)
 - **Always** maintain the `[Unreleased]` section, even if empty
 - **Always** use ISO 8601 dates (`YYYY-MM-DD`)
+- **Always** include the short commit hash in parentheses at the end of every entry
 - **Omit** empty categories — only include categories that have entries
 - **Preserve** existing comparison links and update them correctly on release
 - Yanked releases use: `## [X.Y.Z] - YYYY-MM-DD [YANKED]`
