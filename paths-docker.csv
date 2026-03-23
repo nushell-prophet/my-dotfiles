@@ -6,7 +6,6 @@ full-path
 ~/.claude/agents/*.md
 ~/.claude/commands/*.md
 ~/.claude/output-styles/**/*
-~/.claude/skills/**/*
 ~/.config/helix/config-no-wrap.toml
 ~/.config/helix/config.toml
 ~/.config/helix/languages.toml
