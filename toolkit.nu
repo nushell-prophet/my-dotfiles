@@ -11,6 +11,7 @@
 #   push-to-machine          - Copy configs from repo to machine (--dry-run for preview)
 #   fill-candidates          - Find new config files to potentially track
 #   cleanup-paths-not-in-csv - List repo files not tracked in CSV
+#   install-skills           - Deploy Claude skills from sibling skill repos into ~/.claude/skills/
 
 const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv config-gitignore claude-gitignore]
 
@@ -344,5 +345,55 @@ export def cleanup-paths-not-in-csv [
         $orphans | each { ^git rm $in }
     } else {
         $orphans
+    }
+}
+
+const this_dir = path self | path dirname
+
+const skill_repos = [
+    [repo subpath];
+    [my-claude-skills plugins/my-skills/skills]
+    [nushell-skills plugins]
+]
+
+# Deploy Claude skills from sibling repos into ~/.claude/skills/
+# Expects my-claude-skills and nushell-skills as siblings of this repo (../my-claude-skills, etc.)
+export def install-skills [
+    --base-dir: path # directory containing skill repos (default: parent of this repo)
+    --dry-run # show what would be copied without copying
+] {
+    let base = $base_dir | default ($this_dir | path join '..')
+    let target = '~/.claude/skills' | path expand --no-symlink
+
+    if not $dry_run { mkdir $target }
+
+    for $r in $skill_repos {
+        let repo_dir = $base | path join $r.repo
+        if not ($repo_dir | path exists) {
+            print $"(ansi yellow)Skipped:(ansi reset) ($r.repo) not found at ($repo_dir)"
+            continue
+        }
+
+        let src = $repo_dir | path join $r.subpath
+
+        # my-claude-skills: flat — skills/* are skill dirs directly
+        # nushell-skills: nested — plugins/*/skills/* are skill dirs
+        let skill_dirs = if ($r.subpath | str ends-with 'skills') {
+            ls $src | where type == dir | get name
+        } else {
+            glob ($src | path join '*/skills/*') --no-file
+        }
+
+        for $skill in $skill_dirs {
+            let name = $skill | path basename
+            if $dry_run {
+                print $"($r.repo) → ($name)"
+            } else {
+                let dest = $target | path join $name
+                mkdir $dest
+                ^rsync -a --delete $"($skill)/" $"($dest)/"
+                print $"(ansi green)Installed:(ansi reset) ($name) \(($r.repo))"
+            }
+        }
     }
 }
