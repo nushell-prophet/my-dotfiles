@@ -12,10 +12,13 @@ full-path
 ~/.config/lazygit/config.yml
 ~/.config/nushell/autoload/br.nu
 ~/.config/nushell/autoload/carapace-config.nu
+~/.config/nushell/autoload/hooks-config.nu
 ~/.config/nushell/autoload/zzz_ignore_vars.nu
 ~/.config/nushell/config.nu
 ~/.config/nushell/env.nu
+~/.config/zellij/broot-paste.nu
 ~/.config/zellij/config.kdl
+~/.config/zellij/lazygit-helix.nu
 ~/.config/zellij/layouts/compact-bar-up.kdl
 ~/.config/zellij/layouts/compact-bar-up.swap.kdl
 ~/.config/zellij/todo-nu/**/*
