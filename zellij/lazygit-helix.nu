@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 let target_pane = (
-    zellij action list-panes -s -j
+    zellij action list-panes --state --json
     | from json
     | where is_focused == true and is_floating == false
     | first
