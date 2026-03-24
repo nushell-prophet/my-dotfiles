@@ -144,11 +144,6 @@ keybinds clear-defaults=true {
         bind "Super Shift l" { GoToNextTab; }
         bind "Super n" { NewPane; }
         bind "Super t" { NewTab; }
-        bind "Super Alt t" { NewTab {
-               cwd "~/temp/"
-               name "temp"
-           }
-        }
         bind "Super o" { MoveTab "right"; }
         bind "Super w" { CloseFocus; }
         bind "Super 1" { GoToTab 1; }
@@ -167,36 +162,12 @@ keybinds clear-defaults=true {
         bind "Shift PageUp" { ScrollUp; }
 
         bind "Super m" { ToggleFocusFullscreen; }
-        bind "Super Shift e" {
-            DumpScreen "/tmp/zellij-screen.txt" {
-                full true
-            };
-            Run "nu" "-c" "open /tmp/zellij-screen.txt | hx --config ~/.config/helix/config-no-wrap.toml" {
-                close_on_exit true
-                floating true
-                x "1%"
-                y "1%"
-                width "99%"
-                height "99%"
-            };
-        }
-        bind "Super Alt e" { EditScrollback; }
-        // bind "Super T" {
-        //     NewTab {
-        //         cwd "/Users/user/temp/"
-        //         name "temp"
-        //     };
-        // }
-        //
-        // bind "Super y" {
-        //     LaunchOrFocusPlugin "file:~/.config/zellij/plugins/zellij_forgot.wasm" {
-        //         floating false
-        //     }
-        // }
+        bind "Super Shift e" { EditScrollback; }
 
         bind "Super Alt l" {
-//            Write 0x1B; // escape button
-            Run "lazygit" {
+            // Why: lazygit-helix.nu sends Esc to helix before lazygit,
+            // and :reload-all after lazygit exits.
+            Run "nu" "~/.config/zellij/lazygit-helix.nu" {
                 close_on_exit true
                 floating true
                 x "2%"
@@ -204,11 +175,12 @@ keybinds clear-defaults=true {
                 width "98%"
                 height "98%"
             };
-//            WriteChars "rl";
         }
 
         bind "Super Alt b" {
-            Run "broot" {
+            // Why: broot-paste.nu finds the focused tiled pane, runs broot,
+            // then pastes the selected path into that pane via write-chars --pane-id.
+            Run "nu" "~/.config/zellij/broot-paste.nu" {
                 close_on_exit true
                 floating true
                 x "2%"
