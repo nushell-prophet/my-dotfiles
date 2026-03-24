@@ -356,22 +356,13 @@ const skill_repos = [
     [nushell-skills plugins]
 ]
 
-# Deploy Claude skills from sibling repos into ~/.claude/skills/
-# Expects my-claude-skills and nushell-skills as siblings of this repo (../my-claude-skills, etc.)
-export def install-skills [
-    --base-dir: path # directory containing skill repos (default: parent of this repo)
-    --dry-run # show what would be copied without copying
-] {
-    let base = $base_dir | default ($this_dir | path join '..')
-    let target = '~/.claude/skills' | path expand --no-symlink
-
-    if not $dry_run { mkdir $target }
-
-    for $r in $skill_repos {
+# Collect all available skills from sibling skill repos
+def collect-skills [base: path] {
+    $skill_repos | each {|r|
         let repo_dir = $base | path join $r.repo
         if not ($repo_dir | path exists) {
             print $"(ansi yellow)Skipped:(ansi reset) ($r.repo) not found at ($repo_dir)"
-            continue
+            return []
         }
 
         let src = $repo_dir | path join $r.subpath
@@ -384,16 +375,60 @@ export def install-skills [
             glob ($src | path join '*/skills/*') --no-file
         }
 
-        for $skill in $skill_dirs {
-            let name = $skill | path basename
-            if $dry_run {
-                print $"($r.repo) → ($name)"
-            } else {
-                let dest = $target | path join $name
-                mkdir $dest
-                ^rsync -a --delete $"($skill)/" $"($dest)/"
-                print $"(ansi green)Installed:(ansi reset) ($name) \(($r.repo))"
-            }
+        $skill_dirs | each {|s| {name: ($s | path basename), path: $s, repo: $r.repo} }
+    } | flatten
+}
+
+# Deploy Claude skills from sibling repos into ~/.claude/skills/
+# Expects my-claude-skills and nushell-skills as siblings of this repo (../my-claude-skills, etc.)
+export def install-skills [
+    ...names: string # skill names to install (omit for --all, or use --list to see available)
+    --base-dir: path # directory containing skill repos (default: parent of this repo)
+    --all # install all available skills
+    --list # list available skills without installing
+    --dry-run # show what would be copied without copying
+] {
+    let base = $base_dir | default ($this_dir | path join '..')
+    let skills = collect-skills $base
+
+    if $list {
+        return ($skills | select name repo)
+    }
+
+    if ($names | is-empty) and not $all {
+        print "Specify skill names, or use --all to install everything."
+        print $"Use --list to see available skills."
+        return
+    }
+
+    let to_install = if $all {
+        $skills
+    } else {
+        let unknown = $names | where {|n| $n not-in $skills.name }
+        if ($unknown | is-not-empty) {
+            print $"(ansi red)Unknown skills:(ansi reset) ($unknown | str join ', ')"
+            return
+        }
+        # When a skill exists in both repos, keep the last occurrence
+        # Not: nushell-skills is listed after my-claude-skills in skill_repos,
+        # so its version wins for shared skills
+        $skills | where name in $names
+    }
+
+    let target = '~/.claude/skills' | path expand --no-symlink
+    if not $dry_run { mkdir $target }
+
+    # Deduplicate: last occurrence wins (nushell-skills over my-claude-skills)
+    let to_install = $to_install | reverse | uniq-by name | reverse
+
+    for $skill in $to_install {
+        if $dry_run {
+            print $"($skill.repo) → ($skill.name)"
+        } else {
+            let dest = $target | path join $skill.name
+            mkdir $dest
+            ^rsync -a --delete $"($skill.path)/" $"($dest)/"
+            print $"(ansi green)Installed:(ansi reset) ($skill.name) \(($skill.repo))"
         }
     }
 }
