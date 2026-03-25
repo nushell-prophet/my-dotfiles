@@ -13,13 +13,9 @@
 #   cleanup-paths-not-in-csv - List repo files not tracked in CSV
 #   install-skills           - Deploy Claude skills from sibling skill repos into ~/.claude/skills/
 
-const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv config-gitignore claude-gitignore]
+const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv]
 
-const gitignore_deploys = [
-    [repo_file target_dir];
-    [config-gitignore ~/.config]
-    [claude-gitignore ~/.claude]
-]
+const commit_target_dirs = [~/.config ~/.claude]
 
 export def main [] { }
 
@@ -128,12 +124,7 @@ export def pull-from-machine [
     let paths = assemble-paths
     | where {|i| $i.full-path | path exists }
 
-    let gitignore_targets = $gitignore_deploys
-    | where { ($in.target_dir | path expand --no-symlink | path join '.gitignore') | path exists }
-    | each {|e| {file: $e.repo_file} }
-
     if not $force and (check-dirty-files $paths path-in-repo "repo files") { return }
-    if not $force and (check-dirty-files $gitignore_targets file "repo files") { return }
 
     $paths
     | group-by { $in.path-in-repo | path dirname }
@@ -142,12 +133,6 @@ export def pull-from-machine [
     }
     | flatten
     | each { cp $in.full-path $in.path-in-repo }
-
-    # Pull .gitignore files from config directories
-    $gitignore_deploys | each {|entry|
-        let src = ($entry.target_dir | path expand --no-symlink | path join '.gitignore')
-        if ($src | path exists) { cp $src $entry.repo_file }
-    }
 }
 
 # Show diff preview for a list of paths (repo → machine)
@@ -183,35 +168,10 @@ export def push-to-machine [
 
     if $dry_run {
         show-push-diff $paths
-        $gitignore_deploys | each {|entry|
-            let target_dir = $entry.target_dir | path expand --no-symlink
-            if not ($entry.repo_file | path exists) { return }
-            let git_dir = $target_dir | path join '.git'
-            if not ($git_dir | path exists) {
-                print $"\n=== ($target_dir) ==="
-                print $"(ansi yellow)→ git init will be run(ansi reset)"
-            }
-            let target_file = $target_dir | path join '.gitignore'
-            if ($target_file | path exists) {
-                let diff = ^git diff --no-index $target_file $entry.repo_file | complete
-                if ($diff.stdout | is-not-empty) {
-                    print $"\n=== ($target_file) ==="
-                    $diff.stdout | lines | skip 4 | str join (char newline) | print
-                }
-            } else {
-                print $"\n=== ($target_file) ==="
-                print $"(ansi yellow)→ NEW FILE will be created(ansi reset)"
-            }
-        }
         return
     }
 
-    let gitignore_targets = $gitignore_deploys
-    | each {|e| {file: ($e.target_dir | path expand --no-symlink | path join '.gitignore')} }
-    | where { $in.file | path exists }
-
     if not $force and (check-dirty-files $paths full-path "destination files") { return }
-    if not $force and (check-dirty-files $gitignore_targets file "destination files") { return }
 
     $paths
     | group-by { $in.full-path | path dirname }
@@ -237,43 +197,31 @@ export def push-to-machine [
         }
     }
 
-    # Initialize git repos and deploy .gitignore for config directories
-    $gitignore_deploys | each {|entry|
-        let target_dir = $entry.target_dir | path expand --no-symlink
-        if not ($entry.repo_file | path exists) { return }
+    # Initialize git repos for config directories
+    $commit_target_dirs | each {|target_dir|
+        let target_dir = $target_dir | path expand --no-symlink
         if not ($target_dir | path exists) {
             if $create_dirs { mkdir $target_dir } else { return }
         }
-        let git_dir = $target_dir | path join '.git'
-        if not ($git_dir | path exists) { ^git init $target_dir }
-        cp $entry.repo_file ($target_dir | path join '.gitignore')
+        if not ($target_dir | path join '.git' | path exists) { ^git init $target_dir }
     }
 
     if $commit_changes {
-        $gitignore_deploys | each {|entry|
-            let target_dir = $entry.target_dir | path expand --no-symlink
+        $commit_target_dirs | each {|target_dir|
+            let target_dir = $target_dir | path expand --no-symlink
             if not ($target_dir | path join '.git' | path exists) { return }
 
-            # Only add files that were actually pushed, not everything in the directory
             let pushed_files = $paths
             | where { $in.full-path | str starts-with $"($target_dir)/" }
             | get full-path
 
-            # Not appending .gitignore when no config files were pushed —
-            # .gitignore-only commits would be noise with no corresponding changes
             if ($pushed_files | is-empty) { return }
 
-            let gitignore = $target_dir | path join '.gitignore'
-            let files_to_add = if ($gitignore | path exists) {
-                $pushed_files | append $gitignore
-            } else {
-                $pushed_files
-            }
-
-            $files_to_add | each { ^git -C $target_dir add $in }
-            let status = ^git -C $target_dir status --porcelain | complete
-            if ($status.stdout | str trim | is-not-empty) {
-                ^git -C $target_dir commit -m "push-to-machine"
+            $pushed_files | each { ^git -C $target_dir add $in }
+            ^git -C $target_dir diff --cached --quiet ...$pushed_files
+            | complete
+            | if $in.exit_code != 0 {
+                ^git -C $target_dir commit -m "push-to-machine" -- ...$pushed_files
             }
         }
     }
