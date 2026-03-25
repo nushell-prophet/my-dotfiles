@@ -1,3 +1,6 @@
+# auto generated config via
+# open config.toml -r | str replace "[editor.soft-wrap]\nenable = true" "[editor.soft-wrap]\nenable = false"
+# theme = "tokyonight"
 theme = "carbonfox"
 
 [editor]
@@ -10,19 +13,13 @@ insert-final-newline = true
 line-number = "relative"
 mouse = false
 preview-completion-insert = true
-shell = [
-    "nu",
-    "--login",
-    "--no-newline",
-    "--stdin",
-    "-c",
-]
+shell = ["nu", "--login", "--no-newline", "--stdin", "-c"]
 
 [editor.whitespace.render]
-nbsp = "none"
-newline = "none"
-nnbsp = "none"
-space = "none"
+nbsp = "all"
+newline = "all"
+nnbsp = "all"
+space = "all"
 tab = "all"
 
 [editor.cursor-shape]
@@ -31,100 +28,77 @@ normal = "block"
 select = "underline"
 
 [editor.indent-guides]
-character = "╎"
+character = "╎" # Some characters that work well: "▏", "┆", "┊", "⸽"
 render = true
 skip-levels = 1
 
 [editor.soft-wrap]
 enable = false
 max-indent-retain = 0
-max-wrap = 25
+max-wrap = 25 # increase value to reduce forced mid-word wrapping
 
 [editor.lsp]
 auto-signature-help = false
 
-[editor.statusline]
-left = [
-    "mode",
-    "spinner",
-    "file-name",
-    "total-line-numbers",
-    "file-encoding",
-]
-center = []
-right = [
-    "selections",
-    "primary-selection-length",
-    "position",
-    "position-percentage",
-    "spacer",
-    "diagnostics",
-    "workspace-diagnostics",
-    "version-control",
-]
-
 [keys.normal]
-y = [
-    "yank_main_selection_to_clipboard",
-    "yank",
-]
+# Use system clipboard
+y = ["yank_main_selection_to_clipboard", "yank"]
 p = "paste_clipboard_after"
 P = "paste_clipboard_before"
-d = [
-    "yank_main_selection_to_clipboard",
-    "delete_selection",
-]
-X = [
-    "extend_line_up",
-    "extend_to_line_bounds",
-]
-C-j = [
-    "extend_to_line_bounds",
-    "delete_selection",
-    "paste_after",
-]
-C-k = [
-    "extend_to_line_bounds",
-    "delete_selection",
-    "move_line_up",
-    "paste_before",
-]
+d = ["yank_main_selection_to_clipboard", "delete_selection"]
+X = ["extend_line_up", "extend_to_line_bounds"]
+C-j = ["extend_to_line_bounds", "delete_selection", "paste_after"]
+C-k = ["extend_to_line_bounds", "delete_selection", "move_line_up", "paste_before"]
 C-right = "move_next_word_start"
 C-left = "move_prev_word_end"
 tab = "move_parent_node_end"
 S-tab = "move_parent_node_start"
-A-l = [
-    ":w",
-    ":new",
-    ":insert-output lazygit",
-    ":buffer-close!",
-    ":reload",
-]
+A-l = [":w", ":new", ":insert-output lazygit", ":buffer-close!", ":reload"]
 
+'C-w' = ":write!"
+'C-r' = ":reload"
+'C-S-g' = ":pipe-to git add '%{buffer_name}'; git commit -m 'version %{buffer_name}' '%{buffer_name}'; sleep 0.8sec"
+
+[keys.insert]
+# j = { j = "normal_mode" }
+C-right = "move_next_word_start"
+C-left = "move_prev_word_end"
+S-tab = "move_parent_node_start"
+up = "no_op"
+down = "no_op"
+left = "no_op"
+right = "no_op"
+pageup = "no_op"
+pagedown = "no_op"
+home = "no_op"
+end = "no_op"
+"A-'" = [":append-output '$\"\"'", "collapse_selection"] 
+
+[keys.select]
+y = ["yank_main_selection_to_clipboard", "yank"]
+p = "paste_clipboard_after"
+P = "paste_clipboard_before"
+d = ["yank_main_selection_to_clipboard", "delete_selection"]
+tab = "extend_parent_node_end"
+S-tab = "extend_parent_node_start"
+
+[editor.statusline]
+left = ["mode", "spinner", "file-name", "total-line-numbers", "file-encoding"]
+center = []
+right = ["selections", "primary-selection-length", "position", "position-percentage", "spacer", "diagnostics", "workspace-diagnostics", "version-control"]
+
+# there is one more section with 'keys.select."+"'
 [keys.normal."+"]
-w = ":set soft-wrap.enable false"
-W = ":set soft-wrap.enable true"
-c = """
-:pipe #correct english→
-^claude -p r###########'
-Correct grammar in the text. Respond only with corrected text.
-<text>%{selection}</text>'###########
-"""
-d = ":pipe word-diff apply"
-n = "@%s"
-t = ':pipe $"<user>\n($in)</user>"'
-s = '''
-:pipe-to #xml-coordinate-references→
-r#'<selected-text file="%sh{realpath %{buffer_name}}" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
-'''
-A = '''
+a = '''
 :append-output #append-commented-results→
 nu -c r###########'%{selection}'########### o+e>| lines
 | each { $"# => ($in)"}
 | if r###########'%{selection}'########### ends-with "\n" {} else {prepend ''}
 | to text
 '''
-a = '''
+
+
+A = '''
 :append-output #append-abreviated-results→
 let lines = nu -c r###########'%{selection}'########### o+e>| lines
 
@@ -139,33 +113,47 @@ $lines
 | to text
 '''
 
-[keys.insert]
-C-right = "move_next_word_start"
-C-left = "move_prev_word_end"
-S-tab = "move_parent_node_start"
-up = "no_op"
-down = "no_op"
-left = "no_op"
-right = "no_op"
-pageup = "no_op"
-pagedown = "no_op"
-home = "no_op"
-end = "no_op"
-"A-'" = [
-    ":append-output '$\"\"'",
-    "collapse_selection",
-]
+c = '''
+:pipe #correct english→
+^claude -p r###########'
+Correct grammar in the text. Respond only with corrected text.
+<text>%{selection}</text>'###########
+'''
 
-[keys.select]
-y = [
-    "yank_main_selection_to_clipboard",
-    "yank",
-]
-p = "paste_clipboard_after"
-P = "paste_clipboard_before"
-d = [
-    "yank_main_selection_to_clipboard",
-    "delete_selection",
-]
-tab = "extend_parent_node_end"
-S-tab = "extend_parent_node_start"
+C = '''
+:pipe #remove-commented-output
+lines | where $it !~ "^# =>" | to text
+'''
+
+d = ":pipe word-diff apply"
+
+e = '''
+:pipe dotnu-embeds-update.nu
+'''
+
+f = '''
+:pipe #flatten-to-nuon
+nu -c r###########'%{selection}'########### o+e>| to nuon
+'''
+
+g = "@<C-w><C-S-g><C-r>"
+
+n = ":append-output date now | format date %%J-%%Q" # timestamp 
+p = ":pipe pandoc --from markdown --to markdown"
+t = ':pipe $"<user>\n($in)</user>"'
+
+s = [ '''
+:pipe-to #xml-coordinate-references→
+r#'<selected-text file="%sh{realpath %{buffer_name}}" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
+''', ":write" ]
+
+v = '''
+:pipe-to #voice
+let input = $in
+use ~/git/kokoro/kokoro1.nu "kokoro pipe-to-file" 
+$input | kokoro pipe-to-file
+'''
+
+w = ":set soft-wrap.enable false"
+W = ":set soft-wrap.enable true"
+
