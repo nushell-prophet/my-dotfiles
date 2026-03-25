@@ -227,6 +227,7 @@ export def push-to-machine [
     # Create symlinks for PATH-accessible commands
     [[target link];
      ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
+     ['~/.config/zellij/hx-scrollback.nu' '~/.local/bin/hx-scrollback']
     ] | each {|s|
         let target = $s.target | path expand
         let link = $s.link | path expand --no-symlink
