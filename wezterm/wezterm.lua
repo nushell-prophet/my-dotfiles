@@ -168,6 +168,11 @@ config.skip_close_confirmation_for_processes_named = {
 config.mouse_wheel_scrolls_tabs = false
 config.enable_kitty_keyboard = true
 
+-- When set to true (the default), wezterm will configure
+-- the SSH_AUTH_SOCK environment variable for panes spawned in
+-- the local domain.
+config.mux_enable_ssh_agent = false
+
 -- ============================================================================
 -- KEY BINDINGS
 -- ============================================================================
