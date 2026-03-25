@@ -1,12 +1,11 @@
 #!/usr/bin/env nu
 
-let target = (
-    zellij action list-panes --state --json
-    | from json
-    | where is_focused == true and is_floating == false
+let panes = zellij action list-panes --state --json | from json
+let me = $panes | where is_floating == true | first
+let target = $panes
+    | where is_focused == true and is_floating == false and tab_id == $me.tab_id
     | get id
     | first
-)
 
 let config_path = (
     ['conf', 'select']
