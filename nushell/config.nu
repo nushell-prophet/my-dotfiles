@@ -58,6 +58,10 @@ $env.config.cursor_shape.vi_normal = "Underscore"
 # Safety Settings
 $env.config.rm.always_trash = false
 
+# shell_integration.osc8 (bool): Generate clickable links in `ls` output.
+# Terminal can launch files in associated applications.
+$env.config.shell_integration.osc8 = false
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ CORE KEYBINDINGS
 # ═══════════════════════════════════════════════════════════════════════════════
