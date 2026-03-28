@@ -8,8 +8,9 @@ $env.config.hooks = {
                     open $nu.history-path
                     | query db $"UPDATE history SET command_line = command_line || ' # exit:($exit_code)' WHERE id = \(SELECT MAX\(id\) FROM history WHERE session_id = ($sid) AND command_line NOT LIKE '% # exit:%'\)"
                 } else {
+                    # Strip # exit: from all entries matching the last command
                     open $nu.history-path
-                    | query db $"UPDATE history SET command_line = SUBSTR\(command_line, 1, INSTR\(command_line, ' # exit:'\) - 1\) WHERE id = \(SELECT MAX\(id\) FROM history WHERE session_id = ($sid) AND command_line LIKE '% # exit:%'\)"
+                    | query db $"UPDATE history SET command_line = SUBSTR\(command_line, 1, INSTR\(command_line, ' # exit:'\) - 1\) WHERE command_line LIKE \(SELECT command_line FROM history WHERE id = \(SELECT MAX\(id\) FROM history WHERE session_id = ($sid)\)\) || ' # exit:%'"
                 }
             }
         }
