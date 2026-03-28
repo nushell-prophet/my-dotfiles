@@ -1,5 +1,14 @@
 $env.config.hooks = {
-    pre_prompt: [{ null }] # run before the prompt is shown
+    pre_prompt: [
+        {
+            let exit_code = $env.LAST_EXIT_CODE
+            if $exit_code >= 1 {
+                let sid = history session
+                open $nu.history-path
+                | query db $"UPDATE history SET command_line = command_line || ' # exit:($exit_code)' WHERE id = \(SELECT MAX\(id\) FROM history WHERE session_id = ($sid) AND command_line NOT LIKE '% # exit:%'\)"
+            }
+        }
+    ]
     pre_execution: [{ null }] # run before the repl input is run
     env_change: {
         PWD: [
