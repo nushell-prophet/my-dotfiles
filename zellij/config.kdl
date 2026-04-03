@@ -7,6 +7,75 @@
 //   - Never lowercase modifiers in bind strings: "Super alt" breaks replacement
 
 keybinds clear-defaults=true {
+    shared_among "normal" "locked" {
+        bind "Super Shift +" { Resize "Increase"; }
+        bind "Super Shift -" { Resize "Decrease"; }
+        bind "Super Shift =" { Resize "Increase"; }
+        bind "Super [" { PreviousSwapLayout; }
+        bind "Super ]" { NextSwapLayout; }
+        bind "Super f" { ToggleFloatingPanes; }
+        bind "Super h" { MoveFocus "left"; }
+        bind "Super Shift h" { GoToPreviousTab; }
+        bind "Super Shift l" { GoToNextTab; }
+        bind "Super i" { MoveTab "left"; }
+        bind "Super o" { MoveTab "right"; }
+        bind "Super j" { MoveFocus "down"; }
+        bind "Super k" { MoveFocus "up"; }
+        bind "Super l" { MoveFocus "right"; }
+        bind "Super n" { NewPane; }
+        bind "Super t" { NewTab; }
+        bind "Super w" { CloseFocus; }
+        bind "Super 1" { GoToTab 1; }
+        bind "Super 2" { GoToTab 2; }
+        bind "Super 3" { GoToTab 3; }
+        bind "Super 4" { GoToTab 4; }
+        bind "Super 5" { GoToTab 5; }
+        bind "Super 6" { GoToTab 6; }
+        bind "Super 7" { GoToTab 7; }
+        bind "Super 8" { GoToTab 8; }
+        bind "Super 9" { GoToTab 9; }
+
+        bind "PageDown" { PageScrollDown; }
+        bind "PageUp" { PageScrollUp; }
+        bind "Shift PageDown" { ScrollDown; }
+        bind "Shift PageUp" { ScrollUp; }
+
+        bind "Super m" { ToggleFocusFullscreen; }
+        bind "Super Shift e" { EditScrollback; }
+
+        bind "Super Alt l" {
+            // Why: lazygit-helix.nu sends Esc to helix before lazygit,
+            // and :reload-all after lazygit exits.
+            Run "nu" "~/.config/zellij/lazygit-helix.nu" {
+                close_on_exit true
+                floating true
+                x "2%"
+                y "2%"
+                width "98%"
+                height "98%"
+            };
+        }
+
+        bind "Super Alt b" {
+            // Why: broot-paste.nu finds the focused tiled pane, runs broot,
+            // then pastes the selected path into that pane via write-chars --pane-id.
+            Run "nu" "~/.config/zellij/broot-paste.nu" {
+                close_on_exit true
+                floating true
+                x "2%"
+                y "2%"
+                width "98%"
+                height "98%"
+            };
+        }
+
+        bind "Super e" {
+            Run "todo-hx" {
+                close_on_exit true
+                name "new-todo"
+            };
+        }
+    }
     locked {
         bind "Ctrl Shift g" { SwitchToMode "normal"; }
     }
@@ -138,76 +207,6 @@ keybinds clear-defaults=true {
                 move_to_focused_tab true
             };
             SwitchToMode "Normal"
-        }
-    }
-    shared_among "normal" "locked" {
-        bind "Super Shift +" { Resize "Increase"; }
-        bind "Super Shift -" { Resize "Decrease"; }
-        bind "Super Shift =" { Resize "Increase"; }
-        bind "Super [" { PreviousSwapLayout; }
-        bind "Super ]" { NextSwapLayout; }
-        bind "Super f" { ToggleFloatingPanes; }
-        bind "Super h" { MoveFocus "left"; }
-        bind "Super Shift h" { GoToPreviousTab; }
-        bind "Super i" { MoveTab "left"; }
-        bind "Super j" { MoveFocus "down"; }
-        bind "Super k" { MoveFocus "up"; }
-        bind "Super l" { MoveFocus "right"; }
-        bind "Super Shift l" { GoToNextTab; }
-        bind "Super n" { NewPane; }
-        bind "Super t" { NewTab; }
-        bind "Super o" { MoveTab "right"; }
-        bind "Super w" { CloseFocus; }
-        bind "Super 1" { GoToTab 1; }
-        bind "Super 2" { GoToTab 2; }
-        bind "Super 3" { GoToTab 3; }
-        bind "Super 4" { GoToTab 4; }
-        bind "Super 5" { GoToTab 5; }
-        bind "Super 6" { GoToTab 6; }
-        bind "Super 7" { GoToTab 7; }
-        bind "Super 8" { GoToTab 8; }
-        bind "Super 9" { GoToTab 9; }
-
-        bind "PageDown" { PageScrollDown; }
-        bind "PageUp" { PageScrollUp; }
-        bind "Shift PageDown" { ScrollDown; }
-        bind "Shift PageUp" { ScrollUp; }
-
-        bind "Super m" { ToggleFocusFullscreen; }
-        bind "Super Shift e" { EditScrollback; }
-
-        bind "Super Alt l" {
-            // Why: lazygit-helix.nu sends Esc to helix before lazygit,
-            // and :reload-all after lazygit exits.
-            Run "nu" "~/.config/zellij/lazygit-helix.nu" {
-                close_on_exit true
-                floating true
-                x "2%"
-                y "2%"
-                width "98%"
-                height "98%"
-            };
-        }
-
-        bind "Super Alt b" {
-            // Why: broot-paste.nu finds the focused tiled pane, runs broot,
-            // then pastes the selected path into that pane via write-chars --pane-id.
-            Run "nu" "~/.config/zellij/broot-paste.nu" {
-                close_on_exit true
-                floating true
-                x "2%"
-                y "2%"
-                width "98%"
-                height "98%"
-            };
-        }
-
-        bind "Super e" {
-            Run "todo-hx" {
-                close_on_exit true
-//                cwd "tasks"
-                name "new-todo"
-            };
         }
     }
     shared_except "locked" "renametab" "renamepane" {
