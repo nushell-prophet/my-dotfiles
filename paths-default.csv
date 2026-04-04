@@ -18,6 +18,7 @@ full-path
 ~/.config/nushell/autoload/zzz_ignore_vars.nu
 ~/.config/nushell/config.nu
 ~/.config/nushell/env.nu
+~/.config/nushell/toolkit.nu
 ~/.config/wezterm/wezterm.lua
 ~/.config/zellij/broot-paste.nu
 ~/.config/zellij/config.kdl
