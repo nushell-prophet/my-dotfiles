@@ -586,24 +586,6 @@ $env.config.keybindings ++= [
     }
 ]
 
-# ───────────────────────────────────────────────────────────────────────────────
-# String Interpolation Template
-# Shortcut: Alt+Shift+'
-# Usage: Inserts $"" template with cursor positioned inside quotes
-# ───────────────────────────────────────────────────────────────────────────────
-
-$env.config.keybindings ++= [
-    {
-        name: paste_interpolation
-        modifier: alt_shift
-        keycode: "char_'"
-        mode: [emacs]
-        event: {
-            send: executehostcommand
-            cmd: r#'commandline edit --insert '$""'; commandline set-cursor ((commandline get-cursor) - 1)'#
-        }
-    }
-]
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Smart Pipe Completions Menu - Intelligent command continuation
