@@ -205,40 +205,42 @@ $env.config.menus ++= [
 # Note: $env.ignore-env-vars is initialized at the end of this configuration file
 # ───────────────────────────────────────────────────────────────────────────────
 
+# Not using nushell menu because `scope variables` inside a menu source closure
+# only sees closure-local scope since ~0.101 (nushell/nushell#14071).
+# Using `executehostcommand` + fzf instead — runs in REPL scope, sees all variables.
 $env.config.keybindings ++= [
     {
         name: vars_menu
         modifier: alt
         keycode: char_o
         mode: [emacs]
-        event: {send: menu name: vars_menu}
+        event: {
+            send: executehostcommand
+            cmd: (vars-menu-source)
+        }
     }
 ]
 
-$env.config.menus ++= [
-    {
-        name: vars_menu
-        only_buffer_difference: true
-        marker: "# "
-        type: {
-            layout: list
-            page_size: 10
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
-        source: {|buffer position|
-            scope variables
-            # Filter out variables captured at config initialization (see end of file)
+def vars-menu-source [] {
+    let closure = {
+        let selected = scope variables
             | where name not-in ($env.ignore-env-vars? | default [])
             | sort-by var_id -r
-            | where name =~ $buffer
-            | each {|it| {value: $it.name description: $it.type} }
+            | each { $"($in.name)\t($in.type)" }
+            | str join (char nul)
+            | ^fzf --read0 --no-sort --layout=reverse --height=40% --delimiter="\t"
+            | decode utf-8
+            | str trim
+            | split row "\t"
+            | first
+
+        if ($selected | is-not-empty) {
+            commandline edit --insert $selected
         }
     }
-]
+
+    view source $closure | lines | skip | drop | to text
+}
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Convert Command Line to Raw String Literal
