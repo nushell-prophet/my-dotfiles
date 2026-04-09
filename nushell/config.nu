@@ -119,6 +119,10 @@ $env.config.keybindings ++= [
     }
 ]
 
+# ───────────────────────────────────────────────────────────────────────────────
+# Navigate history
+# Shortcut: Alt+Up/down
+# ───────────────────────────────────────────────────────────────────────────────
 $env.config.keybindings ++= [
     {
         name: previous_history_item
@@ -129,10 +133,6 @@ $env.config.keybindings ++= [
     }
 ]
 
-# ───────────────────────────────────────────────────────────────────────────────
-# Navigate history
-# Shortcut: Alt+Up/down
-# ───────────────────────────────────────────────────────────────────────────────
 $env.config.keybindings ++= [
     {
         name: next_history_item
@@ -188,8 +188,8 @@ $env.config.menus ++= [
             | where $it =~ $"\(?i)($buffer_esc)"
             | compact --empty
             | each {
-                if ($in has ' ') {
-                    $'"($in)"'
+                if $in has (char space) {
+                    $'"($in)"' # enclose entry into quotes
                 } else { }
                 | {value: $in}
             }
