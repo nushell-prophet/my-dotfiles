@@ -7,18 +7,14 @@
 #
 # 📍 Quick Navigation:
 #   • Basic Configuration
-#   • Keyboard Shortcuts
 #   • Core Keybindings
 #   • Menu Systems
-#   • FZF Integration
+#   • FZF Integration Suite
 #   • Tool Integrations
-#   • External Dependencies
 #
 # 🎯 Dependencies Required:
-#   - carapace (completions)
 #   - fzf (history search)
 #   - broot (file browser)
-#   - zellij (terminal multiplexer)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -422,10 +418,10 @@ def 'fzf-hist-current-commandline-prefix-replace' [] {
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
-# FZF Context-Aware Session Search
+# FZF Related Command Search
 # Shortcut: Alt+Ctrl+F
-# Usage: Search sessions that contain similar commands to current input
-# Features: Context awareness, session correlation, command appending
+# Usage: Find history entries that contain any segment of the current commandline
+# Features: Substring matching across all history, command appending
 # ───────────────────────────────────────────────────────────────────────────────
 
 $env.config.keybindings ++= [
