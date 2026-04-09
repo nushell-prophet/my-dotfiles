@@ -417,65 +417,6 @@ def 'fzf-hist-current-commandline-prefix-replace' [] {
     view source $closure | lines | skip | drop | to text
 }
 
-# ───────────────────────────────────────────────────────────────────────────────
-# FZF Related Command Search
-# Shortcut: Alt+Ctrl+F
-# Usage: Find history entries that contain any segment of the current commandline
-# Features: Substring matching across all history, command appending
-# ───────────────────────────────────────────────────────────────────────────────
-
-$env.config.keybindings ++= [
-    {
-        name: fzf_history_sessions
-        modifier: alt_control
-        keycode: char_f
-        mode: [emacs vi_normal vi_insert]
-        event: {
-            send: executehostcommand
-            cmd: (fzf-hist-with-sessions-that-include-current-entry)
-        }
-    }
-]
-
-def 'fzf-hist-with-sessions-that-include-current-entry' [] {
-    let closure = {
-        open $nu.history-path
-        | query db -p [
-            (commandline | split row -r $';(char nl)?' | str trim | compact --empty | to json)
-        ] "
-            WITH json_values AS (
-                SELECT value
-                FROM json_each(?)
-            )
-            SELECT DISTINCT command_line
-            FROM history AS session_history
-            WHERE EXISTS (
-                SELECT 1
-                FROM json_values
-                WHERE session_history.command_line LIKE '%' || json_values.value || '%'
-            )
-        "
-        | get command_line
-        | each { str replace -a '    ' "\u{200B}" }
-        | str join (char nul)
-        | ^fzf ...(
-            $env.FZF_HISTORY_BASE ++ [
-                '--no-sort'
-            ]
-        )
-        | decode utf-8
-        | str trim --char (char nl)
-        | str replace -ar (char nul) $';(char nl)'
-        | str replace -r $';(char nl)$' ''
-        | str replace -a "\u{200B}" '    '
-        | str trim
-        | commandline edit -a $in
-        | commandline set-cursor -e
-    }
-
-    view source $closure | lines | skip | drop | to text
-}
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ TOOL INTEGRATIONS
 # ═══════════════════════════════════════════════════════════════════════════════
