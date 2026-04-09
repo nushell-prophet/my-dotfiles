@@ -2,25 +2,25 @@
 
 def create_left_prompt [] {
     let dir = do -i { pwd | path relative-to $nu.home-dir }
-    | match $in {
-        null => (pwd)
-        '' => '~'
-        $relative_pwd => ([~ $relative_pwd] | path join)
-    }
+        | match $in {
+            null => (pwd)
+            '' => '~'
+            $relative_pwd => ([~ $relative_pwd] | path join)
+        }
 
     let path_color = (if (is-admin) { ansi red_bold } else { ansi green_italic })
     let separator_color = (if (is-admin) { ansi light_red_bold } else { ansi white })
     let path_segment = $"($path_color)($dir)(ansi reset)"
-    | str replace --all (char path_sep) $"($separator_color)(char path_sep)($path_color)"
+        | str replace --all (char path_sep) $"($separator_color)(char path_sep)($path_color)"
 
     let git_status = git status --branch --porcelain
-    | complete
-    | if $in.exit_code == 0 {
-        $in.stdout
-        | lines
-        | first
-        | str replace -r '^## ' ''
-    } else { '' }
+        | complete
+        | if $in.exit_code == 0 {
+            $in.stdout
+            | lines
+            | first
+            | str replace -r '^## ' ''
+        } else { '' }
 
     $'(char nl)(ansi grey)┏ (ansi reset)($path_segment) ($git_status)'
     | append $'(ansi grey)┗━(ansi reset)'
