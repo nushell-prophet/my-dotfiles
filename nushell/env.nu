@@ -60,8 +60,6 @@ $env.ENV_CONVERSIONS = {
     }
 }
 
-$env.XDG_DATA_HOME = ($env.HOME | path join ".local" "share")
-$env.XDG_CONFIG_HOME = ($env.HOME | path join ".config")
 $env.XDG_STATE_HOME = ($env.HOME | path join ".local" "state")
 $env.XDG_CACHE_HOME = ($env.HOME | path join ".cache")
 $env.NUPM_HOME = ($env.XDG_DATA_HOME | path join "nupm")
