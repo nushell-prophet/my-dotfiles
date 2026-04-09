@@ -85,7 +85,6 @@ $env.PATH = (
     | prepend [
         ($env.NUPM_HOME | path join "scripts")
         ($env.NUPM_HOME | path join "modules")
-        '/opt/homebrew/opt/curl/bin'
         '~/.docker/bin'
         '~/.cargo/bin'
         '~/miniconda3/bin'
