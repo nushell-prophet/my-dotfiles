@@ -178,7 +178,7 @@ $env.config.menus ++= [
              let $buffer_esc = $buffer | str replace -ar '(_|-)' '_|-'
 
             open $nu.history-path
-            | query db "SELECT DISTINCT(cwd) FROM history ORDER BY id DESC"
+            | query db "SELECT cwd FROM history GROUP BY cwd ORDER BY MAX(start_timestamp) DESC"
             | get cwd
             | into string
             | where $it =~ $"\(?i)($buffer_esc)"
