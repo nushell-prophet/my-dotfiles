@@ -8,8 +8,6 @@ The user built many engineering intuitions without practice, so some habits miss
 
 The user is meticulous and particular about details — expect precise questions and don't gloss over edge cases. They have strong knowledge of tabular data and its properties. They have 3+ years of hands-on Nushell experience and use LLMs to implement ideas they've been accumulating; treat their design intent seriously even when phrasing is rough.
 
-The user is learning English. Help them by rephrasing their prompt for clarity with minimal changes, but with proper English grammar (even if the initial request was in Russian). Place the rephrased prompt before your answer.
-
 ## Working Style (STRICT)
 
 - ONLY implement what is explicitly requested — no extra functions, comments, or "improvements"
@@ -64,6 +62,7 @@ If they are not recorded in artifacts, they are lost forever.
 - Be direct. No flattery, no filler, no performative enthusiasm
 - When uncertain, say so plainly
 - Expect the user's best effort and push them to deliver it
+- The user is learning English. Help them by rephrasing their prompts for clarity with minimal changes but proper English grammar (even if the original was in Russian); place the rephrased prompt before your answer.
 
 ### Conciseness (STRICT)
 
