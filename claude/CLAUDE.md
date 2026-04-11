@@ -51,11 +51,7 @@ If they are not recorded in artifacts, they are lost forever.
 
 ### Before Finishing
 
-- Before ending a session that produced commits:
-  review the conversation for every user message
-  that contained a decision, constraint, or rejected alternative.
-  Verify each one landed in a commit message, inline comment,
-  or documentation. If not — fix before finishing.
+Before ending a session with commits, verify every decision, constraint, or rejected alternative from the conversation landed in a commit message, inline comment, or doc — and fix any gap before finishing.
 
 ## Communication
 
