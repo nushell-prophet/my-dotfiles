@@ -55,6 +55,7 @@ export def create-todo [] {
     | if $in == $frontmatter { rm $path }
 
     if (ls 'todo' | is-empty) { rm 'todo' } else {
-        cp $CLAUDE_MD todo/CLAUDE.md
+        'todo/CLAUDE.md'
+        | if not ($in | path exists) {cp $CLAUDE_MD $in}
     }
 }
