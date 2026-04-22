@@ -257,8 +257,9 @@ local quick_select_patterns = {
   -- jj change IDs (use k-z alphabet to avoid forming words)
   "\\b[k-z]{8,12}\\b",
 
-  -- Nushell error paths (like ╭─[/path/to/file.nu:1946:63])
-  "─\\[(.*\\:\\d+\\:\\d+)\\]",
+  -- file:line:col (rg --vimgrep, nushell table rows, stack traces,
+  -- nushell error headers like ╭─[/path/to/file.nu:1946:63])
+  "[^\\s│]+:\\d+:\\d+",
 
   -- Table patterns
   -- $env.config.table.mode = "default"
