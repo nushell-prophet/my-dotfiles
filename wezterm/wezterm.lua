@@ -266,7 +266,7 @@ local quick_select_patterns = {
   -- $env.config.table.header_on_separator = true
   -- $env.config.footer_mode = "Always"
   "(?<=─|╭|┬)([a-zA-Z0-9 _%.-]+?)(?=─|╮|┬)", -- Headers
-  "(?<=│ )([a-zA-Z0-9 _.-]+?)(?= │)", -- Column values
+  "(?<=│ )([^│]+?)(?= │)", -- Column values
 
   -- File paths (stops at ~; strips trailing punctuation like . , ; : via lookbehind)
   "/[^/\\s│~]+(?:/[^/\\s│~]+)*(?<![.,;:!?)\\]>])",
