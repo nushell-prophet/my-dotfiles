@@ -469,33 +469,33 @@ def broot-source [] {
         let pos = commandline get-cursor
 
         let element = ast --flatten $cl
-        | flatten
-        | where start <= $pos and end >= $pos
-        | get content.0 -o
-        | default ''
+            | flatten
+            | where start <= $pos and end >= $pos
+            | get content.0 -o
+            | default ''
 
         let path_exp = $element
-        | str trim -c '"'
-        | str trim -c "'"
-        | str trim -c '`'
-        | if $in =~ '^~' { path expand } else { }
-        | if ($in | path exists) { } else { '.' }
+            | str trim -c '"'
+            | str trim -c "'"
+            | str trim -c '`'
+            | if $in =~ '^~' { path expand } else { }
+            | if ($in | path exists) { } else { '.' }
 
         let config_path = $env.XDG_CONFIG_HOME?
-        | default '~/.config'
-        | path join broot '{conf,select}.hjson'
-        | str expand
-        | path expand
-        | str join ';'
+            | default '~/.config'
+            | path join broot '{conf,select}.hjson'
+            | str expand
+            | path expand
+            | str join ';'
 
         let broot_path = ^broot $path_exp --conf $config_path
-        | path expand
+            | path expand
 
         let rel_path = try {
             $broot_path
             | path relative-to (pwd)
         } catch { $broot_path }
-        | if ' ' in $in { $"`($in)`" } else { }
+            | if ' ' in $in { $"`($in)`" } else { }
 
         if $path_exp == '.' {
             commandline edit --insert $rel_path
@@ -522,7 +522,6 @@ $env.config.keybindings ++= [
         event: {send: CtrlD}
     }
 ]
-
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Smart Pipe Completions Menu - Intelligent command continuation

@@ -57,7 +57,7 @@ export def "main history backup" []: nothing -> nothing {
     date now
     | format date '%J_%Q'
     | [$hist_backups_dir $in]
-    | path join 
+    | path join
     | mkdir $in
 
     # Force WAL data into main database before backup

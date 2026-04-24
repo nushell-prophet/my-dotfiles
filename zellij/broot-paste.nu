@@ -8,7 +8,7 @@ let target = $panes
     | first
 
 let config_path = (
-    ['conf', 'select']
+    ['conf' 'select']
     | each { $"($env.HOME)/.config/broot/($in).hjson" }
     | str join ';'
 )

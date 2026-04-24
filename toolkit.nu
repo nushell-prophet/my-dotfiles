@@ -35,7 +35,7 @@ def has-uncommitted-changes [path: path] {
 }
 
 # Check paths for uncommitted changes, print error if found. Returns true if dirty.
-def check-dirty-files [paths: table, field: string, context: string] {
+def check-dirty-files [paths: table field: string context: string] {
     let dirty = $paths | where { has-uncommitted-changes ($in | get $field) }
     if ($dirty | is-not-empty) {
         print $"(ansi red)Error: The following ($context) have uncommitted changes:(ansi reset)"
@@ -85,14 +85,14 @@ def open-configs [paths_file: string = 'paths-default.csv'] {
 
         # Glob from machine (for pull) and repo (for push when machine dir missing)
         let from_machine = glob $expanded --no-dir
-        | each {|f| {full-path: $f path-in-repo: (derive-repo-path $f)} }
+            | each {|f| {full-path: $f path-in-repo: (derive-repo-path $f)} }
 
         let from_repo = glob $repo_pattern --no-dir
-        | each {|f|
-            let repo_path = $f | path relative-to (pwd)
-            let rel = $repo_path | path relative-to $repo_base
-            {path-in-repo: $repo_path full-path: ($machine_base | path join $rel)}
-        }
+            | each {|f|
+                let repo_path = $f | path relative-to (pwd)
+                let rel = $repo_path | path relative-to $repo_base
+                {path-in-repo: $repo_path full-path: ($machine_base | path join $rel)}
+            }
 
         $from_machine | append $from_repo | uniq-by path-in-repo
     }
@@ -109,8 +109,8 @@ def open-local-configs [] {
 # Merge local and default configs, applying ignore/update status and deduplication
 def assemble-paths [paths_file: string = 'paths-default.csv'] {
     let local_statuses = open-local-configs
-    | where status =~ '^update|ignore'
-    | select full-path status
+        | where status =~ '^update|ignore'
+        | select full-path status
 
     open-configs $paths_file
     | join --left $local_statuses full-path
@@ -122,7 +122,7 @@ export def pull-from-machine [
     --force # overwrite files with uncommitted changes
 ] {
     let paths = assemble-paths
-    | where {|i| $i.full-path | path exists }
+        | where {|i| $i.full-path | path exists }
 
     if not $force and (check-dirty-files $paths path-in-repo "repo files") { return }
 
@@ -164,7 +164,7 @@ export def push-to-machine [
 ] {
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
     let paths = assemble-paths $paths_file
-    | where {|i| $i.path-in-repo | path exists }
+        | where {|i| $i.path-in-repo | path exists }
 
     if $dry_run {
         show-push-diff $paths
@@ -185,9 +185,10 @@ export def push-to-machine [
     | each { cp $in.path-in-repo $in.full-path }
 
     # Create symlinks for PATH-accessible commands
-    [[target link];
-     ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
-     ['~/.config/zellij/hx-scrollback.nu' '~/.local/bin/hx-scrollback']
+    [
+        [target link];
+        ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
+        ['~/.config/zellij/hx-scrollback.nu' '~/.local/bin/hx-scrollback']
     ] | each {|s|
         let target = $s.target | path expand
         let link = $s.link | path expand --no-symlink
@@ -212,8 +213,8 @@ export def push-to-machine [
             if not ($target_dir | path join '.git' | path exists) { return }
 
             let pushed_files = $paths
-            | where { $in.full-path | str starts-with $"($target_dir)/" }
-            | get full-path
+                | where { $in.full-path | str starts-with $"($target_dir)/" }
+                | get full-path
 
             if ($pushed_files | is-empty) { return }
 
@@ -234,38 +235,38 @@ export def fill-candidates [] {
     let local_configs = open-local-configs
 
     let ignored_paths = $local_configs
-    | where status? == 'ignore'
-    | where {|i| $i.full-path | path exists }
-    | upsert path-type {|i| $i.full-path | path type }
+        | where status? == 'ignore'
+        | where {|i| $i.full-path | path exists }
+        | upsert path-type {|i| $i.full-path | path type }
 
     let ignored_folders = $ignored_paths
-    | where path-type == 'dir'
-    | get full-path
+        | where path-type == 'dir'
+        | get full-path
 
     let regex = '\.^$*+?{}()[]|/' | split chars | each { $'\($in)' } | str join '|' | $"\(($in))"
 
     let ignored_folders_regex = $ignored_folders
-    | str replace --all --regex $regex '\$1'
-    | str join '|'
-    | $"^($in)"
+        | str replace --all --regex $regex '\$1'
+        | str join '|'
+        | $"^($in)"
 
     let candidates = $configs
-    | get full-path
-    | path dirname
-    | where $it != $nu.home-dir
-    | uniq
-    | each {
-        path join '**/*'
-        | into glob
-        | try { ls $in | get name --optional }
-    }
-    | flatten
-    | if $ignored_folders_regex == '^' { } else {
-        where $it !~ $ignored_folders_regex
-    }
-    | where $it not-in $configs.full-path
-    | where ($it | path type) == 'file'
-    | wrap full-path
+        | get full-path
+        | path dirname
+        | where $it != $nu.home-dir
+        | uniq
+        | each {
+            path join '**/*'
+            | into glob
+            | try { ls $in | get name --optional }
+        }
+        | flatten
+        | if $ignored_folders_regex == '^' { } else {
+            where $it !~ $ignored_folders_regex
+        }
+        | where $it not-in $configs.full-path
+        | where ($it | path type) == 'file'
+        | wrap full-path
 
     $local_configs
     | where full-path? !~ $ignored_folders_regex and status? not-in ['ignore']
@@ -284,9 +285,9 @@ export def cleanup-paths-not-in-csv [
     let exist_paths = glob **/* --exclude $excluded_locals --no-dir
 
     let paths_in_csv = glob paths-*.csv
-    | each { open-configs $in | get path-in-repo }
-    | flatten
-    | uniq
+        | each { open-configs $in | get path-in-repo }
+        | flatten
+        | uniq
 
     let orphans = $exist_paths | path relative-to (pwd) | where $it not-in $paths_in_csv
 
@@ -324,7 +325,7 @@ def collect-skills [base: path] {
             glob ($src | path join '*/skills/*') --no-file
         }
 
-        $skill_dirs | each {|s| {name: ($s | path basename), path: $s, repo: $r.repo} }
+        $skill_dirs | each {|s| {name: ($s | path basename) path: $s repo: $r.repo} }
     } | flatten
 }
 

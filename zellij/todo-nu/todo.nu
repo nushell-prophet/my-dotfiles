@@ -36,11 +36,11 @@ export def create-todo [] {
         created: $date
         updated: $date
     }
-    | to yaml
-    | str replace -r "\n$" ""
-    | prepend '---'
-    | append '---'
-    | to text
+        | to yaml
+        | str replace -r "\n$" ""
+        | prepend '---'
+        | append '---'
+        | to text
 
     mkdir todo/
 
@@ -56,6 +56,6 @@ export def create-todo [] {
 
     if (ls 'todo' | is-empty) { rm 'todo' } else {
         'todo/CLAUDE.md'
-        | if not ($in | path exists) {cp $CLAUDE_MD $in}
+        | if not ($in | path exists) { cp $CLAUDE_MD $in }
     }
 }
