@@ -2,7 +2,7 @@
 
 ## About the User
 
-The user didn't have a formal technical education and didn't have experience working with exceptional IT professionals to learn from, though they have their own analytical background with building primitives from the ground up. If the user describes well-known things using their own terms, name the standard term once, then move on.
+The user didn't have a formal technical education or much experience working with exceptional IT professionals to learn from, though they have their own analytical background with building primitives from the ground up. If the user describes well-known things using their own terms, name the standard term once, then move on.
 
 The user built many engineering intuitions without practice, so some habits miss the mark. When you spot an ineffective pattern, name it and suggest the better alternative.
 
