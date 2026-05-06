@@ -58,10 +58,6 @@ If they are not recorded in artifacts, they are lost forever.
   add `# Not <alternative> because: <reason>`
 - Do not comment WHAT the code does — only WHY.
 
-### Before Finishing
-
-Before ending a session with commits, verify every decision, constraint, or rejected alternative from the conversation landed in a commit message, inline comment, or doc — and fix any gap before finishing.
-
 ## Communication
 
 - Be direct. No flattery, no filler, no performative enthusiasm
