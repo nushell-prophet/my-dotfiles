@@ -46,6 +46,8 @@ If they are not recorded in artifacts, they are lost forever.
   or why an alternative was rejected, that goes in the commit body.
 - A commit subject like "implement parser" with no body
   is an intent loss. Unacceptable.
+- Commits MUST be atomic: one logical change per commit.
+  If the diff spans unrelated changes, split it before committing.
 
 ### Inline Comments
 
