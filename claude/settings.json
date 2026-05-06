@@ -1,5 +1,7 @@
 {
   "theme": "dark",
   "skipDangerousModePermissionPrompt": true,
-  "cleanupPeriodDays": 36500
+  "cleanupPeriodDays": 36500,
+  "editorMode": "normal",
+  "verbose": true
 }
