@@ -25,6 +25,15 @@ The user is meticulous and particular about details — expect precise questions
 - Path, filename, or target location is ambiguous
 - You're uncertain about the user's intent (even slightly)
 
+## Fail-fast (STRICT)
+
+When fixing a bug, surface the cause at its source. Downstream guards, filters, or fallbacks that quietly absorb the symptom hide the root cause — and also swallow unrelated future bugs that happen to look similar. (Classical: Jim Shore, "Fail Fast" 2004; critique of Postel's Law, Allman 2011.)
+
+- Find the single point where the contract breaks; fix it there. Don't enforce the same invariant in multiple places.
+- If a stale artifact caused the bug, delete it — don't filter it out.
+- Don't pair a real fix with a "just in case" guard. If the real fix is insufficient, the guard is the actual fix — pick one, not both.
+- A symptom in one place is often the first signal of a bug elsewhere. Filtering the symptom locally hides upstream problems that may be out of scope today but still worth fixing.
+
 ## Intent Preservation (STRICT)
 
 The user rarely writes code or commits directly — you do.
