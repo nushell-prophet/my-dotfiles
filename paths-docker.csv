@@ -3,6 +3,7 @@ full-path
 ~/.config/broot/select.hjson
 ~/.config/broot/verbs.hjson
 ~/.claude/CLAUDE.md
+~/.claude/settings.json
 ~/.claude/agents/*.md
 ~/.claude/commands/*.md
 ~/.claude/output-styles/**/*

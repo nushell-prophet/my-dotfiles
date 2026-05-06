@@ -1,0 +1,5 @@
+{
+  "theme": "dark",
+  "skipDangerousModePermissionPrompt": true,
+  "cleanupPeriodDays": 36500
+}
