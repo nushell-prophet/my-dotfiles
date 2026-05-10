@@ -50,7 +50,7 @@ export def create-todo [] {
         $frontmatter | save --raw $path
     }
 
-    hx $path
+    hx +7 $path
 
     # check if the file wasn't modified
     open $path --raw
