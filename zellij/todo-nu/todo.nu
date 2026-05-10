@@ -50,9 +50,11 @@ export def create-todo [] {
     hx +7 $path
 
     # check if the file wasn't modified
-    open $path --raw
-    | if $in == $frontmatter {
-        rm $path
-        if not $todo_folder_existed { rm todo -r }
+    if ($path | path exists) {
+        open --raw $path
+        | if $in == $frontmatter {
+            rm $path
+            if not $todo_folder_existed { rm --recursive todo/ }
+        }
     }
 }
