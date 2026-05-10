@@ -43,6 +43,7 @@ export def create-todo [] {
     }
         | to yaml
         | str replace --all $date $'($date) #yyyyMMdd-hhmmss'
+        | str replace 'status: draft' 'status: draft #draft | in_progress | completed | rejected'
         | $"---\n($in)---\n\n"
 
     if not ($path | path exists) {

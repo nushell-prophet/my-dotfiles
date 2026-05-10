@@ -10,7 +10,7 @@ Todo files are created by `create-todo` from `todo.nu` (typically bound to a zel
 
 ```yaml
 ---
-status: draft
+status: draft                    # draft | in_progress | completed | rejected
 created: 20260510-143000 #yyyyMMdd-hhmmss
 updated: 20260510-143000 #yyyyMMdd-hhmmss
 related_files:                   # optional, paths the task touches
