@@ -40,11 +40,8 @@ export def create-todo [] {
         updated: $date
     }
         | to yaml
-        | str replace -r "\n$" ""
         | str replace --all $date $'($date) #yyyyMMdd-hhmmss'
-        | prepend '---'
-        | append '---'
-        | to text
+        | $"---\n($in)---\n\n"
 
     if not ($path | path exists) {
         $frontmatter | save --raw $path
