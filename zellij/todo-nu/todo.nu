@@ -25,10 +25,12 @@ export def lstd [] {
 export def create-todo [] {
     let todo_folder_is_new = if ('todo' | path exists) { false } else {
         mkdir todo
-        cp $CLAUDE_MD todo
         true
     }
-    # cd todo
+
+    if not ('todo/CLAUDE.md' | path exists) {
+        cp $CLAUDE_MD todo/CLAUDE.md
+    }
 
     let date = date now | format date '%J-%Q'
 
