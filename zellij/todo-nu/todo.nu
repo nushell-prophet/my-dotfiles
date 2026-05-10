@@ -23,10 +23,10 @@ export def lstd [] {
 }
 
 export def create-todo [] {
-    let todo_folder_existed = if ('todo' | path exists) { true } else {
+    let todo_folder_is_new = if ('todo' | path exists) { false } else {
         mkdir todo
         cp $CLAUDE_MD todo
-        false
+        true
     }
     # cd todo
 
@@ -54,7 +54,7 @@ export def create-todo [] {
         open --raw $path
         | if $in == $frontmatter {
             rm $path
-            if not $todo_folder_existed { rm --recursive todo/ }
+            if $todo_folder_is_new { rm --recursive todo/ }
         }
     }
 }
