@@ -23,8 +23,11 @@ export def lstd [] {
 }
 
 export def create-todo [] {
-    mkdir todo
-
+    let todo_folder_existed = if ('todo' | path exists) { true } else {
+        mkdir todo
+        cp $CLAUDE_MD todo
+        false
+    }
     # cd todo
 
     let date = date now | format date '%J-%Q'
@@ -38,24 +41,21 @@ export def create-todo [] {
     }
         | to yaml
         | str replace -r "\n$" ""
+        | str replace --all $date $'($date) #yyyyMMdd-hhmmss'
         | prepend '---'
         | append '---'
         | to text
 
-    mkdir todo/
-
     if not ($path | path exists) {
-        $frontmatter | save $path
+        $frontmatter | save --raw $path
     }
 
     hx $path
 
     # check if the file wasn't modified
-    open $path
-    | if $in == $frontmatter { rm $path }
-
-    if (ls 'todo' | is-empty) { rm 'todo' } else {
-        'todo/CLAUDE.md'
-        | if not ($in | path exists) { cp $CLAUDE_MD $in }
+    open $path --raw
+    | if $in == $frontmatter {
+        rm $path
+        if not $todo_folder_existed { rm todo -r }
     }
 }
