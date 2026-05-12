@@ -217,13 +217,22 @@ config.keys = {
   { key = 'l', mods = 'CMD|SHIFT',  action = wezterm.action.SendString '\x1b[108;10u' },
   -- cmd+shift+m
   { key = 'm', mods = 'CMD|SHIFT',  action = wezterm.action.SendString '\x1b[109;10u' },
-  -- cmd+shift+n (new window with pure nushell)
-  { key = 'n', mods = 'CMD|SHIFT',  action = wezterm.action.SpawnCommandInNewWindow {
-    args = { nu_path or 'nu' }
-  }},
-  { key = 'n', mods = 'ALT|CMD',  action = wezterm.action.SpawnCommandInNewWindow {
-    args = { 'zsh' }
-  }},
+  -- cmd+shift+n (new wezterm instance with its own Dock icon, running pure nushell)
+  -- Why: SpawnCommandInNewWindow reuses the same OS process, so the new window
+  -- ends up under the existing Dock icon. `open -n` asks LaunchServices for a
+  -- fresh app instance (own Dock icon + foreground activation, side-stepping
+  -- wezterm issue #6202 where `wezterm start --always-new-process` opens in the
+  -- background on macOS).
+  -- `--always-new-process` is required: without it, the freshly-launched
+  -- wezterm-gui detects the existing mux via its unix socket, delegates the
+  -- spawn to the running instance, and exits — collapsing the new window back
+  -- under the old Dock icon.
+  { key = 'n', mods = 'CMD|SHIFT', action = wezterm.action_callback(function()
+    wezterm.background_child_process({ 'open', '-n', '-a', 'WezTerm', '--args', 'start', '--always-new-process', '--', nu_path or 'nu' })
+  end)},
+  { key = 'n', mods = 'ALT|CMD',   action = wezterm.action_callback(function()
+    wezterm.background_child_process({ 'open', '-n', '-a', 'WezTerm', '--args', 'start', '--always-new-process', '--', 'zsh' })
+  end)},
   -- cmd+shift+o
   { key = 'o', mods = 'CMD|SHIFT',  action = wezterm.action.SendString '\x1b[111;10u' },
   -- cmd+shift+p
