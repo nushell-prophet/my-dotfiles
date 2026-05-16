@@ -106,8 +106,8 @@ def open-local-configs [] {
     } else { [] }
 }
 
-# Merge local and default configs, applying ignore/update status and deduplication
-def assemble-paths [paths_file: string = 'paths-default.csv'] {
+# {full-path, path-in-repo, in-repo, on-machine, status?}
+def expand-paths [paths_file: string = 'paths-default.csv'] {
     let local_statuses = open-local-configs
         | where status =~ '^update|ignore'
         | select full-path status
@@ -115,14 +115,15 @@ def assemble-paths [paths_file: string = 'paths-default.csv'] {
     open-configs $paths_file
     | join --left $local_statuses full-path
     | where status? != ignore
+    | insert in-repo    {|r| $r.path-in-repo | path exists }
+    | insert on-machine {|r| $r.full-path    | path exists }
 }
 
 # Copy config files from the local machine into the repository
 export def pull-from-machine [
     --force # overwrite files with uncommitted changes
 ] {
-    let paths = assemble-paths
-        | where {|i| $i.full-path | path exists }
+    let paths = expand-paths | where on-machine
 
     if not $force and (check-dirty-files $paths path-in-repo "repo files") { return }
 
@@ -161,19 +162,28 @@ export def push-to-machine [
     --dry-run # show diff of what would change without copying
     --docker # use paths-docker.csv for Docker sandbox setup
     --commit-changes # git add + commit in target directories after push
+    --delete-orphans # remove machine files whose repo source was deleted
 ] {
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
-    let paths = assemble-paths $paths_file
-        | where {|i| $i.path-in-repo | path exists }
+    let paths = expand-paths $paths_file
+    let to_copy = $paths | where in-repo
+    let to_delete = if $delete_orphans {
+        $paths | where {|r| (not $r.in-repo) and $r.on-machine }
+    } else { [] }
 
     if $dry_run {
-        show-push-diff $paths
+        show-push-diff $to_copy
+        if ($to_delete | is-not-empty) {
+            print $"\n(ansi yellow)Orphans to delete:(ansi reset)"
+            $to_delete | get full-path | each { print $"  ($in)" }
+        }
         return
     }
 
-    if not $force and (check-dirty-files $paths full-path "destination files") { return }
+    if not $force and (check-dirty-files $to_copy full-path "destination files") { return }
+    if not $force and (check-dirty-files $to_delete full-path "orphans") { return }
 
-    $paths
+    $to_copy
     | group-by { $in.full-path | path dirname }
     | items {|dirname v|
         if ($dirname | path exists) { $v } else {
@@ -183,6 +193,8 @@ export def push-to-machine [
     | compact
     | flatten
     | each { cp $in.path-in-repo $in.full-path }
+
+    $to_delete | each { rm $in.full-path }
 
     # Create symlinks for PATH-accessible commands
     [
@@ -212,17 +224,17 @@ export def push-to-machine [
             let target_dir = $target_dir | path expand --no-symlink
             if not ($target_dir | path join '.git' | path exists) { return }
 
-            let pushed_files = $paths
-                | where { $in.full-path | str starts-with $"($target_dir)/" }
-                | get full-path
+            let touched_files = $to_copy | get full-path
+                | append ($to_delete | get full-path)
+                | where { $in | str starts-with $"($target_dir)/" }
 
-            if ($pushed_files | is-empty) { return }
+            if ($touched_files | is-empty) { return }
 
-            $pushed_files | each { ^git -C $target_dir add $in }
-            ^git -C $target_dir diff --cached --quiet ...$pushed_files
+            $touched_files | each { ^git -C $target_dir add $in }
+            ^git -C $target_dir diff --cached --quiet ...$touched_files
             | complete
             | if $in.exit_code != 0 {
-                ^git -C $target_dir commit -m "push-to-machine" -- ...$pushed_files
+                ^git -C $target_dir commit -m "push-to-machine" -- ...$touched_files
             }
         }
     }
