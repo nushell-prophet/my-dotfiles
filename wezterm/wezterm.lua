@@ -268,7 +268,7 @@ local quick_select_patterns = {
 
   -- file:line:col (rg --vimgrep, nushell table rows, stack traces,
   -- nushell error headers like ╭─[/path/to/file.nu:1946:63])
-  "[^\\s│]+:\\d+:\\d+",
+  "[^\\s│╭─\\[]+:\\d+:\\d+",
 
   -- Table patterns
   -- $env.config.table.mode = "default"
