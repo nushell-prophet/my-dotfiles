@@ -41,7 +41,20 @@ keybinds clear-defaults=true {
         bind "Shift PageUp" { ScrollUp; }
 
         bind "Super m" { ToggleFocusFullscreen; }
-        bind "Super Shift e" { EditScrollback; }
+        // Why: editing just the visible screen is the common case; full
+        // scrollback is rarer, so it moves to Super Alt e. DumpScreen without
+        // `full true` captures only the viewport.
+        // Not zellij's EditScrollback because: it always edits full scrollback.
+        // Not `Run "hx" ...` because: zellij passes Run args literally and
+        // won't expand ~ in the --config path; nu -c expands it.
+        bind "Super Shift e" {
+            DumpScreen "/tmp/zellij-screen.txt";
+            Run "nu" "-c" "hx --config ~/.config/helix/config-no-wrap.toml /tmp/zellij-screen.txt" {
+                close_on_exit true
+                floating true
+            };
+        }
+        bind "Super Alt e" { EditScrollback; }
 
         bind "Super Alt l" {
             // Why: lazygit-helix.nu sends Esc to helix before lazygit,
