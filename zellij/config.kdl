@@ -52,6 +52,10 @@ keybinds clear-defaults=true {
             Run "nu" "-c" "hx --config ~/.config/helix/config-no-wrap.toml /tmp/zellij-screen.txt" {
                 close_on_exit true
                 floating true
+                x "2%"
+                y "2%"
+                width "98%"
+                height "98%"
             };
         }
         bind "Super Alt e" { EditScrollback; }
