@@ -18,6 +18,9 @@ local DEFAULTS = {
   initial_cols = 220,
   initial_rows = 220,
   max_fps = 255,
+  -- Why: deep navy distinguishes the host terminal at a glance from sandbox
+  -- sessions, which override to black '#0d0d0d' via SANDBOX_MODE below.
+  background = '#0a0e27',
 }
 
 for k, v in pairs(DEFAULTS) do
