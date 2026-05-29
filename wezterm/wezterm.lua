@@ -20,7 +20,7 @@ local DEFAULTS = {
   max_fps = 255,
   -- Why: deep navy distinguishes the host terminal at a glance from sandbox
   -- sessions, which set a black background via `wezterm-cozy --background`.
-  background = '#000312',
+  background = '#0a0e27',
 }
 
 for k, v in pairs(DEFAULTS) do
