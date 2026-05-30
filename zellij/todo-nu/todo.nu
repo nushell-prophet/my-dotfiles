@@ -9,7 +9,7 @@ export def lstd [] {
     | where type == file
     | where name =~ '\.md$'
     | insert status {|i|
-        open $i.name
+        open --raw $i.name
         | split row -r "---\n?"
         | get 1?
         | try { from yaml | get status -o }
