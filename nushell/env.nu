@@ -62,7 +62,7 @@ $env.ENV_CONVERSIONS = {
 
 $env.XDG_STATE_HOME = ($env.HOME | path join ".local" "state")
 $env.XDG_CACHE_HOME = ($env.HOME | path join ".cache")
-# Why: NUPM_HOME below reads XDG_DATA_HOME, and TOPIARY_* / vd alias below
+# Why: NUPM_HOME below reads XDG_DATA_HOME, and TOPIARY_* below
 # read XDG_CONFIG_HOME. cozy bakes both into the OS env (Dockerfile ENV or
 # /etc/sandbox-persistent.sh), but on a fresh shell or macOS host they
 # aren't set, and nu would crash with "Cannot find column XDG_*_HOME".
@@ -114,4 +114,3 @@ $env.TOPIARY_LANGUAGE_DIR = ($env.XDG_CONFIG_HOME | path join topiary languages)
 $env.EDITOR = 'hx'
 
 alias `:q` = exit
-alias vd = vd --config=($env.XDG_CONFIG_HOME | path join visidata config.py) # should be fixed in 3.5
