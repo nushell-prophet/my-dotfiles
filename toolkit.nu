@@ -314,7 +314,7 @@ const this_dir = path self | path dirname
 
 const skill_repos = [
     [repo subpath];
-    [my-claude-skills plugins/my-skills/skills]
+    [my-claude-skills plugins]
     [nushell-skills plugins]
 ]
 
@@ -329,8 +329,8 @@ def collect-skills [base: path] {
 
         let src = $repo_dir | path join $r.subpath
 
-        # my-claude-skills: flat — skills/* are skill dirs directly
-        # nushell-skills: nested — plugins/*/skills/* are skill dirs
+        # subpath ending in 'skills': flat — skills/* are skill dirs directly
+        # subpath 'plugins': nested — plugins/*/skills/* are skill dirs (every plugin)
         let skill_dirs = if ($r.subpath | str ends-with 'skills') {
             ls $src | where type == dir | get name
         } else {
