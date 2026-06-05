@@ -26,3 +26,4 @@ full-path
 ~/.config/zellij/layouts/compact-bar-up.swap.kdl
 ~/.config/zellij/todo-nu/**/*
 ~/.config/jj/jj-config-claude-ai.toml
+~/.config/visidata/config.py
