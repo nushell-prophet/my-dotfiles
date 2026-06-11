@@ -25,6 +25,7 @@ Working with todo files - creating new or updating existing:
 ## Context
 
 - Current date and time: !`date +%Y%m%d-%H%M`
+- Session UID: ${CLAUDE_SESSION_ID}
 - Todo rules: @todo/CLAUDE.md
 
 ## Task
@@ -57,6 +58,7 @@ Working with todo files - creating new or updating existing:
    status: draft
    created: [current date YYYY-MM-DD]
    updated: [current date YYYY-MM-DD]
+   original_session: [session UID from Context]
    ---
 
    # [Task title]
@@ -88,7 +90,7 @@ Working with todo files - creating new or updating existing:
    ```
 
    **For existing file** (compactness principle):
-   - Update status and updated in frontmatter
+   - Update status and updated in frontmatter (original_session stays unchanged — it points to the creating session)
    - Modify/replace any sections for brevity (except "Task from user (original)")
    - Remove duplicate information
    - Block "Task from user (original)" - PROTECTED, do not modify
