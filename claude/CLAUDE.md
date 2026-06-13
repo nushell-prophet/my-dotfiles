@@ -17,7 +17,7 @@ The user is meticulous and particular about details — expect precise questions
 - Request contradicts the codebase architecture
 - Request conflicts with earlier session decisions
 - Path, filename, or target location is ambiguous
-- You're uncertain about the user's intent (even slightly)
+- Intent is genuinely unclear and a wrong guess is costly
 
 ## Fail-fast (STRICT)
 
