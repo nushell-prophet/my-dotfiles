@@ -15,6 +15,20 @@
 
 const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv]
 
+# Structural runtime/state/secret paths Claude Code (and git) create under tracked
+# config roots on every machine — never hand-authored config. Patterns are
+# base-relative: glob --exclude matches them against each scanned parent dir.
+# Why: ~/.claude/CLAUDE.md sits at the .claude root, so the scan walks ~/.claude/**,
+# which is ~99% session/plugin/history files (thousands) plus the credentials secret.
+# Not paths-local `ignore` rows because: these are universal, not per-machine choices —
+# fail-fast keeps the structural invariant here and the per-user exceptions there.
+const excluded_scan_globs = [
+    .git/** backups/** cache/** claudemd-eval-workspace/** downloads/**
+    file-history/** paste-cache/** plugins/** projects/** session-env/**
+    sessions/** shell-snapshots/** statsig/** tasks/** todos/**
+    .credentials.json history.* .last-cleanup .last-update-result.json
+]
+
 const commit_target_dirs = [~/.config ~/.claude]
 
 export def main [] { }
@@ -267,11 +281,7 @@ export def fill-candidates [] {
         | path dirname
         | where $it != $nu.home-dir
         | uniq
-        | each {
-            path join '**/*'
-            | into glob
-            | try { ls $in | get name --optional }
-        }
+        | each {|dir| glob ($dir | path join '**/*') --no-dir --exclude $excluded_scan_globs }
         | flatten
         | if $ignored_folders_regex == '^' { } else {
             where $it !~ $ignored_folders_regex
