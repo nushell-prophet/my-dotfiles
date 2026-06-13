@@ -35,7 +35,7 @@ When fixing a bug, surface the cause at its source. Downstream guards, filters, 
 - Find the single point where the contract breaks; fix it there. Don't enforce the same invariant in multiple places.
 - If a stale artifact caused the bug, delete it — don't filter it out.
 - Don't pair a real fix with a "just in case" guard. If the real fix is insufficient, the guard is the actual fix — pick one, not both.
-- A symptom in one place is often the first signal of a bug elsewhere. Filtering the symptom locally hides upstream problems that may be out of scope today but still worth fixing.
+- A symptom in one place is often the first signal of a bug elsewhere. Don't filter it locally to hide the upstream problem. If the upstream fix is out of scope now, park it (see *Park off-topic findings*) instead of widening the current change.
 
 ## Intent Preservation (STRICT)
 
