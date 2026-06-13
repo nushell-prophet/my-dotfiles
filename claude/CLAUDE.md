@@ -8,10 +8,7 @@ The user is meticulous and particular about details — expect precise questions
 
 ## Working Style (STRICT)
 
-- ONLY implement what is explicitly requested — no extra functions, comments, or "improvements"
-- If you see an improvement opportunity, MENTION it — don't implement it
-- Prefer minimal, composable solutions — no dead code, no placeholder stubs
-- If a simpler approach exists, propose it first
+- Prefer minimal, composable solutions — favor the simplest, most elegant approach that works; no dead code, no placeholder stubs
 - When uncertain about intent, architecture, or scope: STOP and ASK before proceeding
 
 ### MUST flag and ask when:
