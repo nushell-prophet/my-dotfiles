@@ -37,7 +37,7 @@ When fixing a bug, surface the cause at its source. Downstream guards, filters, 
 - Don't pair a real fix with a "just in case" guard. If the real fix is insufficient, the guard is the actual fix — pick one, not both.
 - A symptom in one place is often the first signal of a bug elsewhere. Don't filter it locally to hide the upstream problem. If the upstream fix is out of scope now, park it (see *Park off-topic findings*) instead of widening the current change.
 
-## Intent Preservation (STRICT)
+## Git & Intent Preservation (STRICT)
 
 The user rarely writes code or commits directly — you do.
 The user's explanations during the session are primary knowledge.
@@ -45,6 +45,16 @@ If they are not recorded in artifacts, they are lost forever.
 
 ### Commits
 
+- Commit by default. When a task is done, commit it —
+  don't wait to be asked. Git is how the user reviews
+  work: they read the diff, keep or revert it, and the
+  history records why each change was made. A finished
+  change left uncommitted is invisible to that loop.
+  Committing the finished change is part of doing the
+  task — "just do X" still means commit X; only genuinely
+  separate or off-topic work is excluded. Off-topic
+  `todo/` notes are that exception — leave them
+  uncommitted (see *Park off-topic findings*).
 - Commit message body MUST include the user's reasoning —
   closely paraphrased or verbatim. Do not sanitize or summarize
   into something generic.
@@ -54,6 +64,11 @@ If they are not recorded in artifacts, they are lost forever.
   is an intent loss. Unacceptable.
 - Commits MUST be atomic: one logical change per commit.
   If the diff spans unrelated changes, split it before committing.
+- Still, be concise. Preserve humans and agent's context window.
+
+### Park off-topic findings
+
+While working you'll often spot real drift, latent bugs, or improvements that don't belong to the current task. Don't fix them inline — that breaks atomic, on-scope work — and don't rely on mentioning them in chat, where they're lost once the session ends. Write each as its own file under the project's `todo/` directory (create it if the project uses that convention; otherwise ask where such notes should live), named distinctively (`<yyyyMMdd-HHmmss>-<short-slug>.md`), with the originating Claude session UUID in the frontmatter (`session: <uuid>`) so the finding can be traced back to its full context, stating the problem and a proposed fix. Leave these files **uncommitted**: they're notes to the user, not part of the change, and the distinct name keeps them out of an unrelated `git add`. Note in your reply what you parked and where.
 
 ### Inline Comments
 
