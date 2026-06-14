@@ -78,6 +78,20 @@ While working you'll often spot real drift, latent bugs, or improvements that do
   add `# Not <alternative> because: <reason>`
 - Do not comment WHAT the code does — only WHY.
 
+### Git-friendly prose
+
+Prose tracked in git (Markdown, docs, commit bodies, README) must stay clean under diff. Git diffs by line. Reflow (rewrapping a paragraph to a width) moves line boundaries, so git marks the whole paragraph as changed even when only a word moved. That noise hides the real edit and ruins `blame`.
+
+- **One paragraph per line — no hard wrapping.** Write each paragraph as a single line and let the editor soft-wrap it on screen. Editing a word then changes only that one line, so the diff and `blame` stay precise. The user reads diffs with git-delta, which wraps long lines and highlights changes by word, so long lines are not a problem.
+- **Never reflow git-tracked prose to a fixed width.** Don't set a `text-width` reflow on it. Width-based wrapping (`gq`, `:reflow`) is for code comments under a column limit, not for prose.
+
+### Relative paths over Markdown links
+
+When pointing to another file in repo docs, prefer the bare relative path in backticks — `../install.md` — over a Markdown link like `[install.md](../install.md)`.
+
+- The path is the whole point; the link wrapper just adds noise and a second copy of the same string to keep in sync.
+- Use a real `[text](path)` link only when the link text says something the path doesn't, or when the doc is rendered somewhere the link must be clickable.
+
 ## Communication
 
 - Be direct. No flattery, no filler, no performative enthusiasm
