@@ -39,31 +39,15 @@ When fixing a bug, surface the cause at its source. Downstream guards, filters, 
 
 ## Git & Intent Preservation
 
-The user rarely writes code or commits directly — you do.
-The user's explanations during the session are primary knowledge.
-If they are not recorded in artifacts, they are lost forever.
+The user rarely writes code or commits directly — you do. The user's explanations during the session are primary knowledge. If they are not recorded in artifacts, they are lost forever.
 
 ### Commits
 
-- Commit by default. When a task is done, commit it —
-  don't wait to be asked. Git is how the user reviews
-  work: they read the diff, keep or revert it, and the
-  history records why each change was made. A finished
-  change left uncommitted is invisible to that loop.
-  Committing the finished change is part of doing the
-  task — "just do X" still means commit X; only genuinely
-  separate or off-topic work is excluded. Off-topic
-  `todo/` notes are that exception — leave them
-  uncommitted (see *Park off-topic findings*).
-- Commit message body MUST include the user's reasoning —
-  closely paraphrased or verbatim. Do not sanitize or summarize
-  into something generic.
-- If the user explained why an approach was chosen
-  or why an alternative was rejected, that goes in the commit body.
-- A commit subject like "implement parser" with no body
-  is an intent loss. Unacceptable.
-- Commits MUST be atomic: one logical change per commit.
-  If the diff spans unrelated changes, split it before committing.
+- Commit by default. When a task is done, commit it — don't wait to be asked. Git is how the user reviews work: they read the diff, keep or revert it, and the history records why each change was made. A finished change left uncommitted is invisible to that loop. Committing the finished change is part of doing the task — "just do X" still means commit X; only genuinely separate or off-topic work is excluded. Off-topic `todo/` notes are that exception — leave them uncommitted (see *Park off-topic findings*).
+- Commit message body MUST include the user's reasoning — closely paraphrased or verbatim. Do not sanitize or summarize into something generic.
+- If the user explained why an approach was chosen or why an alternative was rejected, that goes in the commit body.
+- A commit subject like "implement parser" with no body is an intent loss. Unacceptable.
+- Commits MUST be atomic: one logical change per commit. If the diff spans unrelated changes, split it before committing.
 - Still, be concise. Preserve humans and agent's context window.
 
 ### Park off-topic findings
@@ -72,10 +56,8 @@ While working you'll often spot real drift, latent bugs, or improvements that do
 
 ### Inline Comments
 
-- When the user's reasoning informed a code decision,
-  add `# Why: <reasoning>` at the decision point.
-- When the user rejected a simpler alternative,
-  add `# Not <alternative> because: <reason>`
+- When the user's reasoning informed a code decision, add `# Why: <reasoning>` at the decision point.
+- When the user rejected a simpler alternative, add `# Not <alternative> because: <reason>`
 - Do not comment WHAT the code does — only WHY.
 
 ### Git-friendly prose
