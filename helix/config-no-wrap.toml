@@ -14,7 +14,7 @@ insert-final-newline = true
 line-number = "relative"
 mouse = false
 preview-completion-insert = true
-shell = ["nu", "--login", "--no-newline", "--stdin", "-c"]
+shell = ["nu", "--config", "~/.config/nushell/autoload/modules-core.nu", "--no-newline", "--stdin", "-c"]
 
 [editor.whitespace.render]
 nbsp = "all"
