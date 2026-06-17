@@ -285,6 +285,7 @@ local quick_select_patterns = {
 }
 
 config.quick_select_patterns = quick_select_patterns
+config.quick_select_remove_styling = true
 
 -- ============================================================================
 -- DYNAMIC CONFIGURATION (ZEN MODE)
