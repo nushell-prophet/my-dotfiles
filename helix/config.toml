@@ -91,7 +91,7 @@ right = ["selections", "primary-selection-length", "position", "position-percent
 [keys.normal."+"]
 a = '''
 :append-output #append-commented-results→
-nu -c r###########'%{selection}'########### o+e>| lines
+nu --config ~/.config/nushell/autoload/modules-core.nu -c r###########'%{selection}'########### o+e>| lines
 | each { $"# => ($in)"}
 | if r###########'%{selection}'########### ends-with "\n" {} else {prepend ''}
 | to text
@@ -100,7 +100,7 @@ nu -c r###########'%{selection}'########### o+e>| lines
 
 A = '''
 :append-output #append-abreviated-results→
-let lines = nu -c r###########'%{selection}'########### o+e>| lines
+let lines = nu --config ~/.config/nushell/autoload/modules-core.nu -c r###########'%{selection}'########### o+e>| lines
 
 let len = $lines | length;
 
@@ -133,7 +133,7 @@ e = '''
 
 f = '''
 :pipe #flatten-to-nuon
-nu -c r###########'%{selection}'########### o+e>| to nuon
+nu --config ~/.config/nushell/autoload/modules-core.nu -c r###########'%{selection}'########### o+e>| to nuon
 '''
 
 g = "@<C-w><C-S-g><C-r>"
