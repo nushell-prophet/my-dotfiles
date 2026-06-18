@@ -210,7 +210,10 @@ export def push-to-machine [
 
     $to_delete | each { rm $in.full-path }
 
-    # Create symlinks for PATH-accessible commands
+    # Symlink helpers onto PATH so each caller below can invoke them as a bare command:
+    #   todo-hx        ← zellij/config.kdl   keybind: create a new todo
+    #   hx-scrollback  ← zellij/config.kdl   scrollback_editor setting
+    #   hx-nu          ← helix/config.toml   shell field + +a/+A/+f eval keys
     [
         [target link];
         ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
