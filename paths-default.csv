@@ -10,6 +10,7 @@ full-path
 ~/.hammerspoon/init.lua
 ~/.config/helix/config-no-wrap.toml
 ~/.config/helix/config.toml
+~/.config/helix/hx-nu
 ~/.config/helix/languages.toml
 ~/.config/lazygit/config.yml
 ~/.config/nushell/autoload/br.nu

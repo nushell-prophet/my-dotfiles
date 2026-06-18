@@ -215,6 +215,7 @@ export def push-to-machine [
         [target link];
         ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
         ['~/.config/zellij/hx-scrollback.nu' '~/.local/bin/hx-scrollback']
+        ['~/.config/helix/hx-nu' '~/.local/bin/hx-nu']
     ] | each {|s|
         let target = $s.target | path expand
         let link = $s.link | path expand --no-symlink

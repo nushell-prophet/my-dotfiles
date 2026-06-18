@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# Graceful launcher for the Helix↔nushell integration.
+# Why: the Helix config drives nushell with `--config modules-core.nu`, but that
+# file is cozy-owned (~/.config/nushell/autoload/modules-core.nu) and absent on a
+# bare-dotfiles host without cozy. `nu --config <missing>` is a hard parser error,
+# so a missing file kills ALL Helix↔nushell commands. Inject --config only when the
+# file is present; otherwise fall back to plain `nu` so the integration degrades
+# gracefully (module-free commands like `:pipe pandoc` keep working).
+# Not a nu script because: the outer `nu` running it would parse Helix's passthrough
+# flags (--stdin, -c) as its own, and -c collides with a script-file argument.
+cfg="$HOME/.config/nushell/autoload/modules-core.nu"
+if [ -f "$cfg" ]; then
+    exec nu --config "$cfg" "$@"
+else
+    exec nu "$@"
+fi
