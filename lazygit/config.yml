@@ -21,3 +21,20 @@ customCommands:
     context: 'commitFiles'
     command: 'zellij edit {{.SelectedFile.Name}}'
     description: 'Edit file in Zellij'
+  # Copy an agent-ready pointer to the clipboard (pbcopy = OSC 52 -> host).
+  # Why: hand an agent a precise file reference, like the helix selected-text command.
+  # Working-tree file -> absolute path. The agent opens it directly, no git needed.
+  # Not <branch>:<path> because: a branch tip moves (unstable link), and git already
+  #   reads <branch>:<path> as the *committed* blob, not the file on disk you're pointing at.
+  - key: '<c-y>'
+    context: 'files'
+    command: 'p=$(realpath -- {{.SelectedFile.Name | quote}}); printf %s "$p" | pbcopy; echo "copied: $p"'
+    description: 'Copy absolute path to clipboard'
+    output: log
+  # File at a specific commit -> <full-hash>:<repo-relative-path>. This is literal git
+  #   syntax (git show <hash>:<path>); the hash is immutable, so the link is stable.
+  - key: '<c-y>'
+    context: 'commitFiles'
+    command: 'ref=$(printf "%s:%s" {{.SelectedCommit.Hash | quote}} {{.SelectedCommitFilePath | quote}}); printf %s "$ref" | pbcopy; echo "copied: $ref"'
+    description: 'Copy <hash>:<path> to clipboard'
+    output: log
