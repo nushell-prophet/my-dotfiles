@@ -6,48 +6,49 @@
 # passes it (config `shell = [... "--stdin" ...]`), but this nested call needs
 # its own flag, or the piped block arrives empty.
 #
-# Helix's built-in `!` (shell_insert_output) ignores the cursor column: it drops
-# the command's output flush-left and shoves the rest of the line down. This
-# instead writes the output as a RECTANGLE whose top-left sits at the cursor
-# cell. Each output row overwrites only the columns the block covers; the text
-# to the left and to the right of the block on every line is preserved. Rows
-# that fall past the end of the file are added as blank lines first.
+# Helix's built-in `!` (shell_insert_output) ignores the column: it drops the
+# command's output flush-left and shoves the rest of the line down. This instead
+# writes the output as a RECTANGLE. Each row overwrites only the columns the
+# block covers; the text to the left and right of the block on every line is
+# preserved. Rows past the end of the file are added as blank lines first.
 #
-# Coordinates come from Helix's variable expansion, so `line`/`col` are 1-based
-# and `col` counts grapheme clusters from the start of the line (the same count
-# the statusline shows). We convert to 0-based grapheme indices here.
-# Why graphemes: a column over "👨‍👩‍👧" or a combining mark must land where Helix
-# thinks it is, not where a byte/scalar count would put it.
-#
-# The block text arrives on stdin (the producing command's stdout).
+# The block text arrives on stdin. Coordinates come from Helix's variable
+# expansion, so `line`/`--col` are 1-based and counted in grapheme clusters (the
+# same count the statusline shows). Why graphemes: a column over "👨‍👩‍👧" or a
+# combining mark must land where Helix thinks it is, not where a byte/scalar
+# count would put it.
 
 def spaces [n: int] { "" | fill --character ' ' --width ([$n 0] | math max) }
 
 def main [
-    file: string        # buffer path           (Helix %{buffer_name})
-    line: int           # 1-based cursor line    (%{cursor_line})
-    col: int            # 1-based cursor column  (%{cursor_column}, grapheme clusters)
-    ...producer: string # nu snippet to run for the block; if omitted, the block is read from stdin
+    file: string   # buffer path (Helix %{buffer_name})
+    line: int      # 1-based anchor line
+    --col: int     # 1-based left column of the block (cursor mode)
+    --below        # place the block on line+1, aligned to `line`'s leading indent (ignores --col)
+                   # Why: `+ b` keeps the selected command and grows the table below it.
 ] {
-    # Two ways in: run a command here (the `+ b` prompt passes one), or pipe a block in.
-    let raw = if ($producer | is-empty) {
-        $in | default "" | into string
-    } else {
-        ^hx-nu -c ($producer | str join ' ') | into string
-    }
+    let raw = $in | default "" | into string
     if ($raw | is-empty) { return }   # producer printed nothing -> leave buffer untouched
 
     let block = $raw | str replace -r '\n$' '' | split row "\n"   # drop one trailing newline
     let h = $block | length
     let w = $block | each { str length --grapheme-clusters } | math max   # rectangle width
-    let row0 = $line - 1
-    let col0 = $col - 1
 
     let orig = open --raw $file | into string
     let had_nl = ($orig | str ends-with "\n")
     mut flines = $orig | split row "\n"
     # a trailing newline yields a phantom final "" element; drop it and restore the newline on save
     if $had_nl and (($flines | last) == "") { $flines = ($flines | drop) }
+
+    # resolve the 0-based top-left anchor
+    let row0 = if $below { $line } else { $line - 1 }   # --below: the line *after* `line`
+    let col0 = if $below {
+        # align under the command: start at its first non-blank column
+        let cmdline = $flines | get -i ($line - 1) | default ""
+        $cmdline | split chars --grapheme-clusters | take while {|c| $c =~ '^\s$' } | length
+    } else {
+        ($col | default 1) - 1
+    }
 
     # grow the file with blank lines so the block has rows to land on
     let need = $row0 + $h
@@ -59,7 +60,7 @@ def main [
         let existing = $flines | get $target
         let eg = $existing | split chars --grapheme-clusters
         let elen = $eg | length
-        # keep everything left of the block; pad with spaces if the line is shorter than the cursor column
+        # keep everything left of the block; pad with spaces if the line is shorter than the start column
         let left = if $elen >= $col0 { $eg | first $col0 | str join } else { $existing + (spaces ($col0 - $elen)) }
         # pad the block row to the rectangle width so the preserved right side stays column-aligned
         let brow = $block | get $i
