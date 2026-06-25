@@ -115,18 +115,14 @@ $lines
 | to text
 '''
 
-# Eval the selection and drop the result as a RECTANGLE whose top-left is the
-# cursor cell — overwriting only the columns it covers, keeping each line's right
-# side, padding past EOF with blank lines. The column-respect that Helix's `!`
-# lacks. Why write+reload: hx-block edits the file on disk (same as the `g` git
-# key), so the buffer must be flushed first and re-read after.
-b = [
-  ":write",
-  ''':pipe-to #block-insert-at-cursor→
-hx-nu -c r###########'%{selection}'###########
-| hx-block r###########'%{buffer_name}'########### %{cursor_line} %{cursor_column}''',
-  ":reload",
-]
+# Prompt for a command, then drop its output as a RECTANGLE whose top-left is the
+# cursor cell — the column-respect Helix's built-in `!` lacks. The macro writes
+# the buffer (so hx-block reads fresh content off disk), then prefills the command
+# line up to the producer and leaves it open: type the command (quote it if it
+# contains a `|`), Enter, then C-r to reload. Why C-r and not automatic: Helix
+# can't chain a command after an interactive prompt, and has no auto-reload;
+# hx-block runs the command and edits the file on disk, so the buffer is re-read.
+b = "@:w<ret>:pipe-to hx-block r#'%{buffer_name}'# %{cursor_line} %{cursor_column} "
 
 c = '''
 :pipe #correct english→

@@ -24,11 +24,17 @@
 def spaces [n: int] { "" | fill --character ' ' --width ([$n 0] | math max) }
 
 def main [
-    file: string   # buffer path           (Helix %{buffer_name})
-    line: int      # 1-based cursor line    (%{cursor_line})
-    col: int       # 1-based cursor column  (%{cursor_column}, grapheme clusters)
+    file: string        # buffer path           (Helix %{buffer_name})
+    line: int           # 1-based cursor line    (%{cursor_line})
+    col: int            # 1-based cursor column  (%{cursor_column}, grapheme clusters)
+    ...producer: string # nu snippet to run for the block; if omitted, the block is read from stdin
 ] {
-    let raw = $in | default "" | into string
+    # Two ways in: run a command here (the `+ b` prompt passes one), or pipe a block in.
+    let raw = if ($producer | is-empty) {
+        $in | default "" | into string
+    } else {
+        ^hx-nu -c ($producer | str join ' ') | into string
+    }
     if ($raw | is-empty) { return }   # producer printed nothing -> leave buffer untouched
 
     let block = $raw | str replace -r '\n$' '' | split row "\n"   # drop one trailing newline
