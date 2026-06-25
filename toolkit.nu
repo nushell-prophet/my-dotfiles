@@ -54,10 +54,26 @@ def check-dirty-files [paths: table field: string context: string] {
     if ($dirty | is-not-empty) {
         print $"(ansi red)Error: The following ($context) have uncommitted changes:(ansi reset)"
         $dirty | get $field | each { print $"  ($in)" }
-        print $"\nCommit or stash changes first, or use --force to overwrite."
+        print $"\nCommit or stash changes first, or use --commit-existing / --force to overwrite."
         true
     } else {
         false
+    }
+}
+
+# Commit the given files in whatever git repo contains each, grouped by repo root.
+# Why: lets push-to-machine snapshot the machine's current config before it
+# overwrites it, so the prior state stays recoverable in git history instead of
+# being lost. Commits each file with an explicit pathspec, so unrelated dirty
+# files in the same repo are left untouched.
+# Contract: caller passes only in-repo files (filtered via has-uncommitted-changes),
+# so every group has a non-empty repo root and something to commit.
+def commit-in-own-repo [files: list<path> message: string] {
+    $files
+    | group-by {|f| do { cd ($f | path dirname); ^git rev-parse --show-toplevel } | complete | get stdout | str trim }
+    | items {|toplevel group|
+        ^git -C $toplevel add ...$group
+        ^git -C $toplevel commit -m $message -- ...$group
     }
 }
 
@@ -173,6 +189,7 @@ def show-push-diff [paths: table] {
 export def push-to-machine [
     --create-dirs # in case of missing directories - create them in place
     --force # overwrite files with uncommitted changes
+    --commit-existing # snapshot dirty destination/orphan files in git before pushing (instead of erroring)
     --dry-run # show diff of what would change without copying
     --docker # use paths-docker.csv for Docker sandbox setup
     --commit-changes # git add + commit in target directories after push
@@ -194,8 +211,17 @@ export def push-to-machine [
         return
     }
 
-    if not $force and (check-dirty-files $to_copy full-path "destination files") { return }
-    if not $force and (check-dirty-files $to_delete full-path "orphans") { return }
+    if $commit_existing {
+        let dirty = $to_copy | append $to_delete
+            | get full-path
+            | where { has-uncommitted-changes $in }
+        if ($dirty | is-not-empty) {
+            commit-in-own-repo $dirty "push-to-machine: snapshot before overwrite"
+        }
+    } else {
+        if not $force and (check-dirty-files $to_copy full-path "destination files") { return }
+        if not $force and (check-dirty-files $to_delete full-path "orphans") { return }
+    }
 
     $to_copy
     | group-by { $in.full-path | path dirname }
