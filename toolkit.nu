@@ -77,6 +77,18 @@ def commit-in-own-repo [files: list<path> message: string] {
     }
 }
 
+# Ensure each config target dir exists and is a git repo. Idempotent — a no-op
+# for dirs that are already repos. Without --create-dirs, a missing dir is skipped.
+def init-target-repos [create_dirs: bool] {
+    $commit_target_dirs | each {|target_dir|
+        let target_dir = $target_dir | path expand --no-symlink
+        if not ($target_dir | path exists) {
+            if $create_dirs { mkdir $target_dir } else { return }
+        }
+        if not ($target_dir | path join '.git' | path exists) { ^git init $target_dir }
+    }
+}
+
 # Derive repo path from full machine path using convention:
 #   ~/.config/X/... → X/...
 #   ~/.X/...        → X/...
@@ -212,6 +224,11 @@ export def push-to-machine [
     }
 
     if $commit_existing {
+        # Why: on a fresh machine the target dirs aren't git repos yet, so their
+        # pre-existing files wouldn't register as "uncommitted" and would be lost
+        # on overwrite. Init first — then those files count as untracked and get
+        # snapshotted below, before we copy over them.
+        init-target-repos $create_dirs
         let dirty = $to_copy | append $to_delete
             | get full-path
             | where { has-uncommitted-changes $in }
@@ -251,14 +268,8 @@ export def push-to-machine [
         }
     }
 
-    # Initialize git repos for config directories
-    $commit_target_dirs | each {|target_dir|
-        let target_dir = $target_dir | path expand --no-symlink
-        if not ($target_dir | path exists) {
-            if $create_dirs { mkdir $target_dir } else { return }
-        }
-        if not ($target_dir | path join '.git' | path exists) { ^git init $target_dir }
-    }
+    # Initialize git repos for config directories (idempotent if --commit-existing already did)
+    init-target-repos $create_dirs
 
     if $commit_changes {
         $commit_target_dirs | each {|target_dir|
