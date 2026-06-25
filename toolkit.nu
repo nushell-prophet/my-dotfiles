@@ -215,6 +215,7 @@ export def push-to-machine [
         ['~/.config/zellij/todo-nu/todo-hx.nu' '~/.local/bin/todo-hx']
         ['~/.config/zellij/hx-scrollback.nu' '~/.local/bin/hx-scrollback']
         ['~/.config/helix/hx-nu' '~/.local/bin/hx-nu'] # to execute nushell in the environment with chosen modules (if the file exist)
+        ['~/.config/helix/hx-block' '~/.local/bin/hx-block'] # column-aware block writer, called by the `+ b` keybinding
     ] | each {|s|
         let target = $s.target | path expand
         let link = $s.link | path expand --no-symlink

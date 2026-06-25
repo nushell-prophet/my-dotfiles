@@ -113,6 +113,19 @@ $lines
 | to text
 '''
 
+# Eval the selection and drop the result as a RECTANGLE whose top-left is the
+# cursor cell — overwriting only the columns it covers, keeping each line's right
+# side, padding past EOF with blank lines. The column-respect that Helix's `!`
+# lacks. Why write+reload: hx-block edits the file on disk (same as the `g` git
+# key), so the buffer must be flushed first and re-read after.
+b = [
+  ":write",
+  ''':pipe-to #block-insert-at-cursor→
+hx-nu -c r###########'%{selection}'###########
+| hx-block r###########'%{buffer_name}'########### %{cursor_line} %{cursor_column}''',
+  ":reload",
+]
+
 c = '''
 :pipe #correct english→
 ^claude -p r###########'

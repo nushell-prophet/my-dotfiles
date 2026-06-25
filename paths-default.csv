@@ -11,6 +11,7 @@ full-path
 ~/.config/helix/config-no-wrap.toml
 ~/.config/helix/config.toml
 ~/.config/helix/hx-nu
+~/.config/helix/hx-block
 ~/.config/helix/languages.toml
 ~/.config/lazygit/config.yml
 ~/.config/nushell/autoload/br.nu
