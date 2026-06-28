@@ -164,7 +164,7 @@ t = ':pipe $"<user>\n($in)</user>"'
 # (just the basename) when the file is outside any git repo.
 s = [ '''
 :pipe-to #xml-coordinate-references→
-r#'<selected-text file="%sh{git -C $(dirname %{buffer_name}) rev-parse --show-prefix 2>/dev/null}$(basename %{buffer_name})" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
+r#'<selected-text file="%sh{echo "$(git -C $(dirname %{buffer_name}) rev-parse --show-prefix 2>/dev/null)$(basename %{buffer_name})"}" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
 ''', ":write" ]
 
 S = [ '''
