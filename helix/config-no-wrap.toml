@@ -160,13 +160,18 @@ p = ":pipe pandoc --from markdown --to markdown"
 t = ':pipe $"<user>\n($in)</user>"'
 
 # `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path
-# (from the repo root), `S` with the ABSOLUTE path. The path is computed in the
-# %sh{} block so %{selection} stays inside the raw string and needs no escaping.
-# Relative path = <dir relative to repo root> + <basename>; show-prefix is empty
-# (just the basename) when the file is outside any git repo.
+# (from the repo root), `S` (below) with the ABSOLUTE path. The relative path is
+# computed in nushell — `%sh{}` runs through hx-nu (nushell), so POSIX `$(...)`
+# command substitution does NOT work there; we compute it in the pipeline instead.
+# Relative path = <dir relative to repo root> (git show-prefix) + <basename>;
+# show-prefix is empty when the file is at the repo root or outside any git repo,
+# so it then falls back to just the basename. %{selection} stays in its own raw
+# string so its contents need no escaping.
 s = [ '''
 :pipe-to #xml-coordinate-references→
-r#'<selected-text file="%sh{echo "$(git -C $(dirname %{buffer_name}) rev-parse --show-prefix 2>/dev/null)$(basename %{buffer_name})"}" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
+let bn = r#'%{buffer_name}'#
+let pre = (^git -C ($bn | path dirname) rev-parse --show-prefix | complete | get stdout | str trim)
+$'<selected-text file="($pre)($bn | path basename)" lines="%{selection_line_start}-%{selection_line_end}">' + r#'%{selection}'# + '</selected-text>' | pbcopy
 ''', ":write" ]
 
 S = [ '''
