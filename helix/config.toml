@@ -157,7 +157,17 @@ n = ":append-output date now | format date %%J-%%Q" # timestamp
 p = ":pipe pandoc --from markdown --to markdown"
 t = ':pipe $"<user>\n($in)</user>"'
 
+# `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path
+# (from the repo root), `S` with the ABSOLUTE path. The path is computed in the
+# %sh{} block so %{selection} stays inside the raw string and needs no escaping.
+# Relative path = <dir relative to repo root> + <basename>; show-prefix is empty
+# (just the basename) when the file is outside any git repo.
 s = [ '''
+:pipe-to #xml-coordinate-references→
+r#'<selected-text file="%sh{git -C $(dirname %{buffer_name}) rev-parse --show-prefix 2>/dev/null}$(basename %{buffer_name})" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
+''', ":write" ]
+
+S = [ '''
 :pipe-to #xml-coordinate-references→
 r#'<selected-text file="%sh{realpath %{buffer_name}}" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
 ''', ":write" ]
