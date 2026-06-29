@@ -11,7 +11,7 @@ git:
   autoFetch: false
   pagers:
     - colorArg: always
-      pager: delta --dark --paging=never --true-color=always --minus-style='syntax 52' --plus-style='syntax 22' --line-numbers --side-by-side --max-line-length 2024
+      pager: delta --dark --paging=never --true-color=always --minus-style='syntax 52' --plus-style='syntax 22' --line-numbers --side-by-side --max-line-length 2024 --wrap-max-lines unlimited
 customCommands:
   - key: 'E'
     context: 'files'
