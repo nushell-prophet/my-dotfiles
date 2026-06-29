@@ -53,9 +53,8 @@ C-right = "move_next_word_start"
 C-left = "move_prev_word_end"
 tab = "move_parent_node_end"
 S-tab = "move_parent_node_start"
-A-l = [":w", ":new", ":insert-output lazygit", ":buffer-close!", ":reload"]
 
-'C-w' = ":write!"
+# 'C-w' = ":write!"
 'C-r' = ":reload"
 'C-S-g' = ":pipe-to git add '%{buffer_name}'; git commit -m 'version %{buffer_name}' '%{buffer_name}'; sleep 0.8sec"
 
@@ -72,7 +71,7 @@ pageup = "no_op"
 pagedown = "no_op"
 home = "no_op"
 end = "no_op"
-"A-'" = [":append-output '$\"\"'", "collapse_selection"] 
+# "A-'" = [":append-output '$\"\"'", "collapse_selection"] 
 
 [keys.select]
 y = ["yank_main_selection_to_clipboard", "yank"]
@@ -140,8 +139,6 @@ C = '''
 lines | where $it !~ "^# =>" | to text
 '''
 
-d = ":pipe word-diff apply"
-
 e = '''
 :pipe dotnu-embeds-update.nu
 '''
@@ -154,8 +151,9 @@ hx-nu -c r###########'%{selection}'########### o+e>| to nuon
 g = "@<C-w><C-S-g><C-r>"
 
 n = ":append-output date now | format date %%J-%%Q" # timestamp 
+
+# useful for formatting markdown tables
 p = ":pipe pandoc --from markdown --to markdown"
-t = ':pipe $"<user>\n($in)</user>"'
 
 # `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path
 # (from the repo root), `S` (below) with the ABSOLUTE path. The relative path is
