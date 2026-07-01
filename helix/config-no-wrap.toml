@@ -169,8 +169,8 @@ p = ":pipe pandoc --from markdown --to markdown"
 s = [ '''
 :pipe-to #xml-coordinate-references→
 let sel = $in
-let abs = (r#'%{buffer_name}'# | path expand)
-let res = (^git -C ($abs | path dirname) rev-parse --show-prefix | complete)
+let abs = r#'%{buffer_name}'# | path expand
+let res = ^git -C ($abs | path dirname) rev-parse --show-prefix | complete
 let file = if $res.exit_code == 0 { $"($res.stdout | str trim)($abs | path basename)" } else { $abs }
 $'<selected-text file="($file)" lines="%{selection_line_start}-%{selection_line_end}">($sel)</selected-text>' | pbcopy
 ''', ":write" ]
@@ -178,7 +178,7 @@ $'<selected-text file="($file)" lines="%{selection_line_start}-%{selection_line_
 S = [ '''
 :pipe-to #xml-coordinate-references→
 let sel = $in
-let abs = (r#'%{buffer_name}'# | path expand)
+let abs = r#'%{buffer_name}'# | path expand
 $'<selected-text file="($abs)" lines="%{selection_line_start}-%{selection_line_end}">($sel)</selected-text>' | pbcopy
 ''', ":write" ]
 
