@@ -158,23 +158,26 @@ n = ":append-output date now | format date %%J-%%Q" # timestamp
 p = ":pipe pandoc --from markdown --to markdown"
 
 # `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path
-# (from the repo root), `S` (below) with the ABSOLUTE path. The relative path is
-# computed in nushell — `%sh{}` runs through hx-nu (nushell), so POSIX `$(...)`
-# command substitution does NOT work there; we compute it in the pipeline instead.
-# Relative path = <dir relative to repo root> (git show-prefix) + <basename>;
-# show-prefix is empty when the file is at the repo root or outside any git repo,
-# so it then falls back to just the basename. %{selection} stays in its own raw
-# string so its contents need no escaping.
+# (from the repo root), `S` (below) with the ABSOLUTE path. The path is computed
+# in nushell — `%sh{}` runs through hx-nu (nushell), so POSIX `$(...)` command
+# substitution does NOT work there. `path expand` makes buffer_name absolute so
+# `git -C` always hits the file's real directory. Relative path = git show-prefix
+# (dir from repo root) + basename; when the file is OUTSIDE any git repo (git exits
+# non-zero) it falls back to the ABSOLUTE path, not a bare basename. %{selection}
+# and %{buffer_name} sit in long-# raw strings (like the hx-nu bindings above) so a
+# `'#` in the text can't close the string early and abort the copy.
 s = [ '''
 :pipe-to #xml-coordinate-references→
-let bn = r#'%{buffer_name}'#
-let pre = (^git -C ($bn | path dirname) rev-parse --show-prefix | complete | get stdout | str trim)
-$'<selected-text file="($pre)($bn | path basename)" lines="%{selection_line_start}-%{selection_line_end}">' + r#'%{selection}'# + '</selected-text>' | pbcopy
+let abs = (r###########'%{buffer_name}'########### | path expand)
+let res = (^git -C ($abs | path dirname) rev-parse --show-prefix | complete)
+let file = if $res.exit_code == 0 { $"($res.stdout | str trim)($abs | path basename)" } else { $abs }
+$'<selected-text file="($file)" lines="%{selection_line_start}-%{selection_line_end}">' + r###########'%{selection}'########### + '</selected-text>' | pbcopy
 ''', ":write" ]
 
 S = [ '''
 :pipe-to #xml-coordinate-references→
-r#'<selected-text file="%sh{realpath %{buffer_name}}" lines="%{selection_line_start}-%{selection_line_end}">%{selection}</selected-text>'# | pbcopy
+let abs = (r###########'%{buffer_name}'########### | path expand)
+$'<selected-text file="($abs)" lines="%{selection_line_start}-%{selection_line_end}">' + r###########'%{selection}'########### + '</selected-text>' | pbcopy
 ''', ":write" ]
 
 v = '''
