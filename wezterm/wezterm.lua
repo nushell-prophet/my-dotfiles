@@ -266,6 +266,11 @@ config.keys = {
 -- QUICK SELECT PATTERNS
 -- ============================================================================
 local quick_select_patterns = {
+  -- git commit ranges: hash..hash (two-dot) and hash...hash (three-dot),
+  -- matched as one block. Must precede the bare-hash/jj rules below so the
+  -- whole range wins over selecting a single side.
+  "\\b[0-9a-f]{7,64}\\.{2,3}[0-9a-f]{7,64}\\b",
+
   -- jj change IDs (use k-z alphabet to avoid forming words)
   "\\b[k-z]{8,12}\\b",
 
