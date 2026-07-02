@@ -24,4 +24,4 @@ refactor: extract todo creation logic to shared module
 fix: add --recursive flag to cp commands in toolkit
 ```
 
-Keep descriptions concise and action-oriented. Add body text for complex changes.
+Keep descriptions concise and action-oriented. Body text follows the global intent-preservation rule — include the user's reasoning whenever the change had a why, not only for complex changes.
