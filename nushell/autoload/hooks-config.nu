@@ -1,6 +1,18 @@
 $env.config.hooks = {
     pre_prompt: [
         {
+            # Tag the last history row with ` #exit_<code>` when a command fails, and
+            # strip the tag again once the same command later succeeds. Makes failed
+            # commands visible in history search.
+            #
+            # The hook is ugly: I don't like rewriting history, and it has rough edges.
+            # E.g. pressing Up on a failed command in the REPL, I first have to delete
+            # the ` #exit_<code>` suffix before I can edit and rerun the line. Keeping it
+            # for now anyway.
+            #
+            # Coupling: nu-goodies capture.nu (match-history-command, completions-copy-out)
+            # strips this tag so `copy-out` still matches the untagged on-screen command.
+            # If this hook is ever removed, restore capture.nu to its clean, tag-unaware state.
             if ($nu.history-path =~ '\.sqlite3$') {
                 let exit_code = $env.LAST_EXIT_CODE
                 let sid = history session
