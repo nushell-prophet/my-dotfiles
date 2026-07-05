@@ -26,6 +26,35 @@ $env.config.history.file_format = "Sqlite"
 $env.config.history.isolation = true
 $env.config.history.max_size = 5000000
 
+# Inline history hints (fish-style autosuggestions), scoped to the current folder.
+# Set $env.LOCAL_COMPLETIONS = 0 to hint from the whole history; unset or any other value means local.
+# Why: direct SQL with LIMIT 1 instead of the `history` builtin — the closure fires per keystroke and the builtin loads the whole table each time. Deliberately bypasses history.isolation (that's about up-arrow, not suggestions).
+# Note: str length counts UTF-8 bytes, sqlite substr counts characters — a non-ASCII prefix just yields no hint, never an error.
+$env.config.hinter.closure = {|ctx|
+    if ($ctx.line | is-empty) { return null }
+
+    # Why: $env.-prefixed lines always hint globally — env manipulation isn't tied to a folder, and the LOCAL_COMPLETIONS toggle itself stays recallable from anywhere.
+    let global = ($env.LOCAL_COMPLETIONS? | default 1) == 0 or ($ctx.line | str starts-with '$env.')
+
+    let candidate = open $nu.history-path
+        | query db (
+            "SELECT command_line FROM history
+            WHERE substr(command_line, 1, :len) = :line"
+            + (if $global { "" } else { " AND cwd = :cwd" })
+            + " ORDER BY id DESC LIMIT 1"
+        ) --params (
+            {len: ($ctx.line | str length), line: $ctx.line}
+            | if $global { } else { insert cwd $ctx.cwd }
+        )
+        | get --optional 0.command_line
+
+    if $candidate == null or $candidate == $ctx.line {
+        null
+    } else {
+        $candidate | str substring ($ctx.line | str length)..
+    }
+}
+
 # Terminal & Display Settings
 $env.config.use_kitty_protocol = true
 $env.config.table.header_on_separator = true
