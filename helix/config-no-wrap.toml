@@ -90,42 +90,21 @@ right = ["selections", "primary-selection-length", "position", "position-percent
 
 # there is one more section with 'keys.select."+"'
 [keys.normal."+"]
-a = '''
-:append-output #append-commented-results→
-hx-nu -c r###########'%{selection}'########### o+e>| lines
-| each { $"# => ($in)"}
-| if r###########'%{selection}'########### ends-with "\n" {} else {prepend ''}
-| to text
-'''
-
-
-A = '''
-:append-output #append-abreviated-results→
-let lines = hx-nu -c r###########'%{selection}'########### o+e>| lines
-
-let len = $lines | length;
-
-$lines
-| if $len > 7 {
-  first 7 | append $'... and ($len - 7) more lines'
-} else {}
-| each {$"# => ($in)"}
-| if r###########'%{selection}'########### ends-with "\n" {} else {prepend ''}
-| to text
-'''
+# Helper bodies live in nu-hx.nu (hx-nu loads it for every shell call). Bindings use
+# the :pipe family because only it sends the selection on stdin — that's also why a/A
+# moved off :append-output. Stdin replaces the old r###########'%{selection}'###########
+# substitution, which broke on unlucky selection content (e.g. a stray '#).
+a = ":pipe nu-hx annotate" # append results as `# =>` comments after the selection
+A = ":pipe nu-hx annotate --abbreviate" # same, capped at 7 lines
 
 # Select a nu expression, press `+ b`: it evaluates the selection and grows the
 # result as a RECTANGLE on the line(s) BELOW the command, aligned to the command's
-# indent — overwriting only the columns it covers, keeping each line's right side,
-# padding past EOF with blank lines (the column-respect Helix's built-in `!` lacks).
-# The command stays as a label. Seamless because it's a key sequence, not a prompt:
-# write the buffer, run it, reload. hx-block edits the file on disk (same as the `g`
-# git key), so the buffer is flushed first and re-read after.
+# indent (the column-respect Helix's built-in `!` lacks). The command stays as a
+# label. Seamless because it's a key sequence, not a prompt: hx-block edits the file
+# on disk (same as the `g` git key), so the buffer is flushed first and re-read after.
 b = [
   ":write",
-  ''':pipe-to #block-below-command→
-hx-nu -c r###########'%{selection}'###########
-| hx-block --below r###########'%{buffer_name}'########### %{selection_line_end}''',
+  ":pipe-to nu-hx block-below r#'%{buffer_name}'# %{selection_line_end}",
   ":reload",
 ]
 
@@ -136,19 +115,13 @@ Correct grammar in the text. Respond only with corrected text.
 <text>%{selection}</text>'###########
 '''
 
-C = '''
-:pipe #remove-commented-output
-lines | where $it !~ "^# =>" | to text
-'''
+C = ":pipe nu-hx clear-annotations" # remove `# =>` result comments
 
 e = '''
 :pipe dotnu-embeds-update.nu
 '''
 
-f = '''
-:pipe #flatten-to-nuon
-hx-nu -c r###########'%{selection}'########### o+e>| to nuon
-'''
+f = ":pipe nu-hx flatten" # flatten-to-nuon
 
 g = "@<C-w><C-S-g><C-r>"
 
@@ -157,30 +130,12 @@ n = ":append-output date now | format date %%J-%%Q" # timestamp
 # useful for formatting markdown tables
 p = ":pipe pandoc --from markdown --to markdown"
 
-# `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path
-# (from the repo root), `S` (below) with the ABSOLUTE path. The selection arrives
-# on stdin ($in) — like the `v` binding — so its text needs no escaping; a raw
-# %{selection} substitution would instead break the command on a stray `'#`. Path
-# is computed in nushell because `%sh{}` runs through hx-nu (nushell), where POSIX
-# `$(...)` does not work. `path expand` makes buffer_name absolute so `git -C` hits
-# the file's real dir; relative path = git show-prefix (dir from repo root) +
-# basename, and outside a git repo it falls back to the ABSOLUTE path, not a bare
-# basename.
-s = [ '''
-:pipe-to #xml-coordinate-references→
-let sel = $in
-let abs = r#'%{buffer_name}'# | path expand
-let res = ^git -C ($abs | path dirname) rev-parse --show-prefix | complete
-let file = if $res.exit_code == 0 { $"($res.stdout | str trim)($abs | path basename)" } else { $abs }
-$'<selected-text file="($file)" lines="%{selection_line_start}-%{selection_line_end}">($sel)</selected-text>' | pbcopy
-''', ":write" ]
+# `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path,
+# `S` with the ABSOLUTE path. Path is computed in nushell (inside nu-hx copy-tag)
+# because `%sh{}` runs through hx-nu (nushell), where POSIX `$(...)` does not work.
+s = [ ":pipe-to nu-hx copy-tag r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}", ":write" ]
 
-S = [ '''
-:pipe-to #xml-coordinate-references→
-let sel = $in
-let abs = r#'%{buffer_name}'# | path expand
-$'<selected-text file="($abs)" lines="%{selection_line_start}-%{selection_line_end}">($sel)</selected-text>' | pbcopy
-''', ":write" ]
+S = [ ":pipe-to nu-hx copy-tag --absolute r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}", ":write" ]
 
 v = '''
 :pipe-to #voice
