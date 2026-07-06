@@ -44,7 +44,7 @@ def main [
     let row0 = if $below { $line } else { $line - 1 }   # --below: the line *after* `line`
     let col0 = if $below {
         # align under the command: start at its first non-blank column
-        let cmdline = $flines | get -i ($line - 1) | default ""
+        let cmdline = $flines | get --optional ($line - 1) | default ""
         $cmdline | split chars --grapheme-clusters | take while {|c| $c =~ '^\s$' } | length
     } else {
         ($col | default 1) - 1
