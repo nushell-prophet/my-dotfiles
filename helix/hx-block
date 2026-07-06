@@ -2,9 +2,10 @@
 # Column-aware block writer for the Helix<->nushell bridge.
 #
 # Shebang uses `--stdin` because: a nu script does NOT read process stdin into
-# `$in` by default (only the `--stdin` flag does). Helix's own shell already
-# passes it (config `shell = [... "--stdin" ...]`), but this nested call needs
-# its own flag, or the piped block arrives empty.
+# `$in` by default (only the `--stdin` flag does). It only matters for
+# standalone shell calls — the `+ b` binding reaches this file via nushell's
+# `run` keyword (nu-hx block-below), where pipeline input feeds main's $in
+# directly, no process stdin involved.
 #
 # Helix's built-in `!` (shell_insert_output) ignores the column: it drops the
 # command's output flush-left and shoves the rest of the line down. This instead
@@ -21,11 +22,14 @@
 def spaces [n: int] { "" | fill --character ' ' --width ([$n 0] | math max) }
 
 def main [
-    file: string   # buffer path (Helix %{buffer_name})
+    file: string   # buffer path (Helix %{file_path_absolute})
     line: int      # 1-based anchor line
-    --col: int     # 1-based left column of the block (cursor mode)
+    # --below declared BEFORE --col because: `run` (nu 0.114) binds flags by
+    # declaration position, not name — nu-hx block-below passes --below, which
+    # must land on the first flag slot. The order stays correct once run is fixed.
     --below        # place the block on line+1, aligned to `line`'s leading indent (ignores --col)
                    # Why: `+ b` keeps the selected command and grows the table below it.
+    --col: int     # 1-based left column of the block (cursor mode)
 ] {
     let raw = $in | default "" | into string
     if ($raw | is-empty) { return }   # producer printed nothing -> leave buffer untouched

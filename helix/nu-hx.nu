@@ -12,6 +12,8 @@
 #
 # Named nu-hx (not hx) because: `hx annotate` reads as a call to the editor binary.
 
+const HX_BLOCK = path self | path dirname | path join hx-block
+
 # Evaluate the selection and return it with its output appended as `# => ` comment
 # lines (the `+ a` / `+ A` bindings). For :pipe, which replaces the selection, so
 # the selection itself is echoed back first.
@@ -45,12 +47,13 @@ export def flatten []: string -> string {
 
 # Evaluate the selection and write the result as a rectangle on the line(s) below
 # it, via hx-block (the `+ b` binding). Edits the file on disk, so the binding
-# wraps it in :write / :reload.
+# wraps it in :write / :reload. `run` (0.114) executes hx-block in-process:
+# pipeline input reaches its main directly, no extra nu spawn per press.
 export def block-below [
     file: string # absolute buffer path (Helix %{file_path_absolute})
     line: int # anchor line (Helix %{selection_line_end})
 ]: string -> nothing {
-    hx-nu -c $in | hx-block --below $file $line
+    hx-nu -c $in | run $HX_BLOCK --below $file $line
 }
 
 # Copy the selection to the clipboard as an XML <selected-text> tag with file+line
