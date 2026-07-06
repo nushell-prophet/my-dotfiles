@@ -89,7 +89,6 @@ left = ["mode", "spinner", "file-name", "total-line-numbers", "file-encoding"]
 center = []
 right = ["selections", "primary-selection-length", "position", "position-percentage", "spacer", "diagnostics", "workspace-diagnostics", "version-control"]
 
-# there is one more section with 'keys.select."+"'
 [keys.normal."+"]
 # Helper bodies live in nu-hx.nu (hx-nu loads it for every shell call). Bindings use
 # the :pipe family because only it sends the selection on stdin — that's also why a/A
