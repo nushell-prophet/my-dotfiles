@@ -93,6 +93,27 @@ $env.config.color_config.leading_trailing_space_bg = {bg: red}
 $env.config.datetime_format.table = '%y-%m-%d %H:%M:%S'
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ▐ ABBREVIATIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+# Inline expansion as you type (fires anywhere in the line, not just command position).
+# Why: unlike aliases, the expanded command lands in history, so the fzf bindings, the hinter, and history queries see real commands. Replaces the former `alias lg = lazygit` (cozy standard-aliases.nu) for the same reason.
+# Keys collision-checked against 7.8k history entries (never typed as command or argument token) and PATH.
+
+$env.config.abbreviations = {
+    cs: 'claude --dangerously-skip-permissions'
+    cn: 'claude-nu'
+    gd: 'git diff'
+    gp: 'git pull'
+    gs: 'git status'
+    gl: 'git log'
+    gco: 'git checkout'
+    gb: 'git branch'
+    grv: 'git remote -v'
+    ut: 'use toolkit.nu'
+    lg: 'lazygit'
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ▐ CORE KEYBINDINGS
 # ═══════════════════════════════════════════════════════════════════════════════
 
