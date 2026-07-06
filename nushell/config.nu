@@ -456,9 +456,11 @@ def 'fzf-hist-current-commandline-prefix-replace' [] {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ───────────────────────────────────────────────────────────────────────────────
-# Copy Command to Clipboard (macOS)
+# Copy Command to Clipboard
 # Shortcut: Ctrl+Alt+C
 # Usage: Copies current command line to clipboard and adds confirmation
+# pbcopy is native on macOS; in cozy it's an OSC52 shim (cozy/docker-files/pbcopy),
+# the same clipboard path zellij/helix/lazygit use — portable, not Mac-only
 # ───────────────────────────────────────────────────────────────────────────────
 
 $env.config.keybindings ++= [
@@ -469,7 +471,6 @@ $env.config.keybindings ++= [
         mode: [emacs]
         event: {
             send: executehostcommand
-            # macos version command below
             cmd: "commandline | pbcopy; commandline edit --append ' # copied'"
         }
     }
