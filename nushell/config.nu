@@ -87,6 +87,9 @@ $env.config.rm.always_trash = false
 # Terminal can launch files in associated applications.
 $env.config.shell_integration.osc8 = false
 
+# Why: makes invisible leading/trailing spaces in table cells visible — a classic source of "why doesn't this match" bugs. Table renderer only; bare strings are not touched.
+$env.config.color_config.leading_trailing_space_bg = {bg: red}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ CORE KEYBINDINGS
 # ═══════════════════════════════════════════════════════════════════════════════
