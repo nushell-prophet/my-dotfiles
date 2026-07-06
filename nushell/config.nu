@@ -43,7 +43,7 @@ $env.config.hinter.closure = {|ctx|
             + (if $global { "" } else { " AND cwd = :cwd" })
             + " ORDER BY id DESC LIMIT 1"
         ) --params (
-            {len: ($ctx.line | str length), line: $ctx.line}
+            {len: ($ctx.line | str length) line: $ctx.line}
             | if $global { } else { insert cwd $ctx.cwd }
         )
         | get --optional 0.command_line
