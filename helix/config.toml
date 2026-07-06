@@ -40,6 +40,11 @@ max-wrap = 25 # increase value to reduce forced mid-word wrapping
 [editor.lsp]
 auto-signature-help = false
 
+[editor.statusline]
+left = ["mode", "spinner", "file-name", "total-line-numbers", "file-encoding"]
+center = []
+right = ["selections", "primary-selection-length", "position", "position-percentage", "spacer", "diagnostics", "workspace-diagnostics", "version-control"]
+
 [keys.normal]
 # Use system clipboard
 y = ["yank_main_selection_to_clipboard", "yank"]
@@ -72,7 +77,7 @@ pageup = "no_op"
 pagedown = "no_op"
 home = "no_op"
 end = "no_op"
-# "A-'" = [":append-output '$\"\"'", "collapse_selection"] 
+# "A-'" = [":append-output '$\"\"'", "collapse_selection"]
 
 [keys.select]
 y = ["yank_main_selection_to_clipboard", "yank"]
@@ -81,11 +86,6 @@ P = "paste_clipboard_before"
 d = ["yank_main_selection_to_clipboard", "delete_selection"]
 tab = "extend_parent_node_end"
 S-tab = "extend_parent_node_start"
-
-[editor.statusline]
-left = ["mode", "spinner", "file-name", "total-line-numbers", "file-encoding"]
-center = []
-right = ["selections", "primary-selection-length", "position", "position-percentage", "spacer", "diagnostics", "workspace-diagnostics", "version-control"]
 
 [keys.normal."+"]
 # Helper bodies live in nu-hx.nu (hx-nu loads it for every shell call). Bindings use
@@ -123,7 +123,7 @@ f = ":pipe nu-hx flatten" # flatten-to-nuon
 
 g = "@<C-w><C-S-g><C-r>"
 
-n = ":append-output date now | format date %%J-%%Q" # timestamp 
+n = ":append-output date now | format date %%J-%%Q" # timestamp
 
 # useful for formatting markdown tables
 p = ":pipe pandoc --from markdown --to markdown"
