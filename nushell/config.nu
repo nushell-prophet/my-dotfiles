@@ -89,6 +89,8 @@ $env.config.shell_integration.osc8 = false
 
 # Why: makes invisible leading/trailing spaces in table cells visible — a classic source of "why doesn't this match" bugs. Table renderer only; bare strings are not touched.
 $env.config.color_config.leading_trailing_space_bg = {bg: red}
+# Why: exact timestamps over the humanized default ("a day ago") — humanizing throws away the exact value in table work.
+$env.config.datetime_format.table = '%y-%m-%d %H:%M:%S'
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ CORE KEYBINDINGS
