@@ -22,7 +22,7 @@
 def spaces [n: int] { "" | fill --character ' ' --width ([$n 0] | math max) }
 
 def main [
-    file: string   # buffer path (Helix %{file_path_absolute})
+    file: string   # buffer path (Helix %{buffer_name})
     line: int      # 1-based anchor line
     # --below declared BEFORE --col because: `run` (nu 0.114) binds flags by
     # declaration position, not name — nu-hx block-below passes --below, which
