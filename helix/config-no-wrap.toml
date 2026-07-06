@@ -58,7 +58,8 @@ S-tab = "move_parent_node_start"
 
 # 'C-w' = ":write!"
 'C-r' = ":reload"
-'C-S-g' = ":pipe-to git add '%{buffer_name}'; git commit -m 'version %{buffer_name}' '%{buffer_name}'; sleep 0.8sec"
+# r#'...'# so a path with an apostrophe (don't.md) can't close a quote mid-command
+'C-S-g' = ":pipe-to git add r#'%{buffer_name}'#; git commit -m r#'version %{buffer_name}'# r#'%{buffer_name}'#; sleep 0.8sec"
 
 [keys.insert]
 # j = { j = "normal_mode" }
@@ -108,11 +109,11 @@ b = [
   ":reload",
 ]
 
+# the selection comes from stdin ($in), so prose with `'#` (markdown headers etc.)
+# can't terminate the prompt string — the reason the long-# fence existed here
 c = '''
 :pipe #correct english→
-^claude -p r###########'
-Correct grammar in the text. Respond only with corrected text.
-<text>%{selection}</text>'###########
+^claude -p $"Correct grammar in the text. Respond only with corrected text.\n<text>($in)</text>"
 '''
 
 C = ":pipe nu-hx clear-annotations" # remove `# =>` result comments
