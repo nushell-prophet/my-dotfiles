@@ -104,7 +104,7 @@ A = ":pipe nu-hx annotate --abbreviate" # same, capped at 7 lines
 # on disk (same as the `g` git key), so the buffer is flushed first and re-read after.
 b = [
   ":write",
-  ":pipe-to nu-hx block-below r#'%{buffer_name}'# %{selection_line_end}",
+  ":pipe-to nu-hx block-below r#'%{file_path_absolute}'# %{selection_line_end}",
   ":reload",
 ]
 
@@ -133,9 +133,9 @@ p = ":pipe pandoc --from markdown --to markdown"
 # `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path,
 # `S` with the ABSOLUTE path. Path is computed in nushell (inside nu-hx copy-tag)
 # because `%sh{}` runs through hx-nu (nushell), where POSIX `$(...)` does not work.
-s = [ ":pipe-to nu-hx copy-tag r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}", ":write" ]
+s = [ ":pipe-to nu-hx copy-tag r#'%{file_path_absolute}'# %{selection_line_start} %{selection_line_end}", ":write" ]
 
-S = [ ":pipe-to nu-hx copy-tag --absolute r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}", ":write" ]
+S = [ ":pipe-to nu-hx copy-tag --absolute r#'%{file_path_absolute}'# %{selection_line_start} %{selection_line_end}", ":write" ]
 
 v = '''
 :pipe-to #voice

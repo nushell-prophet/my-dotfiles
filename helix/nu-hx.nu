@@ -7,7 +7,7 @@
 # strings — which breaks on unlucky content (e.g. a stray '#). Here the selection
 # arrives on STDIN instead (Helix pipes it for :pipe/:pipe-to — but NOT for
 # :append-output/:insert-output, so bindings must use the pipe family), and needs
-# no escaping. Only %{buffer_name} and line numbers are still substituted. As a
+# no escaping. Only %{file_path_absolute} and line numbers are still substituted. As a
 # .nu file the logic also gets highlighting, `nu --ide-check`, and topiary.
 #
 # Named nu-hx (not hx) because: `hx annotate` reads as a call to the editor binary.
@@ -47,7 +47,7 @@ export def flatten []: string -> string {
 # it, via hx-block (the `+ b` binding). Edits the file on disk, so the binding
 # wraps it in :write / :reload.
 export def block-below [
-    file: string # buffer path (Helix %{buffer_name})
+    file: string # absolute buffer path (Helix %{file_path_absolute})
     line: int # anchor line (Helix %{selection_line_end})
 ]: string -> nothing {
     hx-nu -c $in | hx-block --below $file $line
@@ -58,17 +58,16 @@ export def block-below [
 # show-prefix + basename); outside a git repo it falls back to the ABSOLUTE path,
 # not a bare basename. --absolute skips git entirely.
 export def copy-tag [
-    file: string # buffer path (Helix %{buffer_name})
+    file: string # absolute buffer path (Helix %{file_path_absolute})
     start: int # first selected line (Helix %{selection_line_start})
     end: int # last selected line (Helix %{selection_line_end})
     --absolute # use the absolute path even inside a git repo
 ]: string -> nothing {
     let sel = $in
-    # `path expand` + `git -C` so the lookup hits the file's real dir, not Helix's cwd
-    let abs = $file | path expand
-    let path = if $absolute { $abs } else {
-        let res = ^git -C ($abs | path dirname) rev-parse --show-prefix | complete
-        if $res.exit_code == 0 { $"($res.stdout | str trim)($abs | path basename)" } else { $abs }
+    # `git -C` the file's own dir, so the repo lookup never depends on Helix's cwd
+    let path = if $absolute { $file } else {
+        let res = ^git -C ($file | path dirname) rev-parse --show-prefix | complete
+        if $res.exit_code == 0 { $"($res.stdout | str trim)($file | path basename)" } else { $file }
     }
     $'<selected-text file="($path)" lines="($start)-($end)">($sel)</selected-text>' | pbcopy
 }
