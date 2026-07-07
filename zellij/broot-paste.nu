@@ -13,7 +13,9 @@ let config_path = (
     | str join ';'
 )
 
-let selection = ^broot --conf $config_path | str trim
+let pwd = pwd
+
+let selection = ^broot --conf $config_path | str trim | if $in starts-with $pwd { path relative-to $pwd } else { }
 
 if ($selection | is-not-empty) {
     zellij action write-chars $selection --pane-id $"terminal_($target)"
