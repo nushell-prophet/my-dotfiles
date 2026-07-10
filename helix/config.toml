@@ -4,7 +4,7 @@ theme = "ayu_evolve"
 
 [editor]
 auto-pairs = false
-auto-save = true
+auto-save = false
 bufferline = "multiple"
 cursorcolumn = true
 cursorline = true
