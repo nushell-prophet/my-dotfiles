@@ -21,7 +21,7 @@ def create-left-prompt []: nothing -> string {
             | first
             | str replace --regex '^## ' ''
         } else { '' }
-        | $in + ' '
+        | if $in == '' { } else { $in + ' ' }
 
     let last_exit_code = if $env.LAST_EXIT_CODE != 0 {
         $'(ansi red_bold)($env.LAST_EXIT_CODE)(ansi reset) '
