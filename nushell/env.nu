@@ -21,8 +21,19 @@ def create_left_prompt [] {
             | first
             | str replace -r '^## ' ''
         } else { '' }
+        | $in + ' '
 
-    $'(char nl)(ansi grey)┏ (ansi reset)($path_segment) ($git_status)'
+    let last_exit_code = if ($env.LAST_EXIT_CODE != 0) {
+        $'(ansi rb)($env.LAST_EXIT_CODE)(ansi reset) '
+    } else { "" }
+
+    let shlvl = $env.SHLVL? | default 1
+        # show only if there are more than 2 instances
+        | if $in <= 2 { '' } else { $'(ansi yellow)nu($in)(ansi reset) ' }
+
+    let duration = $env.CMD_DURATION_MS | into int | if $in < 90 { '' } else { $'($in)ms ' }
+
+    $'(char nl)(ansi grey)┏ (ansi reset)($path_segment) ($git_status)($duration)($last_exit_code)($shlvl)'
     | append $'(ansi grey)┗━(ansi reset)'
     | str join (char nl)
 }
