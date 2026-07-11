@@ -1,15 +1,15 @@
 # Nushell Environment Config File
 
-def create_left_prompt [] {
-    let dir = do -i { pwd | path relative-to $nu.home-dir }
+def create-left-prompt []: nothing -> string {
+    let dir = do --ignore-errors { pwd | path relative-to $nu.home-dir }
         | match $in {
             null => (pwd)
             '' => '~'
             $relative_pwd => ([~ $relative_pwd] | path join)
         }
 
-    let path_color = (if (is-admin) { ansi red_bold } else { ansi green_italic })
-    let separator_color = (if (is-admin) { ansi light_red_bold } else { ansi white })
+    let path_color = if (is-admin) { ansi red_bold } else { ansi green_italic }
+    let separator_color = if (is-admin) { ansi light_red_bold } else { ansi white }
     let path_segment = $"($path_color)($dir)(ansi reset)"
         | str replace --all (char path_sep) $"($separator_color)(char path_sep)($path_color)"
 
@@ -19,18 +19,19 @@ def create_left_prompt [] {
             $in.stdout
             | lines
             | first
-            | str replace -r '^## ' ''
+            | str replace --regex '^## ' ''
         } else { '' }
         | $in + ' '
 
-    let last_exit_code = if ($env.LAST_EXIT_CODE != 0) {
-        $'(ansi rb)($env.LAST_EXIT_CODE)(ansi reset) '
+    let last_exit_code = if $env.LAST_EXIT_CODE != 0 {
+        $'(ansi red_bold)($env.LAST_EXIT_CODE)(ansi reset) '
     } else { "" }
 
     let shlvl = $env.SHLVL? | default 1
         # show only if there are more than 2 instances
         | if $in <= 2 { '' } else { $'(ansi yellow)nu($in)(ansi reset) ' }
 
+    # hide near-instant commands
     let duration = $env.CMD_DURATION_MS | into int | if $in < 90 { '' } else { $'($in)ms ' }
 
     $'(char nl)(ansi grey)┏ (ansi reset)($path_segment) ($git_status)($duration)($last_exit_code)($shlvl)'
@@ -38,7 +39,7 @@ def create_left_prompt [] {
     | str join (char nl)
 }
 
-$env.PROMPT_COMMAND = {|| create_left_prompt }
+$env.PROMPT_COMMAND = {|| create-left-prompt }
 $env.PROMPT_COMMAND_RIGHT = {|| null }
 
 # The prompt indicators are environmental variables that represent
