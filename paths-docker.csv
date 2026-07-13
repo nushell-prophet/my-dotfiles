@@ -16,7 +16,6 @@ full-path
 ~/.config/helix/languages.toml
 ~/.config/lazygit/config.yml
 ~/.config/nushell/autoload/br.nu
-~/.config/nushell/autoload/carapace-config.nu
 ~/.config/nushell/autoload/hooks-config.nu
 ~/.config/nushell/autoload/zzz_ignore_vars.nu
 ~/.config/nushell/config.nu
