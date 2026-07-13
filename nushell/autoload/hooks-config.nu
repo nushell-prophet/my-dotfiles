@@ -1,32 +1,5 @@
 $env.config.hooks = {
-    pre_prompt: [
-        {
-            # Tag the last history row with ` #exit_<code>` when a command fails, and
-            # strip the tag again once the same command later succeeds. Makes failed
-            # commands visible in history search.
-            #
-            # The hook is ugly: I don't like rewriting history, and it has rough edges.
-            # E.g. pressing Up on a failed command in the REPL, I first have to delete
-            # the ` #exit_<code>` suffix before I can edit and rerun the line. Keeping it
-            # for now anyway.
-            #
-            # Coupling: nu-goodies capture.nu (match-history-command, completions-copy-out)
-            # strips this tag so `copy-out` still matches the untagged on-screen command.
-            # If this hook is ever removed, restore capture.nu to its clean, tag-unaware state.
-            if ($nu.history-path =~ '\.sqlite3$') {
-                let exit_code = $env.LAST_EXIT_CODE
-                let sid = history session
-                if $exit_code >= 1 {
-                    open $nu.history-path
-                    | query db $"UPDATE history SET command_line = CASE WHEN command_line LIKE '% #exit_%' THEN SUBSTR\(command_line, 1, INSTR\(command_line, ' #exit_'\) - 1\) || ' #exit_($exit_code)' ELSE command_line || ' #exit_($exit_code)' END WHERE id = \(SELECT MAX\(id\) FROM history WHERE session_id = ($sid)\)"
-                } else {
-                    # Strip #exit_ from all entries matching the last command
-                    open $nu.history-path
-                    | query db $"UPDATE history SET command_line = SUBSTR\(command_line, 1, INSTR\(command_line, ' #exit_'\) - 1\) WHERE command_line LIKE \(SELECT CASE WHEN command_line LIKE '% #exit_%' THEN SUBSTR\(command_line, 1, INSTR\(command_line, ' #exit_'\) - 1\) ELSE command_line END FROM history WHERE id = \(SELECT MAX\(id\) FROM history WHERE session_id = ($sid)\)\) || ' #exit_%'"
-                }
-            }
-        }
-    ]
+    pre_prompt: [{ null }] # run before the prompt is shown
     pre_execution: [{ null }] # run before the repl input is run
     env_change: {
         PWD: [
