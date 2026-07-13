@@ -391,37 +391,39 @@ def fzf-history-source [] {
             | if ($in | is-empty) { '' } else { $'^($in)' }
 
         let reload = $"reload:nu -n --no-std-lib \"($src_script)\" \"($db)\""
-        let cwd_toggle = ($"[ \"$FZF_PROMPT\" = \"cwd> \" ]"
+        let cwd_toggle = (
+            $"[ \"$FZF_PROMPT\" = \"cwd> \" ]"
             + $" && echo 'change-prompt\(> )+($reload)'"
-            + $" || echo 'change-prompt\(cwd> )+($reload) --cwd'")
+            + $" || echo 'change-prompt\(cwd> )+($reload) --cwd'"
+        )
 
         let selection = '' | ^fzf ...[
-            '--read0'
-            '--print0'
-            '--multi'
-            '--cycle'
-            '--layout=reverse'
-            '--height=70%'
-            '--wrap'
-            "--wrap-sign=\t↳ "
-            '--no-sort' # start in recency order; ctrl-f/ctrl-r switch to relevance
-            '--tiebreak=begin,length,chunk'
-            "--delimiter=\t"
-            '--nth=2..' # match on the command, not the id column
-            '--with-shell=sh -c'
-            '--prompt=> '
-            $'--query=($query)'
-            '--expect=alt-enter'
-            '--header=enter replace · alt-enter insert · alt-c cwd · ctrl-f sort · alt-r raw'
-            '--header-first'
-            '--bind=ctrl-f:toggle-sort'
-            '--bind=ctrl-r:toggle-sort'
-            '--bind=alt-r:toggle-raw'
-            $'--bind=start:($reload)'
-            $'--bind=alt-c:transform:($cwd_toggle)'
-            '--preview-window=bottom:30%:wrap'
-            $'--preview=nu -n --no-std-lib "($preview_script)" "($db)" {1} {2..}'
-        ] | complete
+                '--read0'
+                '--print0'
+                '--multi'
+                '--cycle'
+                '--layout=reverse'
+                '--height=70%'
+                '--wrap'
+                "--wrap-sign=\t↳ "
+                '--no-sort' # start in recency order; ctrl-f/ctrl-r switch to relevance
+                '--tiebreak=begin,length,chunk'
+                "--delimiter=\t"
+                '--nth=2..' # match on the command, not the id column
+                '--with-shell=sh -c'
+                '--prompt=> '
+                $'--query=($query)'
+                '--expect=alt-enter'
+                '--header=enter replace · alt-enter insert · alt-c cwd · ctrl-f sort · alt-r raw'
+                '--header-first'
+                '--bind=ctrl-f:toggle-sort'
+                '--bind=ctrl-r:toggle-sort'
+                '--bind=alt-r:toggle-raw'
+                $'--bind=start:($reload)'
+                $'--bind=alt-c:transform:($cwd_toggle)'
+                '--preview-window=bottom:30%:wrap'
+                $'--preview=nu -n --no-std-lib "($preview_script)" "($db)" {1} {2..}'
+            ] | complete
 
         match $selection.exit_code {
             0 => {
