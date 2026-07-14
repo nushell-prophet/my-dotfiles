@@ -57,13 +57,15 @@ $env.TRANSIENT_PROMPT_COMMAND = {|| "\n" }
 # $env.TRANSIENT_PROMPT_MULTILINE_INDICATOR = {|| "" }
 # $env.TRANSIENT_PROMPT_COMMAND_RIGHT = {|| "" }
 
-$env.XDG_STATE_HOME = ($env.HOME | path join ".local" "state")
-$env.XDG_CACHE_HOME = ($env.HOME | path join ".cache")
 # Why: NUPM_HOME below reads XDG_DATA_HOME, and TOPIARY_* below
-# read XDG_CONFIG_HOME. cozy bakes both into the OS env (Dockerfile ENV or
-# /etc/sandbox-persistent.sh), but on a fresh shell or macOS host they
-# aren't set, and nu would crash with "Cannot find column XDG_*_HOME".
-# Honor existing values if present, fall back to the XDG-spec defaults.
+# read XDG_CONFIG_HOME. cozy bakes CONFIG/DATA/CACHE into the OS env
+# (Dockerfile ENV or /etc/sandbox-persistent.sh), but on a fresh shell or
+# macOS host they aren't set, and nu would crash with "Cannot find column
+# XDG_*_HOME". Honor an existing value if present (so a baked or host value
+# wins), fall back to the XDG-spec defaults. All four use the same pattern:
+# an unconditional set would silently override whatever cozy baked.
+$env.XDG_STATE_HOME = ($env.XDG_STATE_HOME? | default ($env.HOME | path join ".local" "state"))
+$env.XDG_CACHE_HOME = ($env.XDG_CACHE_HOME? | default ($env.HOME | path join ".cache"))
 $env.XDG_DATA_HOME = ($env.XDG_DATA_HOME? | default ($env.HOME | path join ".local" "share"))
 $env.XDG_CONFIG_HOME = ($env.XDG_CONFIG_HOME? | default ($env.HOME | path join ".config"))
 $env.NUPM_HOME = ($env.XDG_DATA_HOME | path join "nupm")
