@@ -8,7 +8,7 @@
 #
 # Commands:
 #   pull-from-machine        - Copy configs from machine into repo
-#   push-to-machine          - Copy configs from repo to machine (--dry-run for preview)
+#   push-to-machine          - Copy configs from repo to machine (--dry-run for preview; pass module names to limit)
 #   fill-candidates          - Find new config files to potentially track
 #   cleanup-paths-not-in-csv - List repo files not tracked in CSV
 #   install-skills           - Deploy Claude skills from sibling skill repos into ~/.claude/skills/
@@ -199,6 +199,7 @@ def show-push-diff [paths: table] {
 
 # Copy config files from the repository to the local machine
 export def push-to-machine [
+    ...modules: string # limit push to these repo subdirs or files (e.g. zellij helix); omit for all
     --create-dirs # in case of missing directories - create them in place
     --force # overwrite files with uncommitted changes
     --commit-existing # snapshot dirty destination/orphan files in git before pushing (instead of erroring)
@@ -209,6 +210,19 @@ export def push-to-machine [
 ] {
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
     let paths = expand-paths $paths_file
+        | if ($modules | is-empty) { } else {
+            where {|r| $modules | any {|m| $r.path-in-repo == $m or ($r.path-in-repo | str starts-with $"($m)/") } }
+        }
+
+    # Why: fail fast on a typo instead of silently pushing nothing for that name
+    let unmatched = $modules | where {|m|
+        not ($paths.path-in-repo | any { $in == $m or ($in | str starts-with $"($m)/") })
+    }
+    if ($unmatched | is-not-empty) {
+        print $"(ansi red)No tracked paths match:(ansi reset) ($unmatched | str join ', ')"
+        return
+    }
+
     let to_copy = $paths | where in-repo
     let to_delete = if $delete_orphans {
         $paths | where {|r| (not $r.in-repo) and $r.on-machine }
