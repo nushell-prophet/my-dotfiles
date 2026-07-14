@@ -7,7 +7,7 @@
 #   - paths-local.csv: Optional local overrides with status column (update, ignore)
 #
 # Commands:
-#   pull-from-machine        - Copy configs from machine into repo
+#   pull-from-machine        - Copy configs from machine into repo (module names + --docker supported)
 #   push-to-machine          - Copy configs from repo to machine (--dry-run for preview; pass module names to limit)
 #   fill-candidates          - Find new config files to potentially track
 #   cleanup-paths-not-in-csv - List repo files not tracked in CSV
@@ -161,11 +161,33 @@ def expand-paths [paths_file: string = 'paths-default.csv'] {
     | insert on-machine {|r| $r.full-path    | path exists }
 }
 
+# Filter expanded paths to the given module names (repo subdirs or exact files).
+# Empty names = no filter. A name matching no tracked path fails fast — a typo
+# would otherwise silently select nothing for it.
+def select-modules [modules: list<string>] {
+    let paths = $in
+    if ($modules | is-empty) { return $paths }
+
+    let selected = $paths | where {|r|
+        $modules | any {|m| $r.path-in-repo == $m or ($r.path-in-repo | str starts-with $"($m)/") }
+    }
+    let unmatched = $modules | where {|m|
+        not ($selected.path-in-repo | any { $in == $m or ($in | str starts-with $"($m)/") })
+    }
+    if ($unmatched | is-not-empty) {
+        error make {msg: $"No tracked paths match: ($unmatched | str join ', ')"}
+    }
+    $selected
+}
+
 # Copy config files from the local machine into the repository
 export def pull-from-machine [
+    ...modules: string # limit pull to these repo subdirs or files (e.g. zellij helix); omit for all
     --force # overwrite files with uncommitted changes
+    --docker # use paths-docker.csv (pulling inside the sandbox VM)
 ] {
-    let paths = expand-paths | where on-machine
+    let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
+    let paths = expand-paths $paths_file | select-modules $modules | where on-machine
 
     if not $force and (check-dirty-files $paths path-in-repo "repo files") { return }
 
@@ -209,20 +231,7 @@ export def push-to-machine [
     --delete-orphans # remove machine files whose repo source was deleted
 ] {
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
-    let paths = expand-paths $paths_file
-        | if ($modules | is-empty) { } else {
-            where {|r| $modules | any {|m| $r.path-in-repo == $m or ($r.path-in-repo | str starts-with $"($m)/") } }
-        }
-
-    # Why: fail fast on a typo instead of silently pushing nothing for that name
-    let unmatched = $modules | where {|m|
-        not ($paths.path-in-repo | any { $in == $m or ($in | str starts-with $"($m)/") })
-    }
-    if ($unmatched | is-not-empty) {
-        print $"(ansi red)No tracked paths match:(ansi reset) ($unmatched | str join ', ')"
-        return
-    }
-
+    let paths = expand-paths $paths_file | select-modules $modules
     let to_copy = $paths | where in-repo
     let to_delete = if $delete_orphans {
         $paths | where {|r| (not $r.in-repo) and $r.on-machine }
