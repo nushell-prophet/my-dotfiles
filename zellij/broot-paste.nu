@@ -15,11 +15,12 @@ let config_path = (
 
 let pwd = pwd
 
-let selection = ^broot --conf $config_path | str trim | if $in starts-with $pwd { path relative-to $pwd } else { }
+let selection = ^broot --conf $config_path | str trim
 
 if ($selection | is-not-empty) {
-    zellij action write-chars $selection --pane-id $"terminal_($target)"
-    # Why: mirror the picked path to the clipboard so it's reusable outside the pane;
-    # pbcopy is native on macOS and an OSC 52 shim in cozy — portable on both targets
+    # Why: clipboard always gets the absolute path — usable from any cwd, unlike the
+    # pasted form; pbcopy is native on macOS and an OSC 52 shim in cozy
     $selection | pbcopy
+    let to_paste = $selection | if $in starts-with $pwd { path relative-to $pwd } else { }
+    zellij action write-chars $to_paste --pane-id $"terminal_($target)"
 }
