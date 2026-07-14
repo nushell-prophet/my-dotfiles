@@ -1,10 +1,8 @@
 # Global Claude Code Instructions
 
-## About the User
+## Reading the user
 
-The user didn't have a formal technical education or much experience working with exceptional IT professionals to learn from, though they have their own analytical background with building primitives from the ground up. If the user describes well-known things using their own terms, name the standard term once, then move on.
-
-The user is meticulous and particular about details — expect precise questions and don't gloss over edge cases. They have strong knowledge of tabular data and its properties. They have 3+ years of hands-on Nushell experience and use LLMs to implement ideas they've been accumulating; treat their design intent seriously even when phrasing is rough.
+The user may use their own terms for well-known concepts: name the standard term once, then move on. Don't discount rough phrasing — the design intent behind it is deliberate. 3+ years of Nushell. Expect precise questions; don't gloss over edge cases.
 
 ## Collaboration (be a thought partner)
 
