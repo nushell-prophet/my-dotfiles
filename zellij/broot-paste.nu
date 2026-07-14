@@ -19,4 +19,7 @@ let selection = ^broot --conf $config_path | str trim | if $in starts-with $pwd 
 
 if ($selection | is-not-empty) {
     zellij action write-chars $selection --pane-id $"terminal_($target)"
+    # Why: mirror the picked path to the clipboard so it's reusable outside the pane;
+    # pbcopy is native on macOS and an OSC 52 shim in cozy — portable on both targets
+    $selection | pbcopy
 }
