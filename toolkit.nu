@@ -240,16 +240,20 @@ export def push-to-machine [
         if not $force and (check-dirty-files $to_delete full-path "orphans") { return }
     }
 
-    $to_copy
-    | group-by { $in.full-path | path dirname }
-    | items {|dirname v|
-        if ($dirname | path exists) { $v } else {
-            if $create_dirs { mkdir $dirname; $v }
+    # Why: skips files whose parent dir is missing when --create-dirs is off, so
+    # $copied — not the planned $to_copy — is the single source of truth for what
+    # actually landed on the machine. --commit-changes derives touched_files from it.
+    let copied = $to_copy
+        | group-by { $in.full-path | path dirname }
+        | items {|dirname v|
+            if ($dirname | path exists) { $v } else {
+                if $create_dirs { mkdir $dirname; $v }
+            }
         }
-    }
-    | compact
-    | flatten
-    | each { cp $in.path-in-repo $in.full-path }
+        | compact
+        | flatten
+
+    $copied | each { cp $in.path-in-repo $in.full-path }
 
     $to_delete | each { rm $in.full-path }
 
@@ -276,7 +280,7 @@ export def push-to-machine [
             let target_dir = $target_dir | path expand --no-symlink
             if not ($target_dir | path join '.git' | path exists) { return }
 
-            let touched_files = $to_copy | get full-path
+            let touched_files = $copied | get full-path
                 | append ($to_delete | get full-path)
                 | where { $in | str starts-with $"($target_dir)/" }
 
