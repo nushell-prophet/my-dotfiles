@@ -1,10 +1,22 @@
 # Nushell Environment Config File
 
 def create-left-prompt []: nothing -> string {
-    # Why: in the cozy container the workspace is mounted at the host's
-    # absolute path (/Users/<name>/…), which a relative-to-$nu.home-dir check
-    # never matches — so collapse any user-home-shaped prefix, not only $HOME.
-    let dir = pwd | str replace --regex '^/(?:Users|home)/[^/]+' '~'
+    # Why: ~ must mean this user's home, not any /Users/<x>. In the cozy
+    # container the workspace is mounted at the host's absolute path, which
+    # $nu.home-dir never matches — the host home is the user-home prefix of
+    # WORKSPACE_DIR (already /c/… rewritten on Windows).
+    let homes = [$nu.home-dir]
+        | append ($env.WORKSPACE_DIR? | default '' | parse --regex '^(?<home>(?:/[a-z])?/(?:Users|home)/[^/]+)' | get --optional 0.home)
+        | compact
+
+    let dir = $homes | reduce --fold (pwd) {|home acc|
+        do --ignore-errors { $acc | path relative-to $home }
+        | match $in {
+            null => $acc
+            '' => '~'
+            $rel => ([~ $rel] | path join)
+        }
+    }
 
     let path_color = if (is-admin) { ansi red_bold } else { ansi green_italic }
     let separator_color = if (is-admin) { ansi light_red_bold } else { ansi white }
