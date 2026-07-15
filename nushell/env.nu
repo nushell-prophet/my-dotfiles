@@ -137,6 +137,10 @@ const NU_PLUGIN_DIRS = [
 
 $env.PATH = (
     $env.PATH
+    # Why: `nu --mcp` skips the startup string→list PATH conversion, so PATH
+    # arrives here as one colon-joined string; `where { path exists }` below
+    # would drop it whole, leaving only the prepended dirs (no git, no prompt).
+    | if ($in | describe) == string { split row (char esep) } else { }
     | prepend [
         ($env.NUPM_HOME | path join "scripts")
         ($env.NUPM_HOME | path join "modules")
