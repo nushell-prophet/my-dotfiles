@@ -50,7 +50,7 @@ $env.PROMPT_INDICATOR_VI_NORMAL = {|| "> " }
 $env.PROMPT_MULTILINE_INDICATOR = {|| "" }
 
 # Collapse the 2-line prompt to a single newline for previously entered commands
-$env.TRANSIENT_PROMPT_COMMAND = {|| "\n" }
+# $env.TRANSIENT_PROMPT_COMMAND = {|| "\n" }
 # $env.TRANSIENT_PROMPT_INDICATOR = {|| "" }
 # $env.TRANSIENT_PROMPT_INDICATOR_VI_INSERT = {|| "" }
 # $env.TRANSIENT_PROMPT_INDICATOR_VI_NORMAL = {|| "" }
