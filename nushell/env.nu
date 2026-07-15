@@ -38,7 +38,10 @@ def create-left-prompt []: nothing -> string {
         $'(ansi red_bold)($env.LAST_EXIT_CODE)(ansi reset) '
     } else { "" }
 
-    let shlvl = $env.SHLVL? | default 1
+    # Why: into int because SHLVL arrives as a string when inherited from the
+    # OS environment (e.g. a nu spawned outside a login shell) — without it the
+    # comparison below kills the whole prompt.
+    let shlvl = $env.SHLVL? | default 1 | into int
         # show only if there are more than 2 instances
         | if $in <= 2 { '' } else { $'(ansi yellow)nu($in)(ansi reset) ' }
 
