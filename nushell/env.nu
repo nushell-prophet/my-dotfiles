@@ -44,13 +44,17 @@ def create-left-prompt []: nothing -> string {
 
     # hide near-instant commands
     let duration = $env.CMD_DURATION_MS | into int | if $in < 90 { '' } else { $'($in)ms ' }
+
+    # everything after the path — built once, so the width math below and the
+    # rendered prompt can't drift apart
+    let tail = $'($git_status)($duration)($last_exit_code)($shlvl)'
+    let width = { ansi strip | str length --grapheme-clusters } # visible width
     let max_width = (term size).columns - 2 # the `┏ ` prefix takes 2 cells
 
     # Why: when the line would overflow, shorten the path fish-style
     # (~/g/a/nu-multiproof) rather than let the cap below cut off the more
     # informative tail (git, duration, exit code).
-    let overhead = $' ($git_status)($duration)($last_exit_code)($shlvl)' | ansi strip | str length --grapheme-clusters
-    let dir = if (($dir | str length --grapheme-clusters) + $overhead) <= $max_width { $dir } else {
+    let dir = if (($dir | do $width) + 1 + ($tail | do $width)) <= $max_width { $dir } else {
         $dir | split row (char path_sep)
         | drop 1
         # ~ and ~ws markers stay whole; dot-dirs keep two chars
@@ -67,8 +71,8 @@ def create-left-prompt []: nothing -> string {
     # Why: the prompt must never be wider than one terminal line. str substring
     # would count the invisible ansi codes, so measure the stripped text and
     # drop the colors in the rare overflow case.
-    let longprompt = $'($path_segment) ($git_status)($duration)($last_exit_code)($shlvl)'
-        | if ($in | ansi strip | str length --grapheme-clusters) <= $max_width { } else {
+    let longprompt = $'($path_segment) ($tail)'
+        | if ($in | do $width) <= $max_width { } else {
             ($in | ansi strip | str substring --grapheme-clusters 0..<($max_width - 1)) + '…'
         }
 
