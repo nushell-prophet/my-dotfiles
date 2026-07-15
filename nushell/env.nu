@@ -1,22 +1,21 @@
 # Nushell Environment Config File
 
 def create-left-prompt []: nothing -> string {
-    # Why: ~ must mean this user's home, not any /Users/<x>. In the cozy
-    # container the workspace is mounted at the host's absolute path, which
-    # $nu.home-dir never matches — the host home is the user-home prefix of
-    # WORKSPACE_DIR (already /c/… rewritten on Windows).
-    let homes = [$nu.home-dir]
-        | append ($env.WORKSPACE_DIR? | default '' | parse --regex '^(?<home>(?:/[a-z])?/(?:Users|home)/[^/]+)' | get --optional 0.home)
-        | compact
+    # Why: ~ means this machine's home only. In the cozy container the
+    # workspace is mounted at the host's absolute path — that is not home
+    # there, so it gets its own marker: WORKSPACE_DIR collapses to ~ws.
+    # On the host the ~ rule fires first and the ~ws rule never matches.
+    let prefixes = [{path: $nu.home-dir, mark: '~'}]
+        | append ($env.WORKSPACE_DIR? | match $in { null => [], _ => {path: $in, mark: '~ws'} })
 
-    let dir = $homes | reduce --fold (pwd) {|home acc|
-        do --ignore-errors { $acc | path relative-to $home }
-        | match $in {
-            null => $acc
-            '' => '~'
-            $rel => ([~ $rel] | path join)
+    let dir = $prefixes | reduce --fold (pwd) {|p acc|
+            do --ignore-errors { $acc | path relative-to $p.path }
+            | match $in {
+                null => $acc
+                '' => $p.mark
+                $rel => ([$p.mark $rel] | path join)
+            }
         }
-    }
 
     let git_status = git status --branch --porcelain
         | complete
@@ -54,7 +53,8 @@ def create-left-prompt []: nothing -> string {
     let dir = if (($dir | str length --grapheme-clusters) + $overhead) <= $max_width { $dir } else {
         $dir | split row (char path_sep)
         | drop 1
-        | each {|c| $c | str substring --grapheme-clusters 0..(if ($c starts-with '.') { 1 } else { 0 }) }
+        # ~ and ~ws markers stay whole; dot-dirs keep two chars
+        | each {|c| if ($c starts-with '~') { $c } else { $c | str substring --grapheme-clusters 0..(if ($c starts-with '.') { 1 } else { 0 }) } }
         | append ($dir | path basename)
         | str join (char path_sep)
     }
