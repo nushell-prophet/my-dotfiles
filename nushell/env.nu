@@ -1,12 +1,10 @@
 # Nushell Environment Config File
 
 def create-left-prompt []: nothing -> string {
-    let dir = do --ignore-errors { pwd | path relative-to $nu.home-dir }
-        | match $in {
-            null => (pwd)
-            '' => '~'
-            $relative_pwd => ([~ $relative_pwd] | path join)
-        }
+    # Why: in the cozy container the workspace is mounted at the host's
+    # absolute path (/Users/<name>/…), which a relative-to-$nu.home-dir check
+    # never matches — so collapse any user-home-shaped prefix, not only $HOME.
+    let dir = pwd | str replace --regex '^/(?:Users|home)/[^/]+' '~'
 
     let path_color = if (is-admin) { ansi red_bold } else { ansi green_italic }
     let separator_color = if (is-admin) { ansi light_red_bold } else { ansi white }
@@ -20,6 +18,13 @@ def create-left-prompt []: nothing -> string {
             | lines
             | first
             | str replace --regex '^## ' ''
+            # Why: the raw line is wordy — `main...codeberg/main [ahead 26]`;
+            # the upstream name is noise, so compact to starship-style `main ⇡26⇣2`
+            | str replace --regex '\.\.\.\S+' ''
+            | str replace 'ahead ' '⇡'
+            | str replace 'behind ' '⇣'
+            | str replace ', ' ''
+            | str replace --regex ' \[(.+)\]$' ' $1'
         } else { '' }
         | if $in == '' { } else { $in + ' ' }
 
@@ -33,8 +38,17 @@ def create-left-prompt []: nothing -> string {
 
     # hide near-instant commands
     let duration = $env.CMD_DURATION_MS | into int | if $in < 90 { '' } else { $'($in)ms ' }
+    let max_width = (term size).columns - 2 # the `┏ ` prefix takes 2 cells
 
-    $'(char nl)(ansi grey)┏ (ansi reset)($path_segment) ($git_status)($duration)($last_exit_code)($shlvl)'
+    # Why: the prompt must never be wider than one terminal line. str substring
+    # would count the invisible ansi codes, so measure the stripped text and
+    # drop the colors in the rare overflow case.
+    let longprompt = $'($path_segment) ($git_status)($duration)($last_exit_code)($shlvl)'
+        | if ($in | ansi strip | str length --grapheme-clusters) <= $max_width { } else {
+            ($in | ansi strip | str substring --grapheme-clusters 0..<($max_width - 1)) + '…'
+        }
+
+    $'(char nl)(ansi grey)┏ (ansi reset)($longprompt)'
     | append $'(ansi grey)┗━(ansi reset)'
     | str join (char nl)
 }
