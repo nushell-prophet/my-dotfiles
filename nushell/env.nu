@@ -1,21 +1,18 @@
 # Nushell Environment Config File
 
 def create-left-prompt []: nothing -> string {
-    # Why: ~ means this machine's home only. In the cozy container the
-    # workspace is mounted at the host's absolute path — that is not home
-    # there, so it gets its own marker: WORKSPACE_DIR collapses to ~ws.
-    # On the host the ~ rule fires first and the ~ws rule never matches.
-    let prefixes = [{path: $nu.home-dir mark: '~'}]
-        | append ($env.WORKSPACE_DIR? | match $in { null => [] _ => {path: $in mark: '~ws'} })
-
-    let dir = $prefixes | reduce --fold (pwd) {|p acc|
-            do --ignore-errors { $acc | path relative-to $p.path }
-            | match $in {
-                null => $acc
-                '' => $p.mark
-                $rel => ([$p.mark $rel] | path join)
-            }
+    # collapse $in to $mark when it sits under $base; unchanged otherwise
+    let collapse = {|base mark|
+        let path = $in
+        do --ignore-errors { $path | path relative-to $base }
+        | match $in {
+            null => $path
+            '' => $mark
+            $rel => ([$mark $rel] | path join)
         }
+    }
+
+    let dir = pwd | do $collapse $nu.home-dir '~'
 
     let git_status = git status --branch --porcelain
         | complete
@@ -54,16 +51,28 @@ def create-left-prompt []: nothing -> string {
     let width = { ansi strip | str length --grapheme-clusters } # visible width
     let max_width = (term size).columns - 2 # the `┏ ` prefix takes 2 cells
 
-    # Why: when the line would overflow, shorten the path fish-style
-    # (~/g/a/nu-multiproof) rather than let the cap below cut off the more
-    # informative tail (git, duration, exit code).
-    let dir = if (($dir | do $width) + 1 + ($tail | do $width)) <= $max_width { $dir } else {
-        $dir | split row (char path_sep)
-        | drop 1
-        # ~ and ~ws markers stay whole; dot-dirs keep two chars
-        | each {|c| if ($c starts-with '~') { $c } else { $c | str substring --grapheme-clusters 0..(if ($c starts-with '.') { 1 } else { 0 }) } }
-        | append ($dir | path basename)
-        | str join (char path_sep)
+    # Why: when the line would overflow, shorten the path rather than let the
+    # cap below cut off the more informative tail (git, duration, exit code).
+    # Shortening is a last resort: the full path is what wezterm quick-select
+    # copies, so it stays whole while there is space. That is also why the
+    # workspace mount (in the container it sits at the host's long absolute
+    # path, not under ~ there) collapses to ~ws only here, not unconditionally.
+    # Then fish-style (~/g/a/nu-multiproof) if ~ws alone is not enough.
+    let fits = {|d| (($d | do $width) + 1 + ($tail | do $width)) <= $max_width }
+    let dir = if (do $fits $dir) { $dir } else {
+        let dir = $env.WORKSPACE_DIR?
+            | match $in {
+                null => $dir
+                $ws => ($dir | do $collapse $ws '~ws')
+            }
+        if (do $fits $dir) { $dir } else {
+            $dir | split row (char path_sep)
+            | drop 1
+            # ~ and ~ws markers stay whole; dot-dirs keep two chars
+            | each {|c| if ($c starts-with '~') { $c } else { $c | str substring --grapheme-clusters 0..(if ($c starts-with '.') { 1 } else { 0 }) } }
+            | append ($dir | path basename)
+            | str join (char path_sep)
+        }
     }
 
     let path_color = if (is-admin) { ansi red_bold } else { ansi green_italic }
