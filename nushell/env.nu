@@ -5,8 +5,8 @@ def create-left-prompt []: nothing -> string {
     # workspace is mounted at the host's absolute path — that is not home
     # there, so it gets its own marker: WORKSPACE_DIR collapses to ~ws.
     # On the host the ~ rule fires first and the ~ws rule never matches.
-    let prefixes = [{path: $nu.home-dir, mark: '~'}]
-        | append ($env.WORKSPACE_DIR? | match $in { null => [], _ => {path: $in, mark: '~ws'} })
+    let prefixes = [{path: $nu.home-dir mark: '~'}]
+        | append ($env.WORKSPACE_DIR? | match $in { null => [] _ => {path: $in mark: '~ws'} })
 
     let dir = $prefixes | reduce --fold (pwd) {|p acc|
             do --ignore-errors { $acc | path relative-to $p.path }
