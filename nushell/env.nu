@@ -18,11 +18,6 @@ def create-left-prompt []: nothing -> string {
         }
     }
 
-    let path_color = if (is-admin) { ansi red_bold } else { ansi green_italic }
-    let separator_color = if (is-admin) { ansi light_red_bold } else { ansi white }
-    let path_segment = $"($path_color)($dir)(ansi reset)"
-        | str replace --all (char path_sep) $"($separator_color)(char path_sep)($path_color)"
-
     let git_status = git status --branch --porcelain
         | complete
         | if $in.exit_code == 0 {
@@ -51,6 +46,23 @@ def create-left-prompt []: nothing -> string {
     # hide near-instant commands
     let duration = $env.CMD_DURATION_MS | into int | if $in < 90 { '' } else { $'($in)ms ' }
     let max_width = (term size).columns - 2 # the `┏ ` prefix takes 2 cells
+
+    # Why: when the line would overflow, shorten the path fish-style
+    # (~/g/a/nu-multiproof) rather than let the cap below cut off the more
+    # informative tail (git, duration, exit code).
+    let overhead = $' ($git_status)($duration)($last_exit_code)($shlvl)' | ansi strip | str length --grapheme-clusters
+    let dir = if (($dir | str length --grapheme-clusters) + $overhead) <= $max_width { $dir } else {
+        $dir | split row (char path_sep)
+        | drop 1
+        | each {|c| $c | str substring --grapheme-clusters 0..(if ($c starts-with '.') { 1 } else { 0 }) }
+        | append ($dir | path basename)
+        | str join (char path_sep)
+    }
+
+    let path_color = if (is-admin) { ansi red_bold } else { ansi green_italic }
+    let separator_color = if (is-admin) { ansi light_red_bold } else { ansi white }
+    let path_segment = $"($path_color)($dir)(ansi reset)"
+        | str replace --all (char path_sep) $"($separator_color)(char path_sep)($path_color)"
 
     # Why: the prompt must never be wider than one terminal line. str substring
     # would count the invisible ansi codes, so measure the stripped text and
