@@ -121,6 +121,7 @@ e = ":pipe dotnu embeds-update" # rerun `| print $in` capture points, refresh `#
 
 f = ":pipe nu-hx flatten" # flatten-to-nuon
 
+# quick commit: replay write (C-w) -> git add+commit the buffer (C-S-g) -> reload (C-r)
 g = "@<C-w><C-S-g><C-r>"
 
 n = ":append-output date now | format date %%J-%%Q" # timestamp
