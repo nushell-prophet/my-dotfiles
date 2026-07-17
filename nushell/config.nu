@@ -235,8 +235,7 @@ $env.config.menus ++= [
             selected_text: green_reverse
         }
         source: {|buffer position|
-
-             let $buffer_esc = $buffer | str replace -ar '(_|-)' '_|-'
+            let buffer_esc = $buffer | str replace --all --regex '(_|-)' '_|-'
 
             open $nu.history-path
             | query db "SELECT cwd FROM history GROUP BY cwd ORDER BY MAX(start_timestamp) DESC"
