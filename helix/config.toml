@@ -59,7 +59,9 @@ C-left = "move_prev_word_end"
 tab = "move_parent_node_end"
 S-tab = "move_parent_node_start"
 
-# 'C-w' = ":write!"
+# Why: kept for the `+ g` macro — @<C-w>… replays this key; unbound, C-w would
+# open Helix's window mode and the commit would run on the unwritten buffer.
+'C-w' = ":write!"
 'C-r' = ":reload"
 # r#'...'# so a path with an apostrophe (don't.md) can't close a quote mid-command
 'C-S-g' = ":pipe-to git add r#'%{buffer_name}'#; git commit -m r#'version %{buffer_name}'# r#'%{buffer_name}'#; sleep 0.8sec"
