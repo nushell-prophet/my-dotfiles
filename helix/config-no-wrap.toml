@@ -117,9 +117,7 @@ c = '''
 
 C = ":pipe nu-hx clear-annotations" # remove `# =>` result comments
 
-e = '''
-:pipe dotnu-embeds-update.nu
-'''
+e = ":pipe dotnu embeds-update" # rerun `| print $in` capture points, refresh `# =>` embeds
 
 f = ":pipe nu-hx flatten" # flatten-to-nuon
 
