@@ -41,8 +41,13 @@ export def clear-annotations []: string -> string {
 }
 
 # Evaluate the selection and flatten the result to one NUON line (the `+ f` binding).
+# `to nuon` is appended INSIDE the eval: applied outside it would serialize the
+# rendered table text, not the data. On its own line so a trailing comment in the
+# selection can't swallow it; the selection is right-trimmed so no blank line lands
+# between the pipeline and the continuation.
 export def flatten []: string -> string {
-    hx-nu -c $in o+e>| to nuon
+    let cmd = $in | str trim --right | $in + "\n| to nuon"
+    hx-nu -c $cmd o+e>| str trim --right
 }
 
 # Evaluate the selection and write the result as a rectangle on the line(s) below
