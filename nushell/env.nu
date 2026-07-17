@@ -88,6 +88,8 @@ def create-left-prompt []: nothing -> string {
             ($in | ansi strip | str substring --grapheme-clusters 0..<($max_width - 1)) + '…'
         }
 
+    # nu-goodies/capture.nu (copy-out, delete-prompts, zellij-to-png) parses
+    # this exact shape from scrollback (`\n┏ …\n┗━> cmd`) — keep in sync.
     $'(char nl)(ansi grey)┏ (ansi reset)($longprompt)'
     | append $'(ansi grey)┗━(ansi reset)'
     | str join (char nl)
@@ -104,6 +106,7 @@ $env.PROMPT_INDICATOR_VI_NORMAL = {|| "> " }
 $env.PROMPT_MULTILINE_INDICATOR = {|| "" }
 
 # Collapse the 2-line prompt to a single newline for previously entered commands
+# (re-enabling changes the scrollback shape nu-goodies/capture.nu parses)
 # $env.TRANSIENT_PROMPT_COMMAND = {|| "\n" }
 # $env.TRANSIENT_PROMPT_INDICATOR = {|| "" }
 # $env.TRANSIENT_PROMPT_INDICATOR_VI_INSERT = {|| "" }
