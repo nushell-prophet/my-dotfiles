@@ -321,14 +321,14 @@ def prompt_to_raw_source [] {
     let closure = {
         let input = commandline
         # Why: parse --regex is fancy-regex, so \k<open> can demand matching closing hashes
-        let wrapped = $input | parse --regex `(?s)^ ?r(?<open>#+)'(?<body>.*)'\k<open>$`
+        let wrapped = $input | parse --regex `(?s)^r(?<open>#+)'(?<body>.*)'\k<open>$`
 
         if ($wrapped | is-not-empty) {
             $wrapped.0.body # toggle back: the whole line is one raw string
         } else {
             let hashes = $input | parse --regex '(#+)' | get capture0 | sort --reverse | get --optional 0 | default '' # find longest hash
 
-            $" r#($hashes)'($input)'#($hashes)"
+            $"r#($hashes)'($input)'#($hashes)"
         } | commandline edit --replace $in
     }
 
