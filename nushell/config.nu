@@ -321,16 +321,16 @@ $env.config.keybindings ++= [
 def prompt_to_raw_source [] {
     let closure = {
         let input = commandline
-        # Why: parse -r is fancy-regex, so \k<open> can demand matching closing hashes
-        let wrapped = $input | parse -r `(?s)^ ?r(?<open>#+)'(?<body>.*)'\k<open>$`
+        # Why: parse --regex is fancy-regex, so \k<open> can demand matching closing hashes
+        let wrapped = $input | parse --regex `(?s)^ ?r(?<open>#+)'(?<body>.*)'\k<open>$`
 
         if ($wrapped | is-not-empty) {
-            $wrapped.0.body | commandline edit -r $in # toggle back: the whole line is one raw string
+            $wrapped.0.body # toggle back: the whole line is one raw string
         } else {
-            let hashes = $input | parse -r '(#+)' | get capture0 | sort -r | get 0? | default '' # find longest hash
+            let hashes = $input | parse --regex '(#+)' | get capture0 | sort --reverse | get --optional 0 | default '' # find longest hash
 
-            $" r#($hashes)'($input)'#($hashes)" | commandline edit -r $in
-        }
+            $" r#($hashes)'($input)'#($hashes)"
+        } | commandline edit --replace $in
     }
 
     view source $closure | lines | skip | drop | to text
