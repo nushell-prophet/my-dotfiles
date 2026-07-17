@@ -321,9 +321,16 @@ $env.config.keybindings ++= [
 def prompt_to_raw_source [] {
     let closure = {
         let input = commandline
-        let hashes = $input | parse -r '(#+)' | get capture0 | sort -r | get 0? | default '' # find longest hash
+        # Not a backreference for the closing hashes because: rust regex has none — compare groups instead
+        let wrapped = $input | parse -r `(?s)^ ?r(?<open>#+)'(?<body>.*)'(?<close>#+)$`
 
-        $" r#($hashes)'($input)'#($hashes)" | commandline edit -r $in
+        if ($wrapped | is-not-empty) and ($wrapped.0.open == $wrapped.0.close) {
+            $wrapped.0.body | commandline edit -r $in # toggle back: the whole line is one raw string
+        } else {
+            let hashes = $input | parse -r '(#+)' | get capture0 | sort -r | get 0? | default '' # find longest hash
+
+            $" r#($hashes)'($input)'#($hashes)" | commandline edit -r $in
+        }
     }
 
     view source $closure | lines | skip | drop | to text
