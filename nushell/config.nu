@@ -26,41 +26,6 @@ $env.config.history.file_format = "Sqlite"
 $env.config.history.isolation = true
 $env.config.history.max_size = 5000000
 
-# Inline history hints (fish-style autosuggestions), scoped to the current folder.
-# Set $env.LOCAL_COMPLETIONS = 0 to hint from the whole history; unset or any other value means local.
-# Why: direct SQL with LIMIT 1 instead of the `history` builtin — the closure fires per keystroke and the builtin loads the whole table each time. Deliberately bypasses history.isolation (that's about up-arrow, not suggestions).
-# Note: str length counts UTF-8 bytes, sqlite substr counts characters — a non-ASCII prefix just yields no hint, never an error.
-# When the candidate's latest run failed, the hint ends with ` #exit_<code>`, built here from the exit_status column — nothing is written to history. Why: I repeat wrong commands; the tag signals "this failed last time", so I type a different command instead — or accept the hint and delete the tag while correcting the line. Once the corrected command succeeds, its latest run has exit 0 and the tag disappears on its own. Replaces a pre_prompt hook (formerly in hooks-config.nu) that wrote the tag into history rows.
-$env.config.hinter.closure = {|ctx|
-    if ($ctx.line | is-empty) { return null }
-
-    # Why: $env.-prefixed lines always hint globally — env manipulation isn't tied to a folder, and the LOCAL_COMPLETIONS toggle itself stays recallable from anywhere.
-    let global = ($env.LOCAL_COMPLETIONS? | default 1) == 0 or ($ctx.line | str starts-with '$env.')
-
-    let row = open $nu.history-path
-        | query db (
-            "SELECT command_line, exit_status FROM history
-            WHERE substr(command_line, 1, :len) = :line"
-            + (if $global { "" } else { " AND cwd = :cwd" })
-            + " ORDER BY id DESC LIMIT 1"
-        ) --params (
-            {len: ($ctx.line | str length) line: $ctx.line}
-            | if $global { } else { insert cwd $ctx.cwd }
-        )
-        | get --optional 0
-
-    if $row == null { return null }
-
-    # Strip a literal tag from the stored line (written by the retired hook, or by an accepted hint run verbatim) so it never stacks under the fresh one.
-    let candidate = $row.command_line | str replace --regex ' #exit_\d+$' ''
-    let tag = $row.exit_status
-        | default 0
-        | if $in >= 1 { $" #exit_($in)" } else { '' }
-
-    let hint = ($candidate | str substring ($ctx.line | str length)..) + $tag
-    if $hint == '' { null } else { $hint }
-}
-
 # Terminal & Display Settings
 $env.config.use_kitty_protocol = true
 $env.config.table.header_on_separator = true
@@ -93,8 +58,6 @@ $env.config.rm.always_trash = false
 # Terminal can launch files in associated applications.
 $env.config.shell_integration.osc8 = false
 
-# Why: makes invisible leading/trailing spaces in table cells visible — a classic source of "why doesn't this match" bugs. Table renderer only; bare strings are not touched.
-$env.config.color_config.leading_trailing_space_bg = {bg: red}
 # Why: exact timestamps over the humanized default ("a day ago") — humanizing throws away the exact value in table work.
 $env.config.datetime_format.table = '%y-%m-%d %H:%M:%S'
 
@@ -117,6 +80,43 @@ $env.config.abbreviations = {
     grv: 'git remote -v'
     ut: 'use toolkit.nu'
     lg: 'lazygit'
+}
+
+# Inline history hints (fish-style autosuggestions), preferring the current folder.
+# Set $env.LOCAL_COMPLETIONS = 0 to hint from the whole history by pure recency; unset or any other value means local-first.
+# Local-first, not local-only: a match from the current folder always wins, but when the folder has none, the newest match from anywhere fills in. Why: reusable commands typed in other folders never hinted under the old strict cwd filter, and those are missed often. A fallback hint carries no visual marker: the hint string is also the exact text reedline inserts on accept (complete_hint returns it raw), so any marker or ANSI code would land in the command line — until nushell grows a display-only styling channel, the two look the same.
+# Why: direct SQL with LIMIT 1 instead of the `history` builtin — the closure fires per keystroke and the builtin loads the whole table each time. Deliberately bypasses history.isolation (that's about up-arrow, not suggestions).
+# Note: str length counts UTF-8 bytes, sqlite substr counts characters — a non-ASCII prefix just yields no hint, never an error.
+# When the candidate's latest run failed, the hint ends with ` #exit_<code>`, built here from the exit_status column — nothing is written to history. Why: I repeat wrong commands; the tag signals "this failed last time", so I type a different command instead — or accept the hint and delete the tag while correcting the line. Once the corrected command succeeds, its latest run has exit 0 and the tag disappears on its own. Replaces a pre_prompt hook (formerly in hooks-config.nu) that wrote the tag into history rows.
+$env.config.hinter.closure = {|ctx|
+    if ($ctx.line | is-empty) { return null }
+
+    # Why: $env.-prefixed lines always hint globally — env manipulation isn't tied to a folder, and the LOCAL_COMPLETIONS toggle itself stays recallable from anywhere.
+    let global = ($env.LOCAL_COMPLETIONS? | default 1) == 0 or ($ctx.line | str starts-with '$env.')
+
+    let row = open $nu.history-path
+        | query db (
+            "SELECT command_line, exit_status FROM history
+            WHERE substr(command_line, 1, :len) = :line
+            ORDER BY"
+            + (if $global { "" } else { " cwd = :cwd DESC," })
+            + " id DESC LIMIT 1"
+        ) --params (
+            {len: ($ctx.line | str length) line: $ctx.line}
+            | if $global { } else { insert cwd $ctx.cwd }
+        )
+        | get --optional 0
+
+    if $row == null { return null }
+
+    # Strip a literal tag from the stored line (written by the retired hook, or by an accepted hint run verbatim) so it never stacks under the fresh one.
+    let candidate = $row.command_line | str replace --regex ' #exit_\d+$' ''
+    let tag = $row.exit_status
+        | default 0
+        | if $in >= 1 { $" #exit_($in)" } else { '' }
+
+    let hint = ($candidate | str substring ($ctx.line | str length)..) + $tag
+    if $hint == '' { null } else { $hint }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
