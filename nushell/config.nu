@@ -222,7 +222,7 @@ $env.config.keybindings ++= [
 
 $env.config.menus ++= [
     {
-        # List all unique successful commands
+        # List unique directories from history, most recently used first
         name: working_dirs_cd_menu
         only_buffer_difference: true
         marker: "? "
