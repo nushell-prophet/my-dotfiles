@@ -58,9 +58,6 @@ $env.config.rm.always_trash = false
 # Terminal can launch files in associated applications.
 $env.config.shell_integration.osc8 = false
 
-# Why: exact timestamps over the humanized default ("a day ago") — humanizing throws away the exact value in table work.
-$env.config.datetime_format.table = '%y-%m-%d %H:%M:%S'
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ ABBREVIATIONS
 # ═══════════════════════════════════════════════════════════════════════════════
