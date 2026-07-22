@@ -82,12 +82,12 @@ $env.config.abbreviations = {
     lg: 'lazygit'
 }
 
-# Inline history hints (fish-style autosuggestions), preferring the current folder.
-# Set $env.LOCAL_COMPLETIONS = 0 to hint from the whole history by pure recency; unset or any other value means local-first.
-# Local-first, not local-only: a match from the current folder always wins, but when the folder has none, the newest match from anywhere fills in. Why: reusable commands typed in other folders never hinted under the old strict cwd filter, and those are missed often. A fallback hint carries no visual marker: the hint string is also the exact text reedline inserts on accept (complete_hint returns it raw), so any marker or ANSI code would land in the command line — until nushell grows a display-only styling channel, the two look the same.
-# Why: direct SQL with LIMIT 1 instead of the `history` builtin — the closure fires per keystroke and the builtin loads the whole table each time. Deliberately bypasses history.isolation (that's about up-arrow, not suggestions).
-# Note: str length counts UTF-8 bytes, sqlite substr counts characters — a non-ASCII prefix just yields no hint, never an error.
-# When the candidate's latest run failed, the hint ends with ` #exit_<code>`, built here from the exit_status column — nothing is written to history. Why: I repeat wrong commands; the tag signals "this failed last time", so I type a different command instead — or accept the hint and delete the tag while correcting the line. Once the corrected command succeeds, its latest run has exit 0 and the tag disappears on its own. Replaces a pre_prompt hook (formerly in hooks-config.nu) that wrote the tag into history rows.
+# Inline history hints (fish-style), local-first: a current-folder match wins, else the newest match from anywhere.
+# $env.LOCAL_COMPLETIONS = 0 hints from the whole history by recency; unset or any other value = local-first.
+# Why local-first, not local-only: reusable commands typed in other folders were missed under the old strict cwd filter. The fallback hint has no marker: reedline inserts the hint string verbatim on accept, so any marker would land in the command line.
+# Why direct SQL with LIMIT 1, not the `history` builtin: the closure fires per keystroke, and the builtin loads the whole table each time. Deliberately bypasses history.isolation (that's up-arrow, not hints).
+# str length counts UTF-8 bytes, sqlite substr counts characters — a non-ASCII prefix yields no hint, never an error.
+# A failed candidate's hint ends with ` #exit_<code>` (from exit_status; nothing written to history) to signal "this failed last time". Once a corrected run succeeds the tag disappears on its own. Replaces a pre_prompt hook that wrote the tag into history rows.
 $env.config.hinter.closure = {|ctx|
     if ($ctx.line | is-empty) { return null }
 
