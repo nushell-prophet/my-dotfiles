@@ -27,17 +27,18 @@ $env.config.history.isolation = true
 $env.config.history.max_size = 5000000
 
 # Terminal & Display Settings
-$env.config.use_kitty_protocol = true
-$env.config.table.header_on_separator = true
+$env.config.footer_mode = "Always"
 $env.config.table.show_empty = false
+$env.config.table.header_on_separator = true
 $env.config.table.trim = {
     methodology: "truncating"
     truncating_suffix: "…"
 }
-$env.config.footer_mode = "Always"
 $env.config.highlight_resolved_externals = true
 $env.config.render_right_prompt_on_last_line = true
 $env.config.show_banner = false
+
+$env.config.use_kitty_protocol = true
 
 # Completions Configuration
 $env.config.completions.algorithm = "Fuzzy"
