@@ -258,7 +258,8 @@ $env.config.menus ++= [
 # Shortcut: Alt+O
 # Usage: Type part of variable name to filter, Enter to insert
 #
-# Note: $env.ignore-env-vars is initialized at the end of this configuration file
+# Note: the exclude list $env.ignore-env-vars is populated in `autoload/zzz_ignore_vars.nu`
+# (user-autoload runs after config.nu, so it captures vars added by modules too).
 # ───────────────────────────────────────────────────────────────────────────────
 
 # Not using nushell menu because `scope variables` inside a menu source closure
@@ -608,12 +609,3 @@ $env.config.menus ++= [
         }
     }
 ]
-
-# Custom module imports are handled in the autoload/ directory
-
-# Initialize list of environment variables to exclude from the Alt+O variables menu
-# This captures the baseline state before loading additional modules
-# 
-# mind that there is another invocation in
-# ~/.config/nushell/autoload/zzz_ignore_vars.nu
-$env.ignore-env-vars = (scope variables | get name)
