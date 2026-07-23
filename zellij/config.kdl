@@ -627,7 +627,8 @@ show_startup_tips false
 // Whether to enable mouse hover visual effects (frame highlight and help text)
 // Default: true
 //
-// mouse_hover_effects false
+// Why: hover highlight of the pane under the mouse looks distracting on screen recordings
+mouse_hover_effects false
 
 // Whether to output OSC8 hyperlink sequences
 // Default: true
