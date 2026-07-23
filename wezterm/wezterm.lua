@@ -265,6 +265,29 @@ config.keys = {
 }
 
 -- ============================================================================
+-- COPY MODE / SEARCH KEY TABLES
+-- ============================================================================
+-- Defining search_mode replaces the whole default table, so the defaults are
+-- reproduced here. Why: default Enter = PriorMatch, which never leaves the
+-- search box. Rebind Enter to AcceptPattern so it closes search and returns to
+-- copy mode with the cursor on the match -- from there CTRL-v starts a block
+-- selection at that corner. Enter-as-PriorMatch is redundant with CTRL-p/Up.
+config.key_tables = {
+  search_mode = {
+    { key = 'Enter', mods = 'NONE', action = wezterm.action.CopyMode 'AcceptPattern' },
+    { key = 'Escape', mods = 'NONE', action = wezterm.action.CopyMode 'Close' },
+    { key = 'n', mods = 'CTRL', action = wezterm.action.CopyMode 'NextMatch' },
+    { key = 'p', mods = 'CTRL', action = wezterm.action.CopyMode 'PriorMatch' },
+    { key = 'r', mods = 'CTRL', action = wezterm.action.CopyMode 'CycleMatchType' },
+    { key = 'u', mods = 'CTRL', action = wezterm.action.CopyMode 'ClearPattern' },
+    { key = 'PageUp', mods = 'NONE', action = wezterm.action.CopyMode 'PriorMatchPage' },
+    { key = 'PageDown', mods = 'NONE', action = wezterm.action.CopyMode 'NextMatchPage' },
+    { key = 'UpArrow', mods = 'NONE', action = wezterm.action.CopyMode 'PriorMatch' },
+    { key = 'DownArrow', mods = 'NONE', action = wezterm.action.CopyMode 'NextMatch' },
+  },
+}
+
+-- ============================================================================
 -- QUICK SELECT PATTERNS
 -- ============================================================================
 local quick_select_patterns = {
