@@ -20,7 +20,7 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ NUSHELL SHOW TAGS  —  #:nu-show-NN marks a setting demoed in a nushell-show episode
 # ═══════════════════════════════════════════════════════════════════════════════
-#   #:nu-show-09 - <pending: open the nushell-show episode-09 issue, paste URL here>
+#   #:nu-show-09 - https://github.com/nushell-prophet/nushell-show/blob/main/shows/009-nushell-configs-1/README.md
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════════════
