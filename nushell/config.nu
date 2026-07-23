@@ -18,17 +18,25 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ▐ NUSHELL SHOW TAGS  —  #:nu-show-NN marks a setting demoed in a nushell-show episode
+# ═══════════════════════════════════════════════════════════════════════════════
+#   #:nu-show-09 - <pending: open the nushell-show episode-09 issue, paste URL here>
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ▐ BASIC CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# History Configuration, nu-show-09
+# History Configuration
+#:nu-show-09
 $env.config.history.file_format = "Sqlite"
 $env.config.history.isolation = true
 $env.config.history.max_size = 5000000
 
 # Terminal & Display Settings
-$env.config.footer_mode = "Always" #nu-show-09
-$env.config.table.header_on_separator = true #nu-show-09
+#:nu-show-09
+$env.config.footer_mode = "Always"
+$env.config.table.header_on_separator = true
 
 $env.config.table.show_empty = false
 $env.config.table.trim = {
@@ -67,7 +75,7 @@ $env.config.shell_integration.osc8 = false
 # Why: unlike aliases, the expanded command lands in history, so the fzf bindings, the hinter, and history queries see real commands. Replaces the former `alias lg = lazygit` (cozy standard-aliases.nu) for the same reason.
 # Keys collision-checked against 7.8k history entries (never typed as command or argument token) and PATH.
 
-#nu-show-09
+#:nu-show-09
 $env.config.abbreviations = {
     cs: 'claude --dangerously-skip-permissions'
     cn: 'claude-nu'
@@ -209,7 +217,7 @@ $env.config.keybindings ++= [
 # Shortcut: Alt+Shift+R
 # Usage: Browse directories from command history, Enter to cd
 # ───────────────────────────────────────────────────────────────────────────────
-#nu-show-09
+#:nu-show-09
 $env.config.keybindings ++= [
     {
         name: working_dirs_cd_menu
@@ -265,7 +273,7 @@ $env.config.menus ++= [
 # Not using nushell menu because `scope variables` inside a menu source closure
 # only sees closure-local scope since ~0.101 (nushell/nushell#14071).
 # Using `executehostcommand` + fzf instead — runs in REPL scope, sees all variables.
-#nu-show-09
+#:nu-show-09
 $env.config.keybindings ++= [
     {
         name: vars_menu
@@ -305,7 +313,7 @@ def vars-menu-source [] {
 # Shortcut: Ctrl+V
 # Usage: Wraps current command in raw string format for easy copying
 # ───────────────────────────────────────────────────────────────────────────────
-#nu-show-09
+#:nu-show-09
 $env.config.keybindings ++= [
     {
         name: prompt_to_raw_string
