@@ -184,6 +184,8 @@ config.keys = {
   { key = ' ', mods = 'SHIFT|CTRL', action = wezterm.action.QuickSelect },
   { key = 'x', mods = 'SHIFT|CTRL', action = wezterm.action.ActivateCopyMode },
   { key = 'p', mods = 'SHIFT|CTRL', action = wezterm.action.ActivateCommandPalette },
+  -- Prefills the search box from the current selection, empty otherwise
+  { key = 'f', mods = 'SHIFT|CTRL', action = wezterm.action.Search 'CurrentSelectionOrEmptyString' },
   { key = 'v', mods = 'CMD',        action = wezterm.action.PasteFrom 'Clipboard' },
   { key = '=', mods = 'CMD',        action = wezterm.action.IncreaseFontSize },
   { key = '-', mods = 'CMD',        action = wezterm.action.DecreaseFontSize },
