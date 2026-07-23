@@ -174,3 +174,60 @@ KeyEventListener = hs.eventtap.new(events, function(event)
   return false
 end):start()
 
+------------------------------------------------------------------
+-- Active-window focus border
+------------------------------------------------------------------
+-- Why: macOS only dims inactive windows faintly, so which window holds keyboard
+-- focus is easy to lose. Draw a colored outline on the focused window instead.
+-- Green to echo the zellij active-pane accent. Tune the three fields below.
+local FOCUS_BORDER = {
+  color = { red = 0, green = 0.9, blue = 0.4, alpha = 0.95 },
+  width = 4,   -- px stroke; raise for a heavier outline
+  radius = 12, -- px corner; ~matches macOS window rounding (raise = rounder)
+}
+
+-- One reused canvas (not recreated per event) so the outline tracks drags and
+-- resizes without flicker.
+local focusCanvas = hs.canvas.new({ x = 0, y = 0, w = 0, h = 0 })
+focusCanvas:appendElements({
+  type = "rectangle",
+  action = "stroke",
+  strokeColor = FOCUS_BORDER.color,
+  strokeWidth = FOCUS_BORDER.width,
+  roundedRectRadii = { xRadius = FOCUS_BORDER.radius, yRadius = FOCUS_BORDER.radius },
+})
+focusCanvas:level(hs.canvas.windowLevels.floating)
+
+local function updateFocusBorder(win)
+  win = win or hs.window.focusedWindow()
+  -- Only standard app windows; hide when nothing is focused (e.g. the desktop).
+  if not win or not win:isStandard() then
+    focusCanvas:hide()
+    return
+  end
+  local f = win:frame()
+  local w = FOCUS_BORDER.width
+  focusCanvas:frame({ x = f.x, y = f.y, w = f.w, h = f.h })
+  -- Inset the stroke by half its width so the outer edge isn't clipped by the
+  -- canvas bounds; this draws the border just inside the window edge.
+  focusCanvas:elementAttribute(1, "frame", { x = w / 2, y = w / 2, w = f.w - w, h = f.h - w })
+  focusCanvas:show()
+end
+
+-- hs.window.filter drives the updates. windowMoved fires on both move and
+-- resize, so the outline follows the focused window as it is dragged/resized.
+local focusWF = hs.window.filter.new()
+focusWF:subscribe(hs.window.filter.windowFocused, function(win) updateFocusBorder(win) end)
+focusWF:subscribe(hs.window.filter.windowMoved, function(win)
+  local fw = hs.window.focusedWindow()
+  if fw and win and win:id() == fw:id() then updateFocusBorder(win) end
+end)
+focusWF:subscribe({
+  hs.window.filter.windowUnfocused,
+  hs.window.filter.windowDestroyed,
+  hs.window.filter.windowMinimized,
+}, function() updateFocusBorder(hs.window.focusedWindow()) end)
+
+-- Draw for whatever is focused right now (e.g. on config reload).
+updateFocusBorder(hs.window.focusedWindow())
+
