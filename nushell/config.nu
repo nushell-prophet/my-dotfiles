@@ -602,14 +602,18 @@ $env.config.menus ++= [
             # Why: str length, str index-of and str substring all count utf-8 bytes by default,
             # which is what reedline's $position is
             let span = {start: ($position - ($last_segment | str length)) end: $position}
+            # Why: entries are flattened to one line below, so the typed text must be flattened
+            # too — otherwise a multiline buffer matches nothing
+            let needle = $last_segment | str replace --all (char nl) ' '
 
             history
             | get command
-            | where ($it | str contains $last_segment)
-            | str replace --all (char nl) ' ' # might cause troubles?
-            # drop everything before the last occurrence, so the entry continues what is typed
-            | each {|command| $command | str substring ($command | str index-of --end $last_segment).. }
             | reverse # most recent first
+            | uniq # Why: dedup before the work below — 11k entries collapse to ~3.7k
+            | str replace --all (char nl) ' ' # Why: match after flattening, so a match can span what was a newline
+            | where ($it | str contains $needle)
+            # drop everything before the last occurrence, so the entry continues what is typed
+            | each {|command| $command | str substring ($command | str index-of --end $needle).. }
             | uniq
             | each {|command| {value: $command span: $span} }
         }
