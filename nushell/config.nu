@@ -591,29 +591,27 @@ $env.config.keybindings ++= [
 
 $env.config.menus ++= [
     {
-        # session menu
         name: pipe_completions_menu
         only_buffer_difference: false # Search is done on the text written after activating the menu
         marker: "# "
         type: {layout: list page_size: 25}
         style: {text: green selected_text: green_reverse description_text: yellow}
         source: {|buffer position|
+            # text after the last pipe, paren, semicolon or closure header — the part we complete
             let last_segment = $buffer | split row --regex '(\s\|\s)|\(|;|(\{\|\w\| )' | last
-            let last_segment_length = $last_segment | str length
-
-            let regex = '\.^$*+?{}()[]|/' | split chars | each { $'\($in)' } | str join '|' | $"\(($in))"
-
-            let last_segment_escaped = $last_segment | str replace --all --regex $regex '\$1'
+            # Why: str length, str index-of and str substring all count utf-8 bytes by default,
+            # which is what reedline's $position is
+            let span = {start: ($position - ($last_segment | str length)) end: $position}
 
             history
             | get command
-            | uniq
-            | where $it =~ $last_segment_escaped
+            | where ($it | str contains $last_segment)
             | str replace --all (char nl) ' ' # might cause troubles?
-            | str replace --regex $'.*($last_segment_escaped)' $last_segment
-            | reverse
+            # drop everything before the last occurrence, so the entry continues what is typed
+            | each {|command| $command | str substring ($command | str index-of --end $last_segment).. }
+            | reverse # most recent first
             | uniq
-            | each {|it| {value: $it span: {start: ($position - $last_segment_length) end: ($position)}} }
+            | each {|command| {value: $command span: $span} }
         }
     }
 ]
