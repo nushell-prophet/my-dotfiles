@@ -128,8 +128,8 @@ g = "@<C-w><C-S-g><C-r>"
 
 n = ":append-output date now | format date %%J-%%Q" # timestamp
 
-# useful for formatting markdown tables
-p = ":pipe pandoc --from markdown --to markdown"
+# re-align the columns of a selected markdown table (pure nushell, no pandoc)
+p = ":pipe nu-hx align-table"
 
 # `s` copies the selection as an <selected-text> tag with a REPO-RELATIVE path,
 # `S` with the ABSOLUTE path. Path is computed in nushell (inside nu-hx copy-tag)
