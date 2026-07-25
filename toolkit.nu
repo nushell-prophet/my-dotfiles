@@ -168,6 +168,12 @@ def select-modules [modules: list<string>] {
     let paths = $in
     if ($modules | is-empty) { return $paths }
 
+    # Why: modules are typed as `path`, so file completion fills them in — and it
+    # writes dirs as `nushell/` and may prefix `./`. Trim both to the bare repo path.
+    let modules = $modules
+        | str replace -r '^\./' ''
+        | str trim --right --char '/'
+
     let selected = $paths | where {|r|
         $modules | any {|m| $r.path-in-repo == $m or ($r.path-in-repo | str starts-with $"($m)/") }
     }
@@ -182,7 +188,7 @@ def select-modules [modules: list<string>] {
 
 # Copy config files from the local machine into the repository
 export def pull-from-machine [
-    ...modules: string # limit pull to these repo subdirs or files (e.g. zellij helix); omit for all
+    ...modules: path # limit pull to these repo subdirs or files (e.g. zellij helix/config.toml); omit for all
     --force # overwrite files with uncommitted changes
     --docker # use paths-docker.csv (pulling inside the sandbox VM)
 ] {
@@ -221,7 +227,7 @@ def show-push-diff [paths: table] {
 
 # Copy config files from the repository to the local machine
 export def push-to-machine [
-    ...modules: string # limit push to these repo subdirs or files (e.g. zellij helix); omit for all
+    ...modules: path # limit push to these repo subdirs or files (e.g. zellij helix/config.toml); omit for all
     --create-dirs # in case of missing directories - create them in place
     --force # overwrite files with uncommitted changes
     --commit-existing # snapshot dirty destination/orphan files in git before pushing (instead of erroring)
