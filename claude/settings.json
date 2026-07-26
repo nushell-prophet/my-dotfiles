@@ -3,5 +3,6 @@
   "skipDangerousModePermissionPrompt": true,
   "cleanupPeriodDays": 36500,
   "editorMode": "normal",
-  "verbose": true
+  "verbose": true,
+  "promptSuggestionEnabled": false
 }
