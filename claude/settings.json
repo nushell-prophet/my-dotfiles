@@ -5,5 +5,7 @@
   "editorMode": "normal",
   "verbose": true,
   "promptSuggestionEnabled": false,
-  "preferredNotifChannel": "terminal_bell"
+  "preferredNotifChannel": "terminal_bell",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true
 }
