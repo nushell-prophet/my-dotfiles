@@ -47,6 +47,7 @@ The user rarely writes code or commits directly — you do. The user's explanati
 - If the user explained why an approach was chosen or why an alternative was rejected, that goes in the commit body.
 - A commit subject like "implement parser" with no body is an intent loss. Unacceptable.
 - Commits MUST be atomic: one logical change per commit. If the diff spans unrelated changes, split it before committing.
+- **Never `git add -A`** (nor `git add .`, nor `git commit -a`). They stage everything the working tree happens to hold — parked `todo/` notes, scratch files, another task's edits — which breaks atomicity and quietly commits things nobody reviewed. Stage the exact paths your change touched: `git add path/one path/two`.
 - Still, be concise. Preserve humans and agent's context window.
 
 ### Park off-topic findings
