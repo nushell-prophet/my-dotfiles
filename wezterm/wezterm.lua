@@ -310,8 +310,18 @@ local quick_select_patterns = {
   "(?<=─|╭|┬)([a-zA-Z0-9 _%.-]+?)(?=─|╮|┬)", -- Headers
   "(?<=│ )([a-zA-Z0-9 _.-]+?)(?= │)", -- Column values
 
-  -- File paths (stops at ~; strips trailing punctuation like . , ; : via lookbehind)
-  "/[^/\\s│~]+(?:/[^/\\s│~]+)*(?<![.,;:!?)\\]>])",
+  -- File paths: absolute, relative and ~-prefixed; strips trailing punctuation
+  -- (. , ; : " ' `) via lookbehind.
+  -- Why the leading (?:[.\w\-@~]+)?: wezterm concatenates our patterns and its
+  -- 14 built-in ones into ONE alternation, and the leftmost match wins -- only
+  -- on an equal start position does our earlier place in the list win. The
+  -- built-in path pattern (?:[.\w\-@~]+)?(?:/+[.\w\-@]+)+ starts at the `~` or
+  -- at the first directory name, i.e. left of a bare `/`, so for `~/a/b.nu.`
+  -- and `a/b.nu.` it used to beat us and drag the sentence dot along.
+  -- Mirroring its opening class makes both alternatives start together.
+  -- Not disable_default_quick_select_patterns because: that would also drop the
+  -- built-in URL, sha, uuid, ip and hex-colour patterns.
+  "(?:[.\\w\\-@~]+)?(?:/+[^/\\s│]+)+(?<![.,;:!?)\\]>\"'`])",
 }
 
 config.quick_select_patterns = quick_select_patterns
