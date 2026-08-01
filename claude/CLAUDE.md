@@ -99,3 +99,9 @@ Your default is verbose; "be brief" alone does not counteract training. Violate 
 - **Don't list non-findings.** "I checked X and found nothing", "no conflicts elsewhere", "no other references" — absence is the default, report only presence.
 
 **Reconciling with Intent Preservation:** the mandatory commit body is not a loophole for bloat. Include the user's reasoning (paraphrased or verbatim), not your elaboration of it. 1–3 sentences usually suffices; a single line when the trigger is clear and no new reasoning exists.
+
+## Nushell
+
+### Pitfalls cheatsheet
+
+- A command name is prose: **letters, digits, spaces and hyphens only**. A name is data other tools put back into source code — nutest re-emits every test name as a bare command call inside generated Nushell, so the parser reads every character. One apostrophe in `def "the signer's endorsement"` fails **every** test in the file with `nu::parser::unexpected_eof`, pointing at generated code that names nothing you wrote. Also fatal: `` ` `` `"` `(` `)` `[` `]` `|` `#`, unbalanced `{`. English wants the apostrophe, so rephrase: `X's Y` → `the Y of X`, contractions spelled out. Never embed a code fragment or literal in a name either (`def "a record {a: 1} round-trips"`) — it happens to parse, but it repeats the body and reads as syntax where a reader expects a sentence.
