@@ -7,5 +7,8 @@
   "promptSuggestionEnabled": false,
   "preferredNotifChannel": "terminal_bell",
   "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "env": {
+    "EDITOR": "hx-quote"
+  }
 }

@@ -8,5 +8,11 @@ indent = { tab-width = 4, unit = "    " }
 [[language]]
 name = "markdown"
 indent = { tab-width = 4, unit = "    " }
-formatter = { command = 'prettier', args = [ "--parser", "markdown", "--prose-wrap", "never" ] }
-auto-format = false
+# Why: strip trailing spaces on save. Not prettier — it was never installed here and
+# the user stopped using it. Not `[editor] trim-trailing-whitespace` — that is global,
+# and the rule is wanted for markdown only.
+# `--no-newline` matters: without it nu appends a newline and the file grows a blank
+# line on every save. The regex keeps the file byte-exact otherwise (`lines | to text`
+# would rewrite the final newline).
+formatter = { command = "nu", args = ['--no-newline', '--stdin', '-c', '$in | str replace --all --regex "(?m)[ \t]+$" ""'] }
+auto-format = true

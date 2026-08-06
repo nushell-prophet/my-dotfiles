@@ -12,6 +12,8 @@ full-path
 ~/.config/helix/config.toml
 ~/.config/helix/hx-nu
 ~/.config/helix/hx-block
+~/.config/helix/hx-quote
+~/.config/helix/requote-claude-prompt.nu
 ~/.config/helix/nu-hx.nu
 ~/.config/helix/nu-hx-config.nu
 ~/.config/helix/languages.toml
