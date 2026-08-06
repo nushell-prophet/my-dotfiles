@@ -58,7 +58,7 @@ Reviewing a plan instead of code: same question, applied to what the plan propos
 
 ## Report
 
-Write one file per review run: `todo/<yyyyMMdd-HHmmss>-review-<target>.md`, frontmatter `session: <uuid>` (the current Claude session UUID). **Leave it uncommitted** — it is a note to the user, not part of the change. If the repo has no `todo/`, ask where such notes go rather than inventing a directory. Reviewing a plan writes no file — report to the console.
+Write one file per review run: `todo/<yyyyMMdd-HHmmss>-review-<target>.md`, frontmatter `origin_session: <uuid>` (the current Claude session UUID; not `session:`, which a gi canvas claims for its own binding). **Leave it uncommitted** — it is a note to the user, not part of the change. If the repo has no `todo/`, ask where such notes go rather than inventing a directory. Reviewing a plan writes no file — report to the console.
 
 One line per finding, unrequested first, then missing:
 
