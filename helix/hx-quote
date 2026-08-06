@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Claude Code's $EDITOR: helix, plus one fix-up on the way in.
+#
+# Set in ~/.claude/settings.json `env`, NOT as the machine's $EDITOR — Claude Code's
+# ctrl+g file is the only thing that needs the fix-up, so git, jj and lazygit have no
+# business going through a wrapper. (Verified: a settings `env` value overrides the
+# inherited one inside the Claude Code process.)
+#
+# That file quotes the last response with `# ` on every line, in a .md buffer.
+# requote-claude-prompt.nu turns those into `> `; see it for why that is safe.
+# Everything else is passed through untouched — Claude Code also opens the plain
+# prompt file and ~/.claude/keybindings.json with $EDITOR.
+#
+# Not a nu script because: nu reads `+42` (the line number Claude Code passes when
+# it opens a file reference) as an int, dropping the `+` before helix sees it. sh
+# forwards "$@" verbatim — the same reason hx-nu is sh.
+
+for arg in "$@"; do
+    case "${arg##*/}" in
+        claude-prompt-*.md) "$HOME/.config/helix/requote-claude-prompt.nu" "$arg" ;;
+    esac
+done
+
+exec hx "$@"
