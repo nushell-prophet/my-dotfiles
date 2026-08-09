@@ -32,23 +32,25 @@ export def create-todo [] {
         cp $CLAUDE_MD todo/CLAUDE.md
     }
 
-    let date = date now | format date '%J-%Q'
+    let date = date now | format date '%J'
 
-    let path = $'todo/($date).md'
+    # Why: the name is the bare date; a second todo the same day gets -1, -2, …
+    let path = 0..
+        | each {|i| if $i == 0 { $'todo/($date).md' } else { $'todo/($date)-($i).md' } }
+        | where {|p| not ($p | path exists) }
+        | first
 
-    let $frontmatter = {
-        status: 'draft'
-        created: $date
-        updated: $date
-    }
-        | to yaml
-        | str replace --all $date $'($date) #yyyyMMdd-hhmmss'
-        | str replace 'status: draft' 'status: draft #draft | in_progress | completed | rejected'
-        | $"---\n($in)---\n\n"
+    # Not `to yaml` because: a bare date comes back quoted, so the trailing #hint
+    # lands inside the value instead of being a yaml comment
+    let $frontmatter = $"---
+status: draft #draft | in_progress | completed | rejected
+created: '($date)' #yyyyMMdd
+updated: '($date)' #yyyyMMdd
+---
 
-    if not ($path | path exists) {
-        $frontmatter | save --raw $path
-    }
+"
+
+    $frontmatter | save --raw $path
 
     hx +7 $path
 
