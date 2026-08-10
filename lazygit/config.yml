@@ -9,9 +9,9 @@ os:
   copyToClipboardCmd: printf {{text}} | pbcopy
 git:
   autoFetch: false
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --dark --paging=never --true-color=always --minus-style='syntax 52' --plus-style='syntax 22' --line-numbers --side-by-side --wrap-max-lines 20
+      command: delta --dark --paging=never --true-color=always --minus-style='syntax 52' --plus-style='syntax 22' --line-numbers --side-by-side --wrap-max-lines 20
 customCommands:
   - key: 'E'
     context: 'files'
