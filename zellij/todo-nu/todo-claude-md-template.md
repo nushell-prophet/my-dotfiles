@@ -1,6 +1,6 @@
 # todo/ — tasks the user wrote for you
 
-Files here are created by `create-todo` in `todo.nu` (bound to a zellij key). The name is the date, `todo/YYYYMMDD.md`, with `-1`, `-2`, … when a second task lands the same day. Do not rename.
+Files here are created by `create-todo` in `todo.nu` (bound to a zellij key). The name starts with the date: `create-todo` writes `todo/YYYYMMDD.md`, with `-1`, `-2`, … when a second task lands the same day. A short slug may be appended by hand — `20260809-move-branches.md` — to say what the task is. Keep the date prefix; adding a slug is the only rename.
 
 ## Keep the task text verbatim
 
@@ -15,7 +15,7 @@ Append what you did to the bottom of the file: the result, what changed, what is
 
 ## Delete the file when the task is fully done
 
-Once the report is committed, remove the file. Git history keeps it, and a finished task left lying here only misleads the next session. A task that is partly done stays, with `status: in_progress`.
+Once the report is committed, remove the file and commit the deletion. Git history keeps it, and a finished task left lying here only misleads the next session. A task that is partly done stays, with `status: in_progress`.
 
 ## Frontmatter
 
