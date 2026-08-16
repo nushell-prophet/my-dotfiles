@@ -27,7 +27,4 @@ use ~/.config/nushell/completions/lazygit.nu *
 use ~/.config/nushell/completions/rg.nu *
 use ~/.config/nushell/completions/sandbox-exec.nu *
 use ~/.config/nushell/completions/vd.nu *
-
-# Not `use zellij.nu *` because: its subcommands are exported bare ("action …");
-# the no-star form prefixes them with the module name -> `zellij action …`
-use ~/.config/nushell/completions/zellij.nu
+use ~/.config/nushell/completions/zellij.nu *

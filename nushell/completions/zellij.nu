@@ -1,4 +1,11 @@
 # Nushell custom completions for Zellij terminal multiplexer
+#
+# Why the subcommand names carry the "zellij " prefix, unlike the sibling
+# completion files: since 0.115 `run` is a parser keyword, so declaring
+# `export extern "run"` fails at parse (nu::parser::name_is_keyword) — the
+# check is on the declared name, so no import form can work around it. Fully
+# qualified names dodge it and let this file be star-imported like the others.
+# Do not "normalize" the names back to bare subcommands.
 
 # ===== Dynamic Completers =====
 
@@ -51,33 +58,33 @@ export extern main [
 # ===== Action Subcommand =====
 
 # Send actions to a specific session
-export extern "action" [
+export extern "zellij action" [
 ]
 
 # Clear all buffers for focused pane
-export extern "action clear" [
+export extern "zellij action clear" [
 ]
 
 # Close the focused pane
-export extern "action close-pane" [
+export extern "zellij action close-pane" [
 ]
 
 # Close the current tab
-export extern "action close-tab" [
+export extern "zellij action close-tab" [
 ]
 
 # Dump current layout to stdout
-export extern "action dump-layout" [
+export extern "zellij action dump-layout" [
 ]
 
 # Dump the focused pane to a file
-export extern "action dump-screen" [
+export extern "zellij action dump-screen" [
     path: path # Output file path
     --full (-f) # Dump with full scrollback
 ]
 
 # Open file in a new pane with default editor
-export extern "action edit" [
+export extern "zellij action edit" [
     file: path # File to edit
     --cwd: path # Working directory for editor
     --direction (-d): string@$directions # Direction to open pane
@@ -92,46 +99,46 @@ export extern "action edit" [
 ]
 
 # Open pane scrollback in default editor
-export extern "action edit-scrollback" [
+export extern "zellij action edit-scrollback" [
 ]
 
 # Change focus to next pane
-export extern "action focus-next-pane" [
+export extern "zellij action focus-next-pane" [
 ]
 
 # Change focus to previous pane
-export extern "action focus-previous-pane" [
+export extern "zellij action focus-previous-pane" [
 ]
 
 # Go to next tab
-export extern "action go-to-next-tab" [
+export extern "zellij action go-to-next-tab" [
 ]
 
 # Go to previous tab
-export extern "action go-to-previous-tab" [
+export extern "zellij action go-to-previous-tab" [
 ]
 
 # Go to tab by index
-export extern "action go-to-tab" [
+export extern "zellij action go-to-tab" [
     index: int # Tab index (1-based)
 ]
 
 # Go to tab by name
-export extern "action go-to-tab-name" [
+export extern "zellij action go-to-tab-name" [
     name: string # Tab name
     --create (-c) # Create tab if it doesn't exist
 ]
 
 # Scroll down half page in focus pane
-export extern "action half-page-scroll-down" [
+export extern "zellij action half-page-scroll-down" [
 ]
 
 # Scroll up half page in focus pane
-export extern "action half-page-scroll-up" [
+export extern "zellij action half-page-scroll-up" [
 ]
 
 # Launch or focus a plugin
-export extern "action launch-or-focus-plugin" [
+export extern "zellij action launch-or-focus-plugin" [
     url: string # Plugin URL
     --configuration (-c): string # Plugin configuration
     --floating (-f) # Open in floating mode
@@ -141,7 +148,7 @@ export extern "action launch-or-focus-plugin" [
 ]
 
 # Launch a plugin
-export extern "action launch-plugin" [
+export extern "zellij action launch-plugin" [
     url: string # Plugin URL
     --configuration (-c): string # Plugin configuration
     --floating (-f) # Open in floating mode
@@ -150,35 +157,35 @@ export extern "action launch-plugin" [
 ]
 
 # List connected clients
-export extern "action list-clients" [
+export extern "zellij action list-clients" [
 ]
 
 # Move focus in specified direction
-export extern "action move-focus" [
+export extern "zellij action move-focus" [
     direction: string@$directions # Direction to move focus
 ]
 
 # Move focus to pane or tab at screen edge
-export extern "action move-focus-or-tab" [
+export extern "zellij action move-focus-or-tab" [
     direction: string@$directions # Direction to move
 ]
 
 # Move pane in specified direction
-export extern "action move-pane" [
+export extern "zellij action move-pane" [
     direction?: string@$directions # Direction to move pane
 ]
 
 # Rotate pane location backwards
-export extern "action move-pane-backwards" [
+export extern "zellij action move-pane-backwards" [
 ]
 
 # Move tab in specified direction
-export extern "action move-tab" [
+export extern "zellij action move-tab" [
     direction: string@$directions_horizontal # Direction to move tab
 ]
 
 # Open a new pane
-export extern "action new-pane" [
+export extern "zellij action new-pane" [
     ...command: string # Command to run
     --close-on-exit (-c) # Close pane when command exits
     --configuration: string # Plugin configuration
@@ -199,7 +206,7 @@ export extern "action new-pane" [
 ]
 
 # Create a new tab
-export extern "action new-tab" [
+export extern "zellij action new-tab" [
     --cwd (-c): path # Working directory
     --layout (-l): string@"nu-complete zellij layouts" # Layout for new tab
     --layout-dir: path # Layout directory
@@ -207,19 +214,19 @@ export extern "action new-tab" [
 ]
 
 # Switch to next swap layout
-export extern "action next-swap-layout" [
+export extern "zellij action next-swap-layout" [
 ]
 
 # Scroll down one page in focus pane
-export extern "action page-scroll-down" [
+export extern "zellij action page-scroll-down" [
 ]
 
 # Scroll up one page in focus pane
-export extern "action page-scroll-up" [
+export extern "zellij action page-scroll-up" [
 ]
 
 # Send data to plugins via pipe
-export extern "action pipe" [
+export extern "zellij action pipe" [
     payload?: string # Data to send (or stdin)
     --name (-n): string # Pipe name
     --args (-a): string # Pipe arguments
@@ -234,110 +241,110 @@ export extern "action pipe" [
 ]
 
 # Switch to previous swap layout
-export extern "action previous-swap-layout" [
+export extern "zellij action previous-swap-layout" [
 ]
 
 # Query all tab names
-export extern "action query-tab-names" [
+export extern "zellij action query-tab-names" [
 ]
 
 # Rename the focused pane
-export extern "action rename-pane" [
+export extern "zellij action rename-pane" [
     name: string # New pane name
 ]
 
 # Rename the current session
-export extern "action rename-session" [
+export extern "zellij action rename-session" [
     name: string # New session name
 ]
 
 # Rename the focused tab
-export extern "action rename-tab" [
+export extern "zellij action rename-tab" [
     name: string # New tab name
 ]
 
 # Resize focused pane
-export extern "action resize" [
+export extern "zellij action resize" [
     resize: string@$resize_actions # Resize action
     direction?: string@$directions # Direction to resize
 ]
 
 # Scroll down in focus pane
-export extern "action scroll-down" [
+export extern "zellij action scroll-down" [
 ]
 
 # Scroll to bottom in focus pane
-export extern "action scroll-to-bottom" [
+export extern "zellij action scroll-to-bottom" [
 ]
 
 # Scroll to top in focus pane
-export extern "action scroll-to-top" [
+export extern "zellij action scroll-to-top" [
 ]
 
 # Scroll up in focus pane
-export extern "action scroll-up" [
+export extern "zellij action scroll-up" [
 ]
 
 # Stack panes by their IDs
-export extern "action stack-panes" [
+export extern "zellij action stack-panes" [
     ...pane_ids: string # Pane IDs (terminal_1, plugin_2, or bare int)
 ]
 
 # Start or reload a plugin
-export extern "action start-or-reload-plugin" [
+export extern "zellij action start-or-reload-plugin" [
     url: string # Plugin URL
     --configuration (-c): string # Plugin configuration
 ]
 
 # Switch input mode
-export extern "action switch-mode" [
+export extern "zellij action switch-mode" [
     mode: string@$input_modes # Input mode
 ]
 
 # Toggle sync for all panes in tab
-export extern "action toggle-active-sync-tab" [
+export extern "zellij action toggle-active-sync-tab" [
 ]
 
 # Toggle floating panes visibility
-export extern "action toggle-floating-panes" [
+export extern "zellij action toggle-floating-panes" [
 ]
 
 # Toggle fullscreen for focused pane
-export extern "action toggle-fullscreen" [
+export extern "zellij action toggle-fullscreen" [
 ]
 
 # Toggle pane between embedded and floating
-export extern "action toggle-pane-embed-or-floating" [
+export extern "zellij action toggle-pane-embed-or-floating" [
 ]
 
 # Toggle pane frames in UI
-export extern "action toggle-pane-frames" [
+export extern "zellij action toggle-pane-frames" [
 ]
 
 # Toggle pane pinned state
-export extern "action toggle-pane-pinned" [
+export extern "zellij action toggle-pane-pinned" [
 ]
 
 # Remove pane name
-export extern "action undo-rename-pane" [
+export extern "zellij action undo-rename-pane" [
 ]
 
 # Remove tab name
-export extern "action undo-rename-tab" [
+export extern "zellij action undo-rename-tab" [
 ]
 
 # Write bytes to terminal
-export extern "action write" [
+export extern "zellij action write" [
     ...bytes: int # Bytes to write
 ]
 
 # Write characters to terminal
-export extern "action write-chars" [
+export extern "zellij action write-chars" [
     chars: string # Characters to write
 ]
 
 # Change floating pane coordinates
-export extern "action change-floating-pane-coordinates" [
+export extern "zellij action change-floating-pane-coordinates" [
     --pane-id (-p): string # Pane ID (terminal_1, plugin_2, or int)
     --height: string # Height (integer or percent)
     --pinned: string@$bool_options # Pin floating pane
@@ -349,7 +356,7 @@ export extern "action change-floating-pane-coordinates" [
 # ===== Attach Subcommand =====
 
 # Attach to a session
-export extern "attach" [
+export extern "zellij attach" [
     session_name?: string@"nu-complete zellij sessions" # Session to attach to
     --create (-c) # Create session if not exists
     --create-background (-b) # Create detached session if not exists
@@ -358,61 +365,61 @@ export extern "attach" [
 ]
 
 # Options for attach
-export extern "attach options" [
+export extern "zellij attach options" [
 ]
 
 # ===== Convert Commands =====
 
 # Convert configuration format
-export extern "convert-config" [
+export extern "zellij convert-config" [
 ]
 
 # Convert layout format
-export extern "convert-layout" [
+export extern "zellij convert-layout" [
 ]
 
 # Convert theme format
-export extern "convert-theme" [
+export extern "zellij convert-theme" [
 ]
 
 # ===== Session Management =====
 
 # Delete all sessions
-export extern "delete-all-sessions" [
+export extern "zellij delete-all-sessions" [
     --force (-f) # Kill running sessions first
     --yes (-y) # Skip confirmation
 ]
 
 # Delete a specific session
-export extern "delete-session" [
+export extern "zellij delete-session" [
     target_session?: string@"nu-complete zellij sessions" # Session to delete
     --force (-f) # Kill running session first
 ]
 
 # Kill all sessions
-export extern "kill-all-sessions" [
+export extern "zellij kill-all-sessions" [
     --yes (-y) # Skip confirmation
 ]
 
 # Kill a specific session
-export extern "kill-session" [
+export extern "zellij kill-session" [
     target_session?: string@"nu-complete zellij sessions" # Session to kill
 ]
 
 # List active sessions
-export extern "list-sessions" [
+export extern "zellij list-sessions" [
     --no-formatting (-n) # No formatting (for scripts)
     --short (-s) # Short format
 ]
 
 # List existing plugin aliases
-export extern "list-aliases" [
+export extern "zellij list-aliases" [
 ]
 
 # ===== Edit Subcommand =====
 
 # Edit file with default editor
-export extern "edit" [
+export extern "zellij edit" [
     file: path # File to edit
     --cwd: path # Working directory
     --direction (-d): string@$directions # Direction to open pane
@@ -429,7 +436,7 @@ export extern "edit" [
 # ===== Options Subcommand =====
 
 # Change zellij behavior
-export extern "options" [
+export extern "zellij options" [
     --advanced-mouse-actions: string@$bool_options # Mouse hover effects
     --attach-to-session: string@$bool_options # Attach to named session
     --auto-layout: string@$bool_options # Predefined layouts
@@ -471,7 +478,7 @@ export extern "options" [
 # ===== Pipe Subcommand =====
 
 # Send data to plugins
-export extern "pipe" [
+export extern "zellij pipe" [
     payload?: string # Data to send (or stdin)
     --name (-n): string # Pipe name
     --args (-a): string # Pipe arguments
@@ -482,7 +489,7 @@ export extern "pipe" [
 # ===== Plugin Subcommand =====
 
 # Load a plugin
-export extern "plugin" [
+export extern "zellij plugin" [
     url: string # Plugin URL (http, file:, zellij:)
     --configuration (-c): string # Plugin configuration
     --floating (-f) # Open in floating mode
@@ -498,7 +505,7 @@ export extern "plugin" [
 # ===== Run Subcommand =====
 
 # Run command in new pane
-export extern "run" [
+export extern "zellij run" [
     ...command: string # Command to run
     --close-on-exit (-c) # Close pane when command exits
     --cwd: path # Working directory
@@ -518,7 +525,7 @@ export extern "run" [
 # ===== Setup Subcommand =====
 
 # Setup zellij and check configuration
-export extern "setup" [
+export extern "zellij setup" [
     --check # Check configuration
     --clean # Load default config
     --dump-config # Dump default config
@@ -532,7 +539,7 @@ export extern "setup" [
 # ===== Web Subcommand =====
 
 # Run web server for terminal sessions
-export extern "web" [
+export extern "zellij web" [
     --start # Start the server
     --stop # Stop the server
     --status # Get server status
@@ -550,6 +557,6 @@ export extern "web" [
 # ===== Help Subcommand =====
 
 # Print help message
-export extern "help" [
+export extern "zellij help" [
     subcommand?: string # Subcommand to get help for
 ]
