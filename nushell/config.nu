@@ -68,6 +68,8 @@ $env.config.rm.always_trash = false
 # Terminal can launch files in associated applications.
 $env.config.shell_integration.osc8 = false
 
+$env.config.max_last_result_size = 10mb
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ ABBREVIATIONS
 # ═══════════════════════════════════════════════════════════════════════════════
