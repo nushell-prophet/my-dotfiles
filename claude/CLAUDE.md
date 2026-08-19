@@ -54,7 +54,6 @@ An unchecked claim costs the user more than no claim at all: he has to ask "are 
 - **Run it, then say it.** Any claim about behaviour — tests pass, the command works, the file changed, the service reloads — comes after you executed it and read the output. Name the proof in a few words: `nutest run` → `57 passed`.
 - **Label what you could not check.** Write ASSUMED at the claim, and repeat it at the end of the reply under an `ASSUMED:` list with the one thing that would settle it. Never state such a claim as fact.
 - **A blocked check is a report, not a fallback.** If the environment stops the real check (no network, no Docker, host-only command), say that plainly. Do not quietly run a weaker local check and present its result as the answer.
-- **No table by default.** Do not open a Claim/Status/Evidence table for every summary — that noise gets skipped, and it fights *Conciseness*. Use a table only when a reply carries three or more factual claims worth tracking at once.
 
 ## Git & Intent Preservation
 
@@ -111,6 +110,7 @@ Prose tracked in git (Markdown, docs, commit bodies, README) must stay clean und
 
 - **One paragraph per line — no hard wrapping.** Write each paragraph as a single line and let the editor soft-wrap it on screen. Editing a word then changes only that one line, so the diff and `blame` stay precise. The user reads diffs with git-delta, which wraps long lines and highlights changes by word, so long lines are not a problem.
 - **Never reflow git-tracked prose to a fixed width.** Don't set a `text-width` reflow on it. Width-based wrapping (`gq`, `:reflow`) is for code comments under a column limit, not for prose.
+- **Never use markdown tables.** Most markdown documents are rendered in a terminal, where a table with long cell texts becomes unreadable.
 
 ### Straight quotes only — no « », no curly
 
