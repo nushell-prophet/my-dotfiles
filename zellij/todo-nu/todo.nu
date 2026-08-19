@@ -1,3 +1,5 @@
+const CLAUDE_MD = (path self | path dirname | path join todo-claude-md-template.md)
+
 # list active todo files
 export def lstd [] {
     'todo' | path exists | if not $in { return }
@@ -24,6 +26,10 @@ export def create-todo [] {
     let todo_folder_is_new = if ('todo' | path exists) { false } else {
         mkdir todo
         true
+    }
+
+    if not ('todo/CLAUDE.md' | path exists) {
+        cp $CLAUDE_MD todo/CLAUDE.md
     }
 
     let date = date now | format date '%J'
