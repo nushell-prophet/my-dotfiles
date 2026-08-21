@@ -348,6 +348,19 @@ default_shell "nu"
 //
 // pane_frames true
 
+// Set the pane frame style when pane_frames is enabled
+// Options:
+//   - titles (0.45 default - draw only a title row above each pane)
+//   - full (draw a full frame around each pane)
+//   - none (equivalent to pane_frames false)
+//
+// 0.45's new title-frames UI made "titles" the default, which drops the box
+// around every pane. Two things broke with it: panes silently gained rows, and
+// the cozy-focus frame_unselected/frame_selected colors below had almost
+// nothing left to paint, so the focus cue disappeared. Those colors are tuned
+// for a full box - keep the two together.
+pane_frame_style "full"
+
 // Toggle between having Zellij lay out panes according to a predefined set of layouts whenever possible
 // Options:
 //   - true (default)
@@ -612,6 +625,15 @@ disable_session_metadata true
 // Default: true
 //
 // stacked_resize false
+
+// Whether stacked panes display as a list with the expanded pane pinned to the
+// bottom
+// Default: true
+//
+// The other half of the 0.45 stacked-lists rewrite. Off, because the previous
+// stack rendering was already what we wanted - see the compact-bar-up swap
+// layouts, which are unchanged.
+stacked_pane_list false
 
 // Whether to show release notes on first version run
 // Default: true
