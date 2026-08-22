@@ -168,6 +168,14 @@ keybinds clear-defaults=true {
         bind "Ctrl b" "PageUp" "Left" "h" { PageScrollUp; }
         bind "d" { HalfPageScrollDown; }
         bind "u" { HalfPageScrollUp; }
+        // 0.45 OSC 133 actions - nushell marks prompt boundaries, so these work
+        // in nu panes. Left commented: "m" is bound to SwitchToMode "move" by a
+        // shared_except block below, and "c" is CaseSensitivity in search mode,
+        // so they can only live here in scroll.
+        // bind "[" { ScrollToPreviousPrompt; }
+        // bind "]" { ScrollToNextPrompt; }
+        // bind "m" { SelectCommandAtScrollPosition; }
+        // bind "c" { CopyLastCommandOutput; SwitchToMode "locked"; }
     }
     search {
         bind "Ctrl c" { ScrollToBottom; SwitchToMode "Locked"; }
@@ -324,6 +332,15 @@ load_plugins {
 //   - quit
 //
 // on_force_close "quit"
+
+// Choose how to handle a nested Zellij session detected running inside a pane
+// Options:
+//   - ask (Default - prompt with a modal to zoom in or control on focus)
+//   - fullscreen (always zoom into the nested session)
+//   - descend (always control the nested session on focus)
+//   - never (never prompt or descend; do it manually)
+//
+// nested_session_handling "ask"
 
 //  Send a request for a simplified ui (without arrow fonts) to plugins
 //  Options:
@@ -557,6 +574,12 @@ disable_session_metadata true
 //
 // support_kitty_keyboard_protocol false
 
+// Enable or disable support for the Kitty Graphics Protocol, used to display images (the host terminal must also support it)
+// (Requires restart)
+// Default: true (if the host terminal supports it)
+//
+// support_kitty_graphics_protocol false
+
 // Whether to make sure a local web server is running when a new Zellij session starts.
 // This web server will allow creating new sessions and attaching to existing ones that have
 // opted in to being shared in the browser.
@@ -626,6 +649,14 @@ disable_session_metadata true
 //
 // stacked_resize false
 
+// Whether to let programs running inside panes read the paste buffer (clipboard)
+// with the OSC 52 escape sequence. When enabled, any program in any pane -
+// including one running on a remote machine over SSH - can read the clipboard
+// without the user being asked.
+// Default: false
+//
+// dangerously_enable_paste_buffer_read true
+
 // Whether stacked panes display as a list with the expanded pane pinned to the
 // bottom
 // Default: true
@@ -646,11 +677,35 @@ show_startup_tips false
 //
 // advanced_mouse_actions false
 
+// Whether Ctrl+ScrollWheel resizes panes
+// Default: true
+//
+// mouse_scroll_resize false
+
 // Whether to enable mouse hover visual effects (frame highlight and help text)
 // Default: true
 //
 // Why: hover highlight of the pane under the mouse looks distracting on screen recordings
 mouse_hover_effects false
+
+// Whether to show mouse hover help-text tips (resize help and group shortcuts)
+// Default: true
+//
+// Why: same reason as mouse_hover_effects above - the hover overlay is noise
+// on screen recordings.
+mouse_hover_tips false
+
+// Whether triple-clicking inside command output marked by the shell (OSC 133) selects
+// the command and its output instead of the logical line
+// Default: true
+//
+// osc133_command_selection false
+
+// Characters that terminate a word when double-clicking to select it
+// whitespace is always a separator and need not be listed here
+// Default: "[]{}<>()"
+//
+// word_separators "[]{}<>()"
 
 // Whether to output OSC8 hyperlink sequences
 // Default: true
