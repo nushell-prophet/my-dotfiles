@@ -66,9 +66,7 @@ keybinds clear-defaults=true {
         bind "Super Alt e" { EditScrollback; }
 
         bind "Super Alt l" {
-            // Why: lazygit-helix.nu sends Esc to helix before lazygit,
-            // and :reload-all after lazygit exits.
-            Run "nu" "~/.config/zellij/lazygit-helix.nu" {
+            Run "lazygit" {
                 close_on_exit true
                 floating true
                 x "2%"
