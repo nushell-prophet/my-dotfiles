@@ -10,5 +10,6 @@
   "agentPushNotifEnabled": true,
   "env": {
     "EDITOR": "hx-quote"
-  }
+  },
+  "outputStyle": "Concise"
 }
