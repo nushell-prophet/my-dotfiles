@@ -8,15 +8,14 @@
 
 keybinds clear-defaults=true {
     // Why: these are window-manager keys, not mode keys - they should work
-    // whatever mode we are in. 0.45 can drop us into Scroll mode on its own (a
-    // mouse wheel scroll, or focusing a pane that was left scrolled), and while
-    // they lived in "normal" "locked" only, that killed tab and pane switching
-    // until the pane was back at the bottom. Excluded are the three modes where
-    // keys are text input.
+    // whatever mode we are in. While they lived in "normal" "locked" only, any
+    // mode we did not pick ourselves killed tab and pane switching. Excluded
+    // are the three modes where keys are text input.
     //
-    // The trigger was the 0.45 scroll-mode sync (see the locked block below),
-    // but KEEP this block when that sync goes away: binding the window-manager
-    // keys globally is right on its own, whatever puts us in another mode.
+    // The trigger was the 0.45 scroll-mode sync, now off via
+    // `scroll_mode_sync false`, but this block stays: binding the
+    // window-manager keys globally is right on its own, whatever puts us in
+    // another mode.
     shared_except "entersearch" "renametab" "renamepane" {
         bind "Super Shift +" { Resize "Increase"; }
         bind "Super Shift -" { Resize "Decrease"; }
@@ -96,7 +95,7 @@ keybinds clear-defaults=true {
             };
         }
     }
-    normal {
+    shared_among "normal" "locked" {
         bind "PageDown" { PageScrollDown; }
         bind "PageUp" { PageScrollUp; }
         bind "Shift PageDown" { ScrollDown; }
@@ -104,24 +103,6 @@ keybinds clear-defaults=true {
     }
     locked {
         bind "Ctrl Shift g" { SwitchToMode "normal"; }
-        // REVISIT ON EVERY ZELLIJ UPGRADE - workaround, not a preference.
-        // 0.45 switches the client into Scroll mode as soon as the pane becomes
-        // scrolled (upstream #5299), and Shift PageUp is not bound in Scroll -
-        // so the second press did nothing. The trailing SwitchToMode undoes
-        // that sync: a binding's actions run in order, each waiting for the
-        // previous one, so this one always lands after the sync's own mode
-        // change.
-        // Not in "normal" because: the sync only fires from the default mode
-        // (locked here), so bouncing there would kick us out of normal for
-        // nothing.
-        // 0.45 has no option to turn the sync off, and we do not patch the
-        // fork for behaviour like this. If upstream backs it out or makes it
-        // configurable, delete the four binds below and move the plain ones
-        // from the "normal" block back into the shared block above.
-        bind "PageDown" { PageScrollDown; SwitchToMode "locked"; }
-        bind "PageUp" { PageScrollUp; SwitchToMode "locked"; }
-        bind "Shift PageDown" { ScrollDown; SwitchToMode "locked"; }
-        bind "Shift PageUp" { ScrollUp; SwitchToMode "locked"; }
     }
     resize {
         bind "r" { SwitchToMode "normal"; }
@@ -712,6 +693,14 @@ show_startup_tips false
 // Default: true
 //
 // mouse_scroll_resize false
+
+// Whether scrolling a pane implicitly enters and exits Scroll mode
+// Default: true
+//
+// Why: the sync fires on a mouse wheel scroll and on focusing a pane that was
+// left scrolled - neither is a mode we asked for, and the mode we land in has
+// its own bindings, so keys quietly stop doing what they did a second ago.
+scroll_mode_sync false
 
 // Whether to enable mouse hover visual effects (frame highlight and help text)
 // Default: true
