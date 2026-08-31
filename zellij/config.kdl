@@ -309,14 +309,16 @@ plugins {
     tab-bar location="zellij:tab-bar"
     status-bar location="zellij:status-bar"
     strider location="zellij:strider"
-    // Not `compact-bar { tooltip "F1" }` because: setting a tooltip key does two
-    // things, not one - besides binding F1 it makes the bar open the hint box by
-    // itself on every mode change away from the base mode (compact-bar
-    // handle_main_mode_update; only Locked/EnterSearch/Rename*/Prompt/Tmux are
-    // exempt). 0.45 syncs the input mode to the scroll position, so a mouse wheel
-    // scroll switches locked -> Scroll and the box popped up on every scroll.
-    // There is no "key only, no auto-open" switch, so the key goes too.
-    compact-bar location="zellij:compact-bar"
+    // Why: `tooltip` does two things, not one - besides binding F1 it makes the
+    // bar open the hint box by itself on every mode change away from the base
+    // mode (compact-bar handle_main_mode_update; only Locked/EnterSearch/
+    // Rename*/Prompt/Tmux are exempt). That is fine again now that
+    // `scroll_mode_sync false` is set: the only mode changes left are ones we
+    // asked for, so the box opens when we switch modes and not on a wheel
+    // scroll. Drop the key again if some other involuntary mode change appears.
+    compact-bar location="zellij:compact-bar" {
+      tooltip "F1"
+    }
     session-manager location="zellij:session-manager"
     welcome-screen location="zellij:session-manager" {
         welcome_screen true
