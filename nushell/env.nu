@@ -42,12 +42,16 @@ def create-left-prompt []: nothing -> string {
         # show only if there are more than 2 instances
         | if $in <= 2 { '' } else { $'(ansi yellow)nu($in)(ansi reset) ' }
 
+    let jobs = job list
+        | length
+        | if $in == 0 { '' } else { $'jobs($in) ' }
+
     # hide near-instant commands
     let duration = $env.CMD_DURATION_MS | into int | if $in < 90 { '' } else { $'($in)ms ' }
 
     # everything after the path — built once, so the width math below and the
     # rendered prompt can't drift apart
-    let tail = $'($git_status)($duration)($last_exit_code)($shlvl)'
+    let tail = $'($git_status)($duration)($last_exit_code)($shlvl)($jobs)'
     let width = { ansi strip | str length --grapheme-clusters } # visible width
     let max_width = (term size).columns - 2 # the `┏ ` prefix takes 2 cells
 
