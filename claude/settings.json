@@ -8,6 +8,7 @@
   "preferredNotifChannel": "terminal_bell",
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
+  "remoteControlAtStartup": false,
   "env": {
     "EDITOR": "hx-quote"
   },
