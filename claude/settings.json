@@ -10,7 +10,8 @@
   "agentPushNotifEnabled": true,
   "remoteControlAtStartup": false,
   "env": {
-    "EDITOR": "hx-quote"
+    "EDITOR": "hx-quote",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
   },
   "outputStyle": "Concise"
 }
