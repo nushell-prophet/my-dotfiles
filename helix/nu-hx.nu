@@ -154,3 +154,17 @@ export def copy-tag [
     }
     $'<selected-text file="($path)" lines="($start)-($end)">($sel)</selected-text>' | pbcopy
 }
+
+# Copy the selection as a <selected-text> tag addressed by a change-id link (the `+ t` binding):
+# `<selected-text link="<repo>@<change-id>:<path>" lines="a-b">`. The link names the commit
+# that last touched the file, so the tag still resolves after a rebase, where a path plus line
+# numbers drifts. The link arrives as an argument, made by `cozy git link` in the binding itself:
+# a call from this file would be a parse-time dependency on the cozy module, absent on a
+# bare-dotfiles host, and one unknown command here kills every Helix<->nushell call.
+export def copy-link-tag [
+    link: string # from `cozy git link %{buffer_name}`
+    start: int # first selected line (Helix %{selection_line_start})
+    end: int # last selected line (Helix %{selection_line_end})
+]: string -> nothing {
+    $'<selected-text link="($link)" lines="($start)-($end)">($in)</selected-text>' | pbcopy
+}

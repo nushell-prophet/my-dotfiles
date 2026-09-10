@@ -138,6 +138,12 @@ s = [ ":pipe-to nu-hx copy-tag r#'%{buffer_name}'# %{selection_line_start} %{sel
 
 S = [ ":pipe-to nu-hx copy-tag --absolute r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}", ":write" ]
 
+# `t` copies the selection as the same tag addressed by a change-id link instead of a path,
+# so it survives a history rewrite. :write comes FIRST: `cozy git link` refuses a file with
+# uncommitted changes, and an unsaved buffer would pass that check while differing from the
+# commit. On the refusal, `+ g` commits the buffer.
+t = [ ":write", ":pipe-to nu-hx copy-link-tag (cozy git link r#'%{buffer_name}'#) %{selection_line_start} %{selection_line_end}" ]
+
 v = '''
 :pipe-to #voice
 let input = $in
