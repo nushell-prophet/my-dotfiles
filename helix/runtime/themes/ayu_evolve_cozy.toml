@@ -1,0 +1,9 @@
+# ayu_evolve, with one addition: a colour for the soft-wrap indicator.
+inherits = "ayu_evolve"
+
+# Why: the indent guide `╎` has no colour of its own in ayu either, so helix falls
+# back to `ui.virtual.whitespace` for it (helix-term/src/ui/document.rs:265).
+# `ui.virtual.wrap` has no such fallback — it only walks up to `ui.virtual`, `ui`,
+# and ayu defines neither, so `↪` ends up the colour of normal text.
+# Naming the same palette entry keeps `↪` and `╎` the same grey by definition.
+"ui.virtual.wrap" = "dark_gray"
