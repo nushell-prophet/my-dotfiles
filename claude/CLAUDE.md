@@ -108,28 +108,6 @@ If it returns `main` or `master`, stop: propose a branch name and the exact `git
 Why: the user reviews work as a diff and undoes it by dropping the branch.
 A change that landed on the trunk takes that exit away.
 
-### Squash when the branch merges
-
-Frequent commits on a working branch are rollback points.
-They may look half-finished — that is fine, that is their job.
-But they stop being useful the moment the branch is done: an agent that later reads `git log` on the trunk wades through abandoned attempts and reversed decisions, and that noise fills its context instead of the real history.
-
-So a finished branch lands on the trunk as one commit.
-Never merge on your own initiative — it touches the trunk.
-Propose the exact command and the message body, then wait (see *Один шаг за раз*).
-
-**An explicit request is the exception.** When the user asks for the merge by name — "land this branch", `/land-branch` — that request is the authorization.
-Show the whole plan first (the commits being squashed, the message body, anything dropped from the commit, the exact merge command), take one confirmation, then run it.
-The rule guards against a merge nobody asked for.
-It does not mean stopping one command short of a job the user asked you to finish.
-
-**The squash must not eat the reasoning.** The step commits die; their bodies do not.
-Before proposing the merge, read the branch's own log and gather into the surviving body: why this approach, why the alternative was rejected, what the user said.
-Drop only the mechanics — "wip", "fix typo", "revert previous".
-
-Use judgement, not the letter: if the branch really holds two unrelated changes, propose two commits.
-If it is already one clean commit, there is nothing to squash.
-
 ### Commits
 
 - **English only, everywhere.** Every commit message — subject and body — is written in English, in every repo, no exception.
@@ -143,7 +121,7 @@ If it is already one clean commit, there is nothing to squash.
   Off-topic `todo/` notes are that exception — leave them uncommitted.
 - Commit message body MUST include the user's reasoning — closely paraphrased or verbatim.
   Do not sanitize or summarize into something generic.
-  The reasoning must also survive the squash (see *Squash when the branch merges*).
+  The reasoning must also survive the squash (see the `40-land-branch` skill).
 - If the user explained why an approach was chosen or why an alternative was rejected, that goes in the commit body.
 - A commit subject like "implement parser" with no body is an intent loss.
   Unacceptable.
