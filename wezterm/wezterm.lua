@@ -291,6 +291,12 @@ local quick_select_patterns = {
   -- Their 8-letter short form is already covered by the rule above.
   "\\b[k-z]{32}\\b",
 
+  -- The text typed after a ❯ prompt (Claude Code's TUI), trimmed at both ends.
+  -- Why \x{a0}: Claude Code puts a no-break space after the ❯, not a plain one.
+  -- Why it sits before the path rule: a prompt like `/40-land-branch` starts
+  -- where the path match starts, and on an equal start the earlier rule wins.
+  "(?<=❯[ \\x{a0}])\\S(?:.*\\S)?",
+
   -- file:line:col (rg --vimgrep, nushell table rows, stack traces,
   -- nushell error headers like ╭─[/path/to/file.nu:1946:63])
   "[^\\s│╭─\\[]+:\\d+:\\d+",
