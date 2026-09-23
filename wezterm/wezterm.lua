@@ -286,6 +286,11 @@ local quick_select_patterns = {
   -- jj change IDs (use k-z alphabet to avoid forming words)
   "\\b[k-z]{8,12}\\b",
 
+  -- Change-Id trailers from cozy's commit-msg hook: 32 letters of the same
+  -- k-z alphabet. The rule above cannot reach them: no \b falls after letter 12.
+  -- Their 8-letter short form is already covered by the rule above.
+  "\\b[k-z]{32}\\b",
+
   -- file:line:col (rg --vimgrep, nushell table rows, stack traces,
   -- nushell error headers like ╭─[/path/to/file.nu:1946:63])
   "[^\\s│╭─\\[]+:\\d+:\\d+",
