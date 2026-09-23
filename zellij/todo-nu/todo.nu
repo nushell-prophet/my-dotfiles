@@ -38,7 +38,6 @@ export def create-todo [] {
     # lands inside the value instead of being a yaml comment
     let $frontmatter = $"---
 status: draft #draft | in_progress | completed | rejected
-created: '($date)' #yyyyMMdd
 updated: '($date)' #yyyyMMdd
 ---
 
@@ -46,7 +45,7 @@ updated: '($date)' #yyyyMMdd
 
     $frontmatter | save --raw $path
 
-    hx +7 $path
+    hx +6 $path
 
     # check if the file wasn't modified
     if ($path | path exists) {
