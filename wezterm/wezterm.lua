@@ -300,7 +300,10 @@ local quick_select_patterns = {
   -- $env.config.table.header_on_separator = true
   -- $env.config.footer_mode = "Always"
   "(?<=─|╭|┬)([a-zA-Z0-9 _%.-]+?)(?=─|╮|┬)", -- Headers
-  "(?<=│ )([a-zA-Z0-9 _.-]+?)(?= │)", -- Column values
+  -- Column values. Why the first character excludes the space: an empty cell,
+  -- or a blank line inside a lazygit/nushell box, is all spaces between two │
+  -- and would otherwise be offered as a match.
+  "(?<=│ )([a-zA-Z0-9_.-][a-zA-Z0-9 _.-]*?)(?= │)",
 
   -- File paths: absolute, relative and ~-prefixed; strips trailing punctuation
   -- (. , ; : " ' `) via lookbehind.
