@@ -65,7 +65,8 @@ keybinds clear-defaults=true {
         bind "Super Alt e" { EditScrollback; }
 
         bind "Super Alt l" {
-            Run "lazygit" {
+            // Why: sh sets $PWD to the pane's cwd before lazygit chdirs to the repo root; lazygit ctrl+o reads LG_START_DIR.
+            Run "sh" "-c" "LG_START_DIR=$PWD exec lazygit" {
                 close_on_exit true
                 floating true
                 x "2%"
