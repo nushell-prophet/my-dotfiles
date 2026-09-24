@@ -36,10 +36,13 @@ customCommands:
   # SelectedPath is the commit file's path when commitFiles is focused, the working-tree path otherwise.
   # LG_START_DIR is set by the zellij Super Alt l launcher (sh -c):
   #   lazygit chdirs to the repo root and the shell resets $PWD, so the launch dir is gone here.
-  # --canonicalize-missing: a deleted file (and its directory) no longer exists on disk.
+  # Why nushell: it is on every machine this config reaches; macOS realpath has no --relative-to.
+  # Not `path relative-to` because: it fails unless the file is inside the base dir, so it never yields ../
+  #   The shared leading segments are counted instead; each leftover base segment becomes a ..
+  # Unset LG_START_DIR fails loudly on its own (Cannot find column 'LG_START_DIR').
   - key: '<c-o>'
     context: 'files, commitFiles'
-    command: '[ -n "$LG_START_DIR" ] || { echo "LG_START_DIR is unset: launch lazygit with zellij Super Alt l"; exit 1; }; p=$(realpath --canonicalize-missing --relative-to="$LG_START_DIR" -- {{.SelectedPath | quote}}); printf %s "$p" | pbcopy; echo "copied: $p"'
+    command: 'P={{.SelectedPath | quote}} nu --no-config-file --commands ''let f = $env.P | path expand | path split; let b = $env.LG_START_DIR | path expand | path split; let n = $f | zip $b | take while { $in.0 == $in.1 } | length; let r = [...($b | skip $n | each { ".." }) ...($f | skip $n)] | path join; $r | ^pbcopy; print $"copied: ($r)"'''
     description: 'Copy cwd-relative path to clipboard'
     output: log
   # File at a specific commit -> <full-hash>:<repo-relative-path>. This is literal git
