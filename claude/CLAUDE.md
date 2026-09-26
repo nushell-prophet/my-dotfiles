@@ -147,9 +147,9 @@ The narrow exception — the class that grows more expensive by waiting: a findi
 Say that in one line in chat, as part of the task's report.
 Everything else: silence, not a file.
 
-### Never merge `todo/` or `gi/`
+### Never merge `todo/`, `gi-canvas/` or `gi/`
 
-Never `git merge` (nor cherry-pick, nor rebase onto a shared branch) anything under a project's `todo/` or `gi/` directory unless the user asks for that file by name. `todo/` holds the user's task notes; `gi/` holds the Canvas working files — the chat moved into version-controlled markdown.
+Never `git merge` (nor cherry-pick, nor rebase onto a shared branch) anything under a project's `todo/`, `gi-canvas/` or `gi/` directory unless the user asks for that file by name. `todo/` holds the user's task notes; `gi-canvas/` holds the Canvas working files — the chat moved into version-controlled markdown; `gi/` is the older name of that folder, still present in a few repos.
 Both are working material, not product.
 They sit in the repo only because git is the transport, so merging them into the trunk publishes a scratchpad.
 
