@@ -177,6 +177,10 @@ That noise hides the real edit and ruins `blame`.
   Let the editor soft-wrap long lines on screen.
   The user reads diffs with git-delta, which wraps long lines and highlights changes by word, so a long line is not a problem.
 - **Never use markdown tables.** Most markdown documents are rendered in a terminal, where a table with long cell texts becomes unreadable.
+- **A number in a living doc is a claim that goes stale.** A count in a CLAUDE.md, README, skill or todo is wrong after the next change, and nothing tells the reader.
+  Write the command that produces it, or a relation ("several times the hits"), instead of the number.
+  When the number itself is the point, date it and name its source: "counted on 2026-09-26 with `<command>`".
+  Why: a later agent reads the stale number as a claim, finds the mismatch, and asks the user to confirm a fix to something outside the task — a problem that should never have existed.
 
 ### Straight quotes only — no « », no curly
 
