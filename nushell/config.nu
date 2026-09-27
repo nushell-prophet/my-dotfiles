@@ -55,6 +55,7 @@ $env.config.completions.partial = false
 $env.config.completions.quick = false
 $env.config.completions.use_ls_colors = false
 $env.config.completions.case_sensitive = false
+$env.config.completions.persistent_menus = true
 
 # Cursor Shape Configuration
 $env.config.cursor_shape.emacs = "Line"
