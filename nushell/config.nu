@@ -244,7 +244,7 @@ $env.config.menus ++= [
             text: green
             selected_text: green_reverse
         }
-        source: {|buffer position|
+        source: {|buffer|
             let buffer_esc = $buffer | str replace --all --regex '(_|-)' '_|-'
 
             open $nu.history-path
@@ -598,12 +598,12 @@ $env.config.menus ++= [
         marker: "# "
         type: {layout: list page_size: 25}
         style: {text: green selected_text: green_reverse description_text: yellow}
-        source: {|buffer position|
+        source: {|buffer place|
             # text after the last pipe, paren, semicolon or closure header — the part we complete
             let last_segment = $buffer | split row --regex '(\s\|\s)|\(|;|(\{\|\w\| )' | last
             # Why: str length, str index-of and str substring all count utf-8 bytes by default,
-            # which is what reedline's $position is
-            let span = {start: ($position - ($last_segment | str length)) end: $position}
+            # which is what $place.cursor is
+            let span = {start: ($place.cursor - ($last_segment | str length)) end: $place.cursor}
             # Why: entries are flattened to one line below, so the typed text must be flattened
             # too — otherwise a multiline buffer matches nothing
             let needle = $last_segment | str replace --all (char nl) ' '
