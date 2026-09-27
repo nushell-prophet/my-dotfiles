@@ -85,7 +85,7 @@ So verified is the default state, and anything you could not check is labelled �
 - **Run it, then say it.** Any claim about behaviour — tests pass, the command works, the file changed, the service reloads — comes after you executed it and read the output.
   Name the proof in a few words: `nutest run` → `57 passed`.
 - **A subagent's count is unchecked.** Relay its list, or count the list yourself with a command; never repeat its total.
-  Why: a sweep reported "38 leftover sites" while its own lists added up to 70, and the number was repeated in five replies before anyone summed the list.
+  Why: a sweep once headlined a total its own lists did not add up to, and the total was repeated reply after reply until someone summed the list.
 - **Label what you could not check.** Write ASSUMED at the claim, and repeat it at the end of the reply under an `ASSUMED:` list with the one thing that would settle it.
   Never state such a claim as fact.
 - **A blocked check is a report, not a fallback.** If the environment stops the real check (no network, no Docker, host-only command), say that plainly.
