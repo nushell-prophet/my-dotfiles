@@ -11,6 +11,7 @@ full-path
 ~/.config/helix/config.toml
 ~/.config/helix/hx-nu
 ~/.config/helix/hx-block
+~/.config/helix/git-stage-lines
 ~/.config/helix/hx-quote
 ~/.config/helix/requote-claude-prompt.nu
 ~/.config/helix/nu-hx.nu

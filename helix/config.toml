@@ -124,6 +124,23 @@ f = ":pipe nu-hx flatten" # flatten-to-nuon
 # quick commit: replay write (C-w) -> git add+commit the buffer (C-S-g) -> reload (C-r)
 g = "@<C-w><C-S-g><C-r>"
 
+# commit in a Zellij pane that takes this pane's place until git exits: git opens its own
+# hx on COMMIT_EDITMSG with the staged diff below the scissors line.
+# Why the pause on failure: --close-on-exit would hide "nothing to commit" or a hook error
+# before it could be read.
+G = '''
+:sh #commit with diff→
+zellij run --in-place --close-on-exit --name commit --cwd (r#'%{buffer_name}'# | path expand | path dirname) -- hx-nu -c 'git commit --verbose; if $env.LAST_EXIT_CODE != 0 { input "press Enter" }' | ignore
+'''
+
+# stage the selected lines (h for hunk). The gutter compares with HEAD, not the index, so
+# it does not change after staging.
+# Why :new + :buffer-close! after :update: Helix saves in the background, so a plain
+# :update then %sh{} stages the old disk content. Closing a buffer waits for pending
+# writes and format-on-save; if the write fails, the close fails and the script refuses
+# the [scratch] buffer, so nothing wrong is staged.
+h = [":update", ":new", ":buffer-close!", ":echo %sh{git-stage-lines r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}}"]
+
 n = ":append-output date now | format date %%J-%%Q" # timestamp
 
 # re-align the columns of a selected markdown table (pure nushell, no pandoc)
@@ -151,4 +168,3 @@ $input | kokoro pipe-to-file
 
 w = ":set soft-wrap.enable false"
 W = ":set soft-wrap.enable true"
-

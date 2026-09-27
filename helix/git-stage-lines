@@ -1,0 +1,217 @@
+#!/usr/bin/env nu
+# git-stage-lines: stage part of a file from Helix (or any editor).
+#
+#   git-stage-lines FILE START END   stage the changed lines touching START..END
+#
+# Line numbers are 1-based, inclusive, as in the file saved on disk.
+#
+# How line staging works (the idea of gitsigns.nvim, not `git apply`):
+#   1. take the index version of the file and the version on disk;
+#   2. diff them with git to find the changed blocks;
+#   3. build a new index version that takes only the selected changes;
+#   4. write it with `git hash-object` + `git update-index`.
+# The working tree is never touched, only the index.
+#
+# Rules for what counts as "selected":
+#   * an added or changed line is staged if it is inside the range;
+#   * a replaced old line goes together with the new line in the same
+#     position of its block (1st old <-> 1st new, 2nd <-> 2nd, ...);
+#   * extra old lines of a block (more removed than added) go with the
+#     last new line of the block;
+#   * a pure deletion lies between two lines; it is staged if the range
+#     touches either of them (Helix draws its mark on the line below).
+#
+# Output: one short line on stdout, because Helix shows it with :echo.
+# Helix ignores the exit code and stderr of %sh{}, so errors go to stdout too.
+
+def fail [msg: string] {
+    print $"✗ ($msg)"
+    exit 1
+}
+
+# Run git and return its stdout byte-exact (no trimming).
+def --wrapped git-out [...args] {
+    let r = (^git ...$args | complete)
+    if $r.exit_code != 0 {
+        fail $"git ($args | first): ($r.stderr | str trim)"
+    }
+    if ($r.stdout | describe) == "binary" {
+        fail "file is not valid UTF-8 text: stage it with lazygit or git add -p"
+    }
+    $r.stdout
+}
+
+# Split text into lines, remembering whether it ends with a newline.
+def split-text [text: string] {
+    if $text == "" { return {lines: [], eol: true} }
+    let eol = ($text | str ends-with "\n")
+    let body = ($text | str replace --regex '\n\z' '')
+    {lines: ($body | split row "\n"), eol: $eol}
+}
+
+# Read the index entry of a path: mode, sha, stage number.
+def index-entry [path: string] {
+    let rows = (git-out ls-files -z --stage --full-name -- $path
+        | split row (char nul)
+        | where $it != "")
+    if ($rows | is-empty) { return null }
+    if ($rows | length) > 1 { fail "file has a merge conflict, resolve it first" }
+    $rows | first | parse --regex '^(?<mode>\d+) (?<sha>[0-9a-f]+) (?<stage>\d)\t(?<path>.*)$' | first
+}
+
+# Build the new index blob from the old (index) and new (disk) blobs,
+# taking only the selected lines of the given blocks. Returns {sha added removed}.
+#
+# Note on speed: in Nushell every read of a big list variable copies it,
+# so the work is O(blocks x file length). It is fine for normal edits;
+# for huge files with hundreds of blocks the script refuses instead of
+# freezing Helix.
+def build-blob [old_sha: string, new_sha: string, hunks: list, s: int, e: int] {
+    let old = (split-text (git-out cat-file blob $old_sha))
+    let new = (split-text (git-out cat-file blob $new_sha))
+    let old_lines = $old.lines
+    let new_lines = $new.lines
+
+    let cost = ($hunks | length) * (($old_lines | length) + ($new_lines | length))
+    if $cost > 3000000 {
+        fail $"too many changed blocks \(($hunks | length)\) for line staging in a file this big; select less or stage the whole file"
+    }
+
+    mut chunks = []        # pieces of the new index text, flattened at the end
+    mut pos = 0            # 0-based index of the next unread old line
+    mut last_src = "old"   # where the last output line came from (for the final newline)
+    mut added = 0
+    mut removed = 0
+
+    for h in $hunks {
+        # 0-based index of the first old line of this block
+        # (for a pure insertion: the old line before which new lines go).
+        let first_old = (if $h.oc == 0 { $h.os } else { $h.os - 1 })
+        if $first_old > $pos {
+            $chunks = ($chunks | append [($old_lines | slice $pos..<$first_old)])
+            $last_src = "old"
+        }
+        let old_part = ($old_lines | slice $first_old..<($first_old + $h.oc))
+        let new_part = ($new_lines | slice ($h.ns - 1)..<($h.ns - 1 + $h.nc))
+
+        let picked = (if $h.nc == 0 { [] } else {
+            0..<($h.nc) | each {|i| let n = $h.ns + $i; $n >= $s and $n <= $e }
+        })
+        # Old lines without a paired new line follow the last new line of
+        # the block; in a pure deletion the block was selected as a whole.
+        let rest_taken = (if $h.nc > 0 { $picked | last } else { true })
+
+        mut out = []
+        for k in 0..<([$h.oc $h.nc] | math max) {
+            if $k < $h.oc {
+                let take = (if $k < $h.nc { $picked | get $k } else { $rest_taken })
+                if $take {
+                    $removed += 1
+                } else {
+                    $out = ($out | append [($old_part | get $k)])
+                    $last_src = "old"
+                }
+            }
+            if $k < $h.nc and ($picked | get $k) {
+                $out = ($out | append [($new_part | get $k)])
+                $added += 1
+                $last_src = "new"
+            }
+        }
+        $chunks = ($chunks | append [$out])
+        $pos = $first_old + $h.oc
+    }
+
+    let rest = ($old_lines | skip $pos)
+    if not ($rest | is-empty) { $last_src = "old" }
+    $chunks = ($chunks | append [$rest])
+
+    if $added == 0 and $removed == 0 { fail $"no changes in lines ($s)-($e)" }
+
+    let result = ($chunks | flatten)
+    let eol = (if $last_src == "new" { $new.eol } else { $old.eol })
+    let text = (if ($result | is-empty) { "" } else {
+        ($result | str join "\n") + (if $eol { "\n" } else { "" })
+    })
+
+    let w = ($text | ^git hash-object -w --stdin --no-filters | complete)
+    if $w.exit_code != 0 { fail $"git hash-object: ($w.stderr | str trim)" }
+    {sha: ($w.stdout | str trim), added: $added, removed: $removed}
+}
+
+def main [
+    file: string    # the file, as Helix names it: %{buffer_name}
+    start: int      # first line of the range
+    end: int        # last line of the range
+] {
+    if $file == "[scratch]" { fail "this buffer is not a file" }
+    let abs = ($file | path expand)
+    if not ($abs | path exists) { fail $"file not found: ($file)" }
+    cd ($abs | path dirname)
+    let top = (git-out rev-parse --show-toplevel | str trim)
+    if $top == "" { fail "not inside a git work tree" }
+    cd $top
+
+    let s = ([$start $end] | math min)
+    let e = ([$start $end] | math max)
+
+    let entry = (index-entry $abs)
+    if $entry == null { fail "file is untracked: git add it first" }
+    if $entry.stage != "0" { fail "file has a merge conflict, resolve it first" }
+    if $entry.mode not-in ["100644" "100755"] { fail $"unsupported file mode ($entry.mode)" }
+    let rel = $entry.path
+
+    # The disk version as a blob, after clean filters (autocrlf, etc.),
+    # so both sides are in the same form that git diff uses.
+    let old_sha = $entry.sha
+    let new_sha = (git-out hash-object -w --path $rel -- $abs | str trim)
+    if $old_sha == $new_sha { fail "nothing to stage: file on disk matches the index" }
+
+    let numstat = (git-out diff --numstat $old_sha $new_sha)
+    if ($numstat | str starts-with "-\t-") { fail "binary file: stage it as a whole" }
+
+    # -U0 and --inter-hunk-context=0 give one header per changed block and
+    # no context lines (they also override diff.context / diff.interHunkContext
+    # from the user's git config); --histogram is what the Helix gutter uses.
+    let all = (git-out diff --no-color --no-ext-diff --no-textconv --histogram -U0 --inter-hunk-context=0 $old_sha $new_sha
+        | lines
+        | where ($it | str starts-with "@@")
+        | parse --regex '^@@ -(?<os>\d+)(?:,(?<oc>\d+))? \+(?<ns>\d+)(?:,(?<nc>\d+))? @@'
+        # git omits ",N" when a side has one line; the unmatched group comes back null
+        | each {|m| {
+            os: ($m.os | into int)
+            oc: ($m.oc | default "1" | into int)
+            ns: ($m.ns | into int)
+            nc: ($m.nc | default "1" | into int)
+        } })
+
+    # Only blocks that touch the range matter; the others keep their old lines.
+    let hunks = ($all | where {|h|
+        if $h.nc > 0 {
+            $h.ns <= $e and ($h.ns + $h.nc - 1) >= $s
+        } else {
+            # Pure deletion: it sits between new lines ns and ns+1.
+            # Helix marks the line below, gitsigns the line above; accept both.
+            $s <= ($h.ns + 1) and $e >= $h.ns
+        }
+    })
+    if ($hunks | is-empty) { fail $"no changes in lines ($s)-($e)" }
+
+    let whole = ($hunks | all {|h| $h.nc == 0 or ($h.ns >= $s and ($h.ns + $h.nc - 1) <= $e) })
+    let staged = (if $whole and ($hunks | length) == ($all | length) {
+        # Fast path: every change of the file is selected, stage the disk version.
+        {sha: $new_sha, added: ($hunks | get nc | math sum), removed: ($hunks | get oc | math sum)}
+    } else {
+        build-blob $old_sha $new_sha $hunks $s $e
+    })
+
+    # Someone (lazygit, another terminal) may have changed the index meanwhile.
+    let now = (index-entry $abs)
+    if $now == null or $now.sha != $old_sha {
+        fail "index changed while staging, nothing written; try again"
+    }
+
+    git-out update-index --cacheinfo $"($entry.mode),($staged.sha),($rel)" | ignore
+    print $"✓ staged +($staged.added) -($staged.removed) in ($rel)"
+}
+
