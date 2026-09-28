@@ -2,7 +2,7 @@
 # Claude Code's $EDITOR: helix, plus one fix-up on the way in.
 #
 # Set in ~/.claude/settings.json `env`, NOT as the machine's $EDITOR — Claude Code's
-# ctrl+g file is the only thing that needs the fix-up, so git, jj and lazygit have no
+# ctrl+x ctrl+e file is the only thing that needs the fix-up, so git, jj and lazygit have no
 # business going through a wrapper. (Verified: a settings `env` value overrides the
 # inherited one inside the Claude Code process.)
 #

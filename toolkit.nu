@@ -295,7 +295,7 @@ export def push-to-machine [
         ['~/.config/helix/hx-nu' '~/.local/bin/hx-nu'] # to execute nushell in the environment with chosen modules (if the file exist)
         ['~/.config/helix/hx-block' '~/.local/bin/hx-block'] # column-aware block writer, called by the `+ b` keybinding
         ['~/.config/helix/git-stage-lines' '~/.local/bin/git-stage-lines'] # stages the selected lines, called by the `+ h` keybinding
-        ['~/.config/helix/hx-quote' '~/.local/bin/hx-quote'] # Claude Code's $EDITOR (settings.json), needs PATH: helix minus the `# ` quoting in the ctrl+g file
+        ['~/.config/helix/hx-quote' '~/.local/bin/hx-quote'] # Claude Code's $EDITOR (settings.json), needs PATH: helix minus the `# ` quoting in the ctrl+x ctrl+e file
     ] | each {|s|
         let target = $s.target | path expand
         let link = $s.link | path expand --no-symlink

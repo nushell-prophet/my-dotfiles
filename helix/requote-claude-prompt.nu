@@ -2,7 +2,7 @@
 # Re-quote the response Claude Code pastes above the reply marker in its $EDITOR file:
 # git-style `# ` comments in, markdown blockquotes out.
 #
-# ctrl+g ("Show last response in external editor") writes $TMPDIR/claude-prompt-<uuid>.md:
+# ctrl+x ctrl+e, with "Show last response in external editor" on in /config, writes $TMPDIR/claude-prompt-<uuid>.md:
 # a banner line, the last response with every line prefixed `# ` (a bare `#` for empty
 # lines), then the marker line. The file is .md, so those prefixes turn the whole
 # response into headings — the one convention markdown does NOT share with git. Here
@@ -27,7 +27,7 @@ def main [file: path] {
     # Find the marker as a LINE, not as a substring: a copy of it inside the response always
     # carries Claude Code's own `# ` in front, so `# # ─── Write…` cannot be mistaken for it.
     let at = $lines | enumerate | where { $in.item | str starts-with $MARKER } | get --optional 0.index
-    # no marker -> a plain prompt file (ctrl+g with nothing quoted), or not ours at all
+    # no marker -> a plain prompt file (ctrl+x ctrl+e with nothing quoted), or not ours at all
     if $at == null or $at == 0 { return }
 
     # That copy is what Claude Code's reader hits first (indexOf), so today it cuts above the

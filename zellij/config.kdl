@@ -110,7 +110,7 @@ keybinds clear-defaults=true {
         bind "Shift PageUp" { ScrollUp; }
     }
     locked {
-        bind "Ctrl Shift g" { SwitchToMode "normal"; }
+        bind "Ctrl g" { SwitchToMode "normal"; }
     }
     resize {
         bind "r" { SwitchToMode "normal"; }
@@ -251,7 +251,7 @@ keybinds clear-defaults=true {
         }
     }
     shared_except "locked" "renametab" "renamepane" {
-        bind "Ctrl Shift g" { SwitchToMode "locked"; }
+        bind "Ctrl g" { SwitchToMode "locked"; }
         bind "Ctrl q" { Quit; }
     }
     shared_except "locked" "entersearch" {
@@ -463,7 +463,7 @@ session_serialization false
 // The two deliberate deviations:
 //   frame_unselected -> a faint near-black gray (#1c1c1c). It is one global
 //     color shared by every unfocused frame — tiled AND floating. Pure black
-//     hid tiled inactive panes nicely but also erased the ctrl+shift+g command
+//     hid tiled inactive panes nicely but also erased the ctrl+g command
 //     tooltip, which is a floating window delimited only by its frame (the
 //     compact-bar plugin draws ribbons, never a background fill). This dim gray
 //     is the compromise: tiled inactive panes stay barely-there against the
