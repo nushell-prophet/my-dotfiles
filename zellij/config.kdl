@@ -46,14 +46,12 @@ keybinds clear-defaults=true {
 
         bind "Super m" { ToggleFocusFullscreen; }
         // Why: editing just the visible screen is the common case; full
-        // scrollback is rarer, so it moves to Super Alt e. DumpScreen without
-        // `full true` captures only the viewport.
-        // Not zellij's EditScrollback because: it always edits full scrollback.
-        // Not `Run "hx" ...` because: zellij passes Run args literally and
-        // won't expand ~ in the --config path; nu -c expands it.
+        // scrollback is rarer, so it moves to Super Alt e.
+        // hx-pane-dump.nu keeps each dump under a name and header that say which
+        // pane it came from, so a `+ s` tag copied from it points back at the source.
+        // Not zellij's EditScrollback because: its temp file cannot carry that header.
         bind "Super Shift e" {
-            DumpScreen "/tmp/zellij-screen.txt";
-            Run "nu" "-c" "hx --config ~/.config/helix/config-no-wrap.toml /tmp/zellij-screen.txt" {
+            Run "nu" "~/.config/zellij/hx-pane-dump.nu" {
                 close_on_exit true
                 floating true
                 x "2%"
@@ -62,7 +60,16 @@ keybinds clear-defaults=true {
                 height "98%"
             };
         }
-        bind "Super Alt e" { EditScrollback; }
+        bind "Super Alt e" {
+            Run "nu" "~/.config/zellij/hx-pane-dump.nu" "--full" {
+                close_on_exit true
+                floating true
+                x "2%"
+                y "2%"
+                width "98%"
+                height "98%"
+            };
+        }
 
         bind "Super Alt l" {
             // Why: sh sets $PWD to the pane's cwd before lazygit chdirs to the repo root; lazygit ctrl+o reads LG_START_DIR.
