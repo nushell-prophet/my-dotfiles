@@ -29,10 +29,12 @@ Body text follows the global intent-preservation rule — include the user's rea
 
 # Pushing configs to the machine
 
-`toolkit.nu push-to-machine` copies every tracked config when it is called with no arguments, so a bare `nu toolkit.nu push-to-machine --docker` overwrites the user's live settings — including files nobody in this session touched.
+`toolkit.nu push-to-machine` copies every tracked config when it is called with no arguments, so a bare `toolkit push-to-machine --docker` overwrites the user's live settings — including files nobody in this session touched.
 Never run it that way.
 
-- **Push only what you changed.** The command takes module names: `nu toolkit.nu push-to-machine zellij --docker`, or a single file: `nu toolkit.nu push-to-machine helix/config.toml --docker`.
+- **Call it as a module command, not as a script.** From Bash: `nu --commands 'use toolkit.nu; toolkit push-to-machine zellij --docker --dry-run'`.
+  Why: the toolkit defines `push-to-machine`, not `main push-to-machine`, so `nu toolkit.nu push-to-machine …` fails with "Extra positional argument".
+- **Push only what you changed.** The command takes module names: `toolkit push-to-machine zellij --docker`, or a single file: `toolkit push-to-machine helix/config.toml --docker`.
   Scope it to the exact paths your change touched, the same way `git add path/one path/two` does.
 - **Look before you copy.** Run it with `--dry-run` first and read the diff.
   What comes back is the change the user is about to lose.
