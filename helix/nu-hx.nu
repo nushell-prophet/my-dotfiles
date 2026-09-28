@@ -52,7 +52,7 @@ export def flatten []: string -> string {
 
 # Evaluate the selection and write the result as a rectangle on the line(s) below
 # it, via hx-block (the `+ b` binding). Edits the file on disk, so the binding
-# wraps it in :write / :reload. `run` (0.114) executes hx-block in-process:
+# wraps it in :update / :reload. `run` (0.114) executes hx-block in-process:
 # pipeline input reaches its main directly, no extra nu spawn per press.
 export def block-below [
     file: string # buffer path (Helix %{buffer_name})
@@ -167,4 +167,66 @@ export def copy-link-tag [
     end: int # last selected line (Helix %{selection_line_end})
 ]: string -> nothing {
     $'<selected-text link="($link)" lines="($start)-($end)">($in)</selected-text>' | pbcopy
+}
+
+# Commit in a Zellij pane that takes this pane's place until git exits (the `+ g` / `+ G`
+# bindings); --add stages the whole file first. Returns only when the pane closes.
+# Why the refusal: a Helix command list runs on after a failed command, so when the save
+# fails, :buffer-close! fails with it and leaves the view on [scratch], whose expanded path
+# lands in Helix's cwd, where git would commit whatever is staged in that repo.
+# Why try, not a $env.LAST_EXIT_CODE check after git: nushell stops the script at the
+# failing external, so that check never runs, and --close-on-exit hides the error at once.
+# `null |` because catch passes the error record in as $in, and `input` rejects that input.
+export def commit [
+    file: string # buffer path (Helix %{buffer_name})
+    --add # stage the whole file before committing
+]: any -> nothing {
+    let file = $file | path expand
+    if ($file | path type) != 'file' { error make {msg: $"not a file on disk: ($file)"} }
+    let dir = $file | path dirname
+    if $add { ^git -C $dir add $file }
+    ^zellij run --in-place --close-on-exit --block-until-exit --name commit --cwd $dir -- hx-nu -c 'try { git commit --verbose } catch { null | input "press Enter" }' | ignore
+}
+
+# List the `+` keys of config.toml with what each does: the `#…→` label a prompt binding
+# shows, else the comment at the end of the key line, else the first sentence of the
+# comment above the key, else the command itself.
+# Why: Helix's own `+` popup shows a multi-command key only as "[Multiple commands]".
+# Parses the raw text, because a TOML parser drops the comments.
+export def keys [
+    config: path = (path self | path dirname | path join config.toml)
+]: nothing -> table<key: string, does: string> {
+    let label = {|line| $line | parse --regex ':[a-z-]+ #(?<l>.*)→$' | get --optional 0.l }
+    open --raw $config
+    | lines
+    | skip until { $in == '[keys.normal."+"]' }
+    | skip 1
+    | take until { $in starts-with '[' }
+    | reduce --fold {rows: [] comment: []} {|line, acc|
+        if ($line starts-with '#') {
+            $acc | update comment { append ($line | str replace --regex '^#\s?' '') }
+        } else if ($line =~ '^\S+ = ') {
+            let kv = $line | parse --regex '^(?<key>\S+) = (?<value>.*)' | first
+            let row = {
+                key: ($kv.key | str trim --char "'")
+                label: (do $label $line)
+                trailing: ($kv.value | parse --regex r#'["'\[\]]\s+#\s(?<c>.*)$'# | get --optional 0.c)
+                about: ($acc.comment | str join ' ' | split row --regex '(?<=\.)\s' | first)
+                value: $kv.value
+            }
+            $acc | update rows { append $row } | update comment []
+        } else {
+            let l = do $label $line
+            $acc
+            | if $l != null and ($acc.rows | last | get label) == null {
+                update rows { update ($in | length | $in - 1) { update label $l } }
+            } else { }
+            | if ($line | str trim | is-empty) { update comment [] } else { }
+        }
+    }
+    | get rows
+    | each {|r|
+        let does = [$r.label $r.trailing $r.about $r.value] | where $it not-in [null '']
+        {key: $r.key, does: ($does | first)}
+    }
 }
