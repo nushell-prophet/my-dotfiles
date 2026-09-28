@@ -58,7 +58,7 @@ Once step 3 stands on step 1, reverting step 1 means unpicking three.
 - **One reviewable step per turn.** When a task splits into steps that build on each other, do the first, report it, wait.
   Not the chain.
 - **Say where the boundary is.** End with the next step and that you are waiting, so the user can say "go" without rebuilding the plan in his head.
-- **Never on inference:** rewriting branch history, touching `main`, editing a global config, pushing to a remote.
+- **Never on inference:** rewriting branch history, merging into the trunk (`main` or `master`) or otherwise touching it, editing a global config, pushing to a remote.
   Propose the exact command instead.
 
 ## Fail-fast
