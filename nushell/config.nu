@@ -50,7 +50,7 @@ $env.config.show_banner = false
 $env.config.use_kitty_protocol = true
 
 # Completions Configuration
-$env.config.completions.algorithm = "Fuzzy"
+$env.config.completions.algorithm = "Prefix"
 $env.config.completions.partial = false
 $env.config.completions.quick = false
 $env.config.completions.use_ls_colors = false
