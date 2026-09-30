@@ -147,6 +147,9 @@ $env.PATH = (
     # Why: `nu --mcp` skips the startup string→list PATH conversion, so PATH
     # arrives here as one colon-joined string; `where { path exists }` below
     # would drop it whole, leaving only the prepended dirs (no git, no prompt).
+    # The real fix is in nushell itself (nushell@b70e82f15, `convert_env_values`
+    # keeps PATH a list for a fresh stack); drop this guard once every nu that
+    # runs this file carries it — brew's stock nu does not yet.
     | if ($in | describe) == string { split row (char esep) } else { }
     | prepend [
         ($env.NUPM_HOME | path join "scripts")
