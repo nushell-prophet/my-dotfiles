@@ -8,6 +8,7 @@ full-path
 ~/.claude/agents/*.md
 ~/.claude/commands/*.md
 ~/.claude/output-styles/**/*
+~/.claude/mods/**/*
 ~/.config/helix/config-no-wrap.toml
 ~/.config/helix/config.toml
 ~/.config/helix/hx-nu

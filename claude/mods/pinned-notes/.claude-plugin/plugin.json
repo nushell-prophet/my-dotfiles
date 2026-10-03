@@ -1,0 +1,6 @@
+{
+  "name": "pinned-notes",
+  "version": "0.1.0",
+  "description": "Pins the Guessed / Said properly lines and the ASSUMED list above the prompt",
+  "types": "./types/index.d.ts"
+}
