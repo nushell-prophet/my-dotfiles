@@ -19,7 +19,7 @@ const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-def
 # Structural runtime/state/secret paths Claude Code (and git) create under tracked
 # config roots on every machine — never hand-authored config. Patterns are
 # base-relative: glob --exclude matches them against each scanned parent dir.
-# Why: ~/.claude/CLAUDE.md sits at the .claude root, so the scan walks ~/.claude/**,
+# Why: in the docker profile ~/.claude/settings.json sits at the .claude root, so the scan walks ~/.claude/**,
 # which is ~99% session/plugin/history files (thousands) plus the credentials secret.
 # Not paths-local `ignore` rows because: these are universal, not per-machine choices —
 # fail-fast keeps the structural invariant here and the per-user exceptions there.
