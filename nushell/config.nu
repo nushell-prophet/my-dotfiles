@@ -82,6 +82,7 @@ $env.config.max_last_result_size = 10mb
 $env.config.abbreviations = {
     cs: 'claude --dangerously-skip-permissions'
     cn: 'claude-nu'
+    cno: 'claude-nu gi open --dangerously-skip-permissions'
     gd: 'git diff'
     gp: 'git pull'
     gs: 'git status'
