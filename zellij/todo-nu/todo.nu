@@ -36,11 +36,15 @@ export def create-todo [] {
 
     # Not `to yaml` because: a bare date comes back quoted, so the trailing #hint
     # lands inside the value instead of being a yaml comment
+    # Why the second empty line: `hx +7` must land on a real line. Without it line 7 is
+    # the phantom line after the final newline, where helix computes no indent, so list
+    # continuation lines start at column 0.
     let $frontmatter = $"---
 status: draft #draft | in_progress | completed | rejected
 agents-mode: co-editing #read-only | grammar-fixes | co-editing
 updated: '($date)' #yyyyMMdd
 ---
+
 
 "
 
