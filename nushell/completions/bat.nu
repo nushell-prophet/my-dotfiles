@@ -47,8 +47,8 @@ def "nu-complete bat style components" [] {
 }
 
 # --style is one comma-separated token, so a suggestion has to carry the components already typed - nushell filters candidates against the whole token, and a bare component name would not match `numbers,gr`.
-def "nu-complete bat style" [context: string] {
-    let typed = $context | split row " " | last | str replace --regex '^--style=' ''
+def "nu-complete bat style" [token: record] {
+    let typed = $token.text
     let done = $typed | split row "," | drop 1
     let prefix = if ($done | is-empty) { "" } else { ($done | str join ",") + "," }
 

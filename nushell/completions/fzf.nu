@@ -2,8 +2,8 @@
 # Flags come from `fzf --help`; the key, event and action names come from `fzf --man`.
 
 # Why: nushell matches a candidate against the whole word under the cursor, so a completer for a comma-joined fzf value has to re-emit the part already typed, and it needs to know which separator it stopped at.
-def "nu-complete fzf split" [context: string, seps: list<string>] {
-    let word = $context | split row " " | last | str replace -r '^[\x27"]' ''
+def "nu-complete fzf split" [typed: string, seps: list<string>] {
+    let word = $typed | str replace --regex '^[\x27"]' ''
     let cut = $seps | each {|s| $word | str index-of --end $s } | math max
 
     if $cut < 0 {
@@ -19,8 +19,8 @@ const border_styles = [
     vertical top bottom left right line inline none
 ]
 
-def "nu-complete fzf style" [context: string] {
-    let at = nu-complete fzf split $context [":"]
+def "nu-complete fzf style" [token: record] {
+    let at = nu-complete fzf split $token.text [":"]
 
     if $at.sep == ":" {
         $border_styles | each {|s| $"($at.head)($s)" }
@@ -33,8 +33,8 @@ def "nu-complete fzf style" [context: string] {
     }
 }
 
-def "nu-complete fzf tiebreak" [context: string] {
-    let at = nu-complete fzf split $context [","]
+def "nu-complete fzf tiebreak" [token: record] {
+    let at = nu-complete fzf split $token.text [","]
 
     [
         {value: "length", description: "prefer the shorter line (default)"}
@@ -47,8 +47,8 @@ def "nu-complete fzf tiebreak" [context: string] {
     | update value {|r| $"($at.head)($r.value)" }
 }
 
-def "nu-complete fzf walker" [context: string] {
-    let at = nu-complete fzf split $context [","]
+def "nu-complete fzf walker" [token: record] {
+    let at = nu-complete fzf split $token.text [","]
 
     [
         {value: "file", description: "list files"}
@@ -59,8 +59,8 @@ def "nu-complete fzf walker" [context: string] {
     | update value {|r| $"($at.head)($r.value)" }
 }
 
-def "nu-complete fzf preview-window" [context: string] {
-    let at = nu-complete fzf split $context [","]
+def "nu-complete fzf preview-window" [token: record] {
+    let at = nu-complete fzf split $token.text [","]
 
     [
         up down left right next
@@ -99,8 +99,8 @@ const color_values = [
     underline-dotted underline-dashed reverse dim italic strikethrough
 ]
 
-def "nu-complete fzf color" [context: string] {
-    let at = nu-complete fzf split $context ["," ":"]
+def "nu-complete fzf color" [token: record] {
+    let at = nu-complete fzf split $token.text ["," ":"]
 
     if $at.sep == ":" {
         $color_values | each {|v| $"($at.head)($v)" }
@@ -195,8 +195,8 @@ def "nu-complete fzf actions" [] {
 }
 
 # Why: --bind takes KEY:ACTION pairs joined by commas and chained with "+", so the completer switches on the separator it stopped at - a key or event right after a comma, an action right after ":" or "+".
-def "nu-complete fzf bind" [context: string] {
-    let at = nu-complete fzf split $context ["," ":" "+"]
+def "nu-complete fzf bind" [token: record] {
+    let at = nu-complete fzf split $token.text ["," ":" "+"]
 
     if $at.sep in [":" "+"] {
         nu-complete fzf actions | each {|a| $"($at.head)($a)" }
@@ -205,8 +205,8 @@ def "nu-complete fzf bind" [context: string] {
     }
 }
 
-def "nu-complete fzf expect" [context: string] {
-    let at = nu-complete fzf split $context [","]
+def "nu-complete fzf expect" [token: record] {
+    let at = nu-complete fzf split $token.text [","]
 
     nu-complete fzf keys | each {|k| $"($at.head)($k)" }
 }
