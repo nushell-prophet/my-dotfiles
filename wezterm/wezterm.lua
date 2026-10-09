@@ -132,6 +132,10 @@ end
 config.initial_cols = local_settings.initial_cols
 config.initial_rows = local_settings.initial_rows
 config.hide_tab_bar_if_only_one_tab = true
+-- Why: on the macOS host the native title bar showed through as transparent;
+-- the user wants an ordinary solid bar. This flag paints it in the window
+-- background colour, and TITLE|RESIZE keeps the default title and border.
+config.window_decorations = "TITLE|RESIZE|MACOS_USE_BACKGROUND_COLOR_AS_TITLEBAR_COLOR"
 config.window_padding = { left = 10, right = 10, top = 10, bottom = 10 }
 
 -- Platform-specific settings
