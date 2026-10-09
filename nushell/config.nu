@@ -246,8 +246,10 @@ $env.config.menus ++= [
             text: green
             selected_text: green_reverse
         }
-        source: {|buffer|
-            let buffer_esc = $buffer | str replace --all --regex '(_|-)' '_|-'
+        # Why: `$buffer` is the whole editor line, so after `cd ` it would filter on `cd ` and match nothing;
+        # `$token.text` is only the word under the cursor.
+        source: {|token|
+            let buffer_esc = $token.text | str replace --all --regex '(_|-)' '_|-'
 
             open $nu.history-path
             | query db "SELECT cwd FROM history GROUP BY cwd ORDER BY MAX(start_timestamp) DESC"
