@@ -212,6 +212,26 @@ $env.config.keybindings ++= [
     }
 ]
 
+# ───────────────────────────────────────────────────────────────────────────────
+# Toggle completion algorithm: prefix <-> fuzzy
+# Shortcut: Alt+Shift+F
+# ───────────────────────────────────────────────────────────────────────────────
+# Why: prefix is the default, but fuzzy is often needed in the middle of typing.
+# A host command keeps the typed line, and the completer is rebuilt from
+# $env.config on the next read_line, so the switch applies to the next Tab.
+$env.config.keybindings ++= [
+    {
+        name: toggle_fuzzy_completion
+        modifier: alt_shift
+        keycode: char_f
+        mode: [emacs vi_normal vi_insert]
+        event: {
+            send: executehostcommand
+            cmd: '$env.config.completions.algorithm = if ($env.config.completions.algorithm | str lowercase) == "fuzzy" { "prefix" } else { "fuzzy" }; print $"completions: ($env.config.completions.algorithm)"'
+        }
+    }
+]
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # ▐ MENU SYSTEMS
 # ═══════════════════════════════════════════════════════════════════════════════
