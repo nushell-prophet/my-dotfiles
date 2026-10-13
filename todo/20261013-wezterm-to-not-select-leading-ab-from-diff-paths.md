@@ -7,4 +7,4 @@ session: 4228d8b5-ea25-457b-a68f-44c7f7fe4130
 
 # wezterm-to-not-select-leading-ab-from-diff-paths
 
-Make wezterm not to select leading a/ b/ from paths
+Make wezterm *not select* *the* leading a/ b/ from *diff* paths
