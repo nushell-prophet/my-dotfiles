@@ -106,9 +106,11 @@ b = [ # run selection, write its output as a block below it
 
 # the selection comes from stdin ($in), so prose with `'#` (markdown headers etc.)
 # can't terminate the prompt string
+# Why: the flags skip settings, CLAUDE.md, MCP servers, tools and skills — about 2x faster,
+# and the reply holds only the corrected text, with no rules from CLAUDE.md
 c = '''
 :pipe #correct english→
-^claude -p $"Correct grammar in the text. Respond only with corrected text.\n<text>($in)</text>"
+^claude -p --model haiku --setting-sources '' --strict-mcp-config --tools '' --disable-slash-commands --no-session-persistence $"Correct grammar in the text. Respond only with corrected text.\n<text>($in)</text>"
 '''
 
 C = ":pipe nu-hx clear-annotations" # remove `# =>` result comments
