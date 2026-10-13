@@ -315,6 +315,16 @@ local quick_select_patterns = {
   -- and would otherwise be offered as a match.
   "(?<=│ )([a-zA-Z0-9_.-][a-zA-Z0-9 _.-]*?)(?= │)",
 
+  -- git diff paths without the a/ or b/ prefix, so the selection pastes as a
+  -- real path. The built-ins already strip it on the `--- a/x` and `+++ b/x`
+  -- lines; this covers `diff --git a/x b/x` and any other bare a/x.
+  -- Why a capture group and not a lookbehind: the path rule below starts at the
+  -- `a`, and the leftmost start wins, so a match that starts after `a/` loses.
+  -- This rule starts at the `a` too and wins by its earlier place; wezterm then
+  -- copies the highest capture group that matched, i.e. the path alone.
+  -- Cost: a real directory named a or b loses its first segment.
+  "(?<![.\\w\\-@~])[ab]/([^/\\s│]+(?:/+[^/\\s│]+)*)(?<![.,;:!?)\\]>\"'`])",
+
   -- File paths: absolute, relative and ~-prefixed; strips trailing punctuation
   -- (. , ; : " ' `) via lookbehind.
   -- Why the leading (?:[.\w\-@~]+)?: wezterm concatenates our patterns and its
