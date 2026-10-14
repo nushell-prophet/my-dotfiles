@@ -220,16 +220,22 @@ def show-push-diff [paths: table] {
             print $"\n=== ($row.full-path) ==="
             print $"(ansi yellow)→ NEW FILE will be created(ansi reset)"
             if not ($row.full-path | path dirname | path exists) {
-                print $"(ansi red)  ⚠ Parent directory does not exist: ($row.full-path | path dirname)(ansi reset)"
+                print $"(ansi yellow)  → parent directory will be created: ($row.full-path | path dirname)(ansi reset)"
             }
         }
     }
 }
 
+# Machine dir of the app a row belongs to: ~/.config/helix for helix/runtime/themes/x.toml
+def app-root []: record -> string {
+    let depth = $in.path-in-repo | path split | skip 1 | length
+    $in.full-path | path split | drop $depth | path join
+}
+
 # Copy config files from the repository to the local machine
 export def push-to-machine [
     ...modules: path # limit push to these repo subdirs or files (e.g. zellij helix/config.toml); omit for all
-    --create-dirs # in case of missing directories - create them in place
+    --create-dirs # also create a missing app dir (e.g. ~/.config/helix); subdirs inside an existing one are always created
     --force # overwrite files with uncommitted changes
     --commit-existing # snapshot dirty destination/orphan files in git before pushing (instead of erroring)
     --dry-run # show diff of what would change without copying
@@ -244,6 +250,18 @@ export def push-to-machine [
     let to_delete = if $delete_orphans {
         $paths | where {|r| (not $r.in-repo) and $r.on-machine }
     } else { [] }
+
+    # Why: a missing subdir under an existing app dir (~/.config/helix/runtime/themes)
+    # is only tracked content not pushed yet; a missing app dir may mean the app
+    # does not live on this machine, so that one stays the user's call.
+    # Checked before --dry-run returns, so the preview and the real run agree.
+    let no_app_dir = $to_copy | where {|r| not ($r | app-root | path exists) }
+    if not $create_dirs and ($no_app_dir | is-not-empty) {
+        print $"(ansi red)Error: these files belong to app dirs missing on this machine:(ansi reset)"
+        $no_app_dir | each {|r| print $"  ($r.full-path)" }
+        print $"\nPass --create-dirs to create them, or name only the modules you want."
+        return
+    }
 
     if $dry_run {
         show-push-diff $to_copy
@@ -271,20 +289,8 @@ export def push-to-machine [
         if not $force and (check-dirty-files $to_delete full-path "orphans") { return }
     }
 
-    # Why: skips files whose parent dir is missing when --create-dirs is off, so
-    # $copied — not the planned $to_copy — is the single source of truth for what
-    # actually landed on the machine. --commit-changes derives touched_files from it.
-    let copied = $to_copy
-        | group-by { $in.full-path | path dirname }
-        | items {|dirname v|
-            if ($dirname | path exists) { $v } else {
-                if $create_dirs { mkdir $dirname; $v }
-            }
-        }
-        | compact
-        | flatten
-
-    $copied | each { cp $in.path-in-repo $in.full-path }
+    $to_copy | get full-path | path dirname | uniq | where { not ($in | path exists) } | each { mkdir $in }
+    $to_copy | each { cp $in.path-in-repo $in.full-path }
 
     $to_delete | each { rm $in.full-path }
 
@@ -313,7 +319,7 @@ export def push-to-machine [
             let target_dir = $target_dir | path expand --no-symlink
             if not ($target_dir | path join '.git' | path exists) { return }
 
-            let touched_files = $copied | get full-path
+            let touched_files = $to_copy | get full-path
                 | append ($to_delete | get full-path)
                 | where { $in | str starts-with $"($target_dir)/" }
 
