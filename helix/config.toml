@@ -160,6 +160,13 @@ nu-hx commit r#'%{buffer_name}'#
 # the [scratch] buffer, so nothing wrong is staged. `+ b` and `+ t` wait the same way.
 h = [":update", ":new", ":buffer-close!", ":echo %sh{git-stage-lines r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}}"] # stage the selected lines
 
+# search for the agent's canvas markers (!!! ??? %%%); n and N jump to the next and previous.
+# Why only 3-char: those are the agent's, the ones the user has to act on.
+# Why a search, not a selection of all: the user only needs the first hit, n does the rest.
+# Why no line anchor: agents also put markers after a list bullet, in headings, mid-line.
+# Mentions in backticks match too: Helix regex has no lookaround to skip them.
+m = '@/!!!|\?\?\?|%%%<ret>' # search for the agent's canvas markers
+
 n = ":append-output date now | format date %%J-%%Q" # timestamp
 
 # re-align the columns of a selected markdown table
