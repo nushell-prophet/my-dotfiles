@@ -2,12 +2,6 @@ full-path
 ~/.config/broot/conf.hjson
 ~/.config/broot/select.hjson
 ~/.config/broot/verbs.hjson
-~/.claude/keybindings.json
-~/.claude/settings.json
-~/.claude/agents/*.md
-~/.claude/commands/*.md
-~/.claude/output-styles/**/*
-~/.claude/mods/**/*
 ~/.config/helix/config-no-wrap.toml
 ~/.config/helix/config.toml
 ~/.config/helix/hx-nu

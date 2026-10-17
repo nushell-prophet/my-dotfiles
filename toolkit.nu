@@ -12,25 +12,13 @@
 #   gen-no-wrap              - Regenerate helix/config-no-wrap.toml from helix/config.toml
 #   fill-candidates          - Find new config files to potentially track
 #   cleanup-paths-not-in-csv - List repo files not tracked in CSV
-#   install-skills           - Deploy Claude skills and agents from sibling skill repos into ~/.claude/
 
 const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-default.csv paths-docker.csv README.md .gitignore CLAUDE.md .DS_Store .claude/settings.local.json paths-local.csv]
 
-# Structural runtime/state/secret paths Claude Code (and git) create under tracked
-# config roots on every machine — never hand-authored config. Patterns are
-# base-relative: glob --exclude matches them against each scanned parent dir.
-# Why: in the docker profile ~/.claude/settings.json sits at the .claude root, so the scan walks ~/.claude/**,
-# which is ~99% session/plugin/history files (thousands) plus the credentials secret.
-# Not paths-local `ignore` rows because: these are universal, not per-machine choices —
-# fail-fast keeps the structural invariant here and the per-user exceptions there.
-const excluded_scan_globs = [
-    .git/** backups/** cache/** claudemd-eval-workspace/** downloads/**
-    file-history/** paste-cache/** plugins/** projects/** session-env/**
-    sessions/** shell-snapshots/** statsig/** tasks/** todos/**
-    .credentials.json history.* .last-cleanup .last-update-result.json
-]
+# Base-relative: glob --exclude matches them against each scanned parent dir.
+const excluded_scan_globs = [.git/**]
 
-const commit_target_dirs = [~/.config ~/.claude]
+const commit_target_dirs = [~/.config]
 
 export def main [] { }
 
@@ -422,115 +410,5 @@ export def cleanup-paths-not-in-csv [
         $orphans | each { ^git rm $in }
     } else {
         $orphans
-    }
-}
-
-const this_dir = path self | path dirname
-
-const skill_repos = [
-    [repo subpath];
-    [my-claude-skills plugins]
-    [nushell-skills plugins]
-]
-
-# Collect all available skills and agents from sibling skill repos
-def collect-skills [base: path] {
-    $skill_repos | each {|r|
-        let repo_dir = $base | path join $r.repo
-        if not ($repo_dir | path exists) {
-            print $"(ansi yellow)Skipped:(ansi reset) ($r.repo) not found at ($repo_dir)"
-            return []
-        }
-
-        let src = $repo_dir | path join $r.subpath
-
-        # subpath ending in 'skills': flat — skills/* are skill dirs directly
-        # subpath 'plugins': nested — plugins/*/skills/* are skill dirs (every plugin)
-        let skill_dirs = if ($r.subpath | str ends-with 'skills') {
-            ls $src | where type == dir | get name
-        } else {
-            glob ($src | path join '*/skills/*') --no-file
-        }
-
-        # Why: a skill that spawns a named subagent is dead without it, so the pair
-        # has to reach the machine together. Only the plugin layout has agents/ —
-        # a flat skills/ subpath cannot express one.
-        let agent_files = if ($r.subpath | str ends-with 'skills') {
-            []
-        } else {
-            glob ($src | path join '*/agents/*.md') --no-dir
-        }
-
-        let skills = $skill_dirs | each {|s| {name: ($s | path basename) kind: skills path: $s repo: $r.repo} }
-        let agents = $agent_files | each {|a| {name: ($a | path parse | get stem) kind: agents path: $a repo: $r.repo} }
-
-        $skills ++ $agents
-    } | flatten
-}
-
-# Deploy Claude skills and agents from sibling repos into ~/.claude/
-# Expects my-claude-skills and nushell-skills as siblings of this repo (../my-claude-skills, etc.)
-export def install-skills [
-    ...names: string # skill/agent names to install (omit for --all, or use --list to see available)
-    --base-dir: path # directory containing skill repos (default: parent of this repo)
-    --all # install everything available
-    --list # list what is available without installing
-    --dry-run # show what would be copied without copying
-] {
-    let base = $base_dir | default ($this_dir | path join '..')
-    let skills = collect-skills $base
-
-    if $list {
-        return ($skills | select name kind repo)
-    }
-
-    if ($names | is-empty) and not $all {
-        print "Specify skill or agent names, or use --all to install everything."
-        print $"Use --list to see what is available."
-        return
-    }
-
-    let to_install = if $all {
-        $skills
-    } else {
-        let unknown = $names | where {|n| $n not-in $skills.name }
-        if ($unknown | is-not-empty) {
-            print $"(ansi red)Unknown skills or agents:(ansi reset) ($unknown | str join ', ')"
-            return
-        }
-        # When a skill exists in both repos, keep the last occurrence
-        # Not: nushell-skills is listed after my-claude-skills in skill_repos,
-        # so its version wins for shared skills
-        $skills | where name in $names
-    }
-
-    # A skill is a directory, an agent is a single .md file, so they land in
-    # different places and copy differently.
-    let targets = {
-        skills: ('~/.claude/skills' | path expand --no-symlink)
-        agents: ('~/.claude/agents' | path expand --no-symlink)
-    }
-
-    # Deduplicate: last occurrence wins (nushell-skills over my-claude-skills).
-    # By kind too, so a skill never shadows an agent that happens to share its name.
-    let to_install = $to_install | reverse | uniq-by kind name | reverse
-
-    for $item in $to_install {
-        let filename = if $item.kind == 'agents' { $"($item.name).md" } else { $item.name }
-        let dest = $targets | get $item.kind | path join $filename
-
-        if $dry_run {
-            print $"($item.repo) → ($item.kind)/($item.name)"
-            continue
-        }
-
-        mkdir ($dest | path dirname)
-        if $item.kind == 'agents' {
-            cp $item.path $dest
-        } else {
-            mkdir $dest
-            ^rsync -a --delete $"($item.path)/" $"($dest)/"
-        }
-        print $"(ansi green)Installed:(ansi reset) ($item.kind)/($item.name) \(($item.repo))"
     }
 }
