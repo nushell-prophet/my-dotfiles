@@ -1,5 +1,7 @@
 options.motd_url = ''
 options.clipboard_copy_cmd = 'pbcopy'
+# Why: an accidental q closed a sheet with work in it; ask before quitting a modified sheet.
+options.quitguard = True
 
 # Why: one lowercase zy feeds BOTH clipboards — internal (vd.memory.clipval,
 # which zp pastes from) and system (pbcopy). Internal copy runs first so zp
