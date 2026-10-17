@@ -11,13 +11,19 @@ Sheet.addCommand(
 )
 
 # Why: reading long cells one record at a time — Enter opens a row as a record
-# sheet, and from there ] and [ step to the next and previous row of the parent
-# without q, j, Enter. The record sheet does not know its parent, so this takes
-# the sheet directly under it, which is the parent right after Enter.
+# sheet, and from there Alt+j and Alt+k step to the next and previous row of the
+# parent without q, j, Enter. The record sheet does not know its parent, so this
+# takes the sheet directly under it and checks that this sheet shows its cursor row.
 @Sheet.api
 def open_sibling_row(sheet, n):
     'close this record sheet, move the parent cursor by n rows, open that row on the same field'
-    parent = vd.sheets[1]
+    parent = vd.sheets[1] if len(vd.sheets) > 1 else None
+    # Why: Enter on a JSON row gives a SheetDict whose source is the row; on a CSV row
+    # (in-vd sends flat tables as CSV) a TableSheet with sourceRow. A dict opened from
+    # a cell with zEnter matches neither, so it is not closed.
+    shown = sheet.source if isinstance(sheet, SheetDict) else getattr(sheet, 'sourceRow', None)
+    if parent is None or shown is None or shown is not parent.cursorRow:
+        vd.fail('not a record sheet opened with Enter')
     field = sheet.cursorRowIndex
     vd.quit(sheet)
     parent.cursorDown(n)
@@ -31,7 +37,7 @@ def open_sibling_row(sheet, n):
         if new:
             new.height, new.width = old.height, old.width
 
-# Not Ctrl+N/Ctrl+P because: Ctrl+P is status history. Not Alt+j/k: zellij takes them.
-# Bound on SheetDict only, so [ and ] keep sorting on every table sheet.
-SheetDict.addCommand(']', 'open-next-row', 'open_sibling_row(1)', 'close record sheet, open next row of parent')
-SheetDict.addCommand('[', 'open-prev-row', 'open_sibling_row(-1)', 'close record sheet, open previous row of parent')
+# Not [ and ] because: they sort, and a record sheet of a CSV row is a plain TableSheet.
+# Not Alt+[ because: ESC [ starts the escape code of arrows and other keys.
+Sheet.addCommand('Alt+j', 'open-next-row', 'open_sibling_row(1)', 'close record sheet, open next row of parent')
+Sheet.addCommand('Alt+k', 'open-prev-row', 'open_sibling_row(-1)', 'close record sheet, open previous row of parent')
