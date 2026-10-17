@@ -43,3 +43,26 @@ def open_sibling_row(sheet, n):
 # Not Alt+[ because: ESC [ starts the escape code of arrows and other keys.
 Sheet.addCommand('Alt+j', 'open-next-row', 'open_sibling_row(1)', 'close record sheet, open next row of parent')
 Sheet.addCommand('Alt+k', 'open-prev-row', 'open_sibling_row(-1)', 'close record sheet, open previous row of parent')
+
+# Why: an accidental q that closes the last sheet ends the process, and the cmdlog
+# goes with it. Save it on every exit, so `vd -p <file>` can replay the session.
+# Not atexit because: main() leaves through os._exit, which skips atexit handlers;
+# killLeftoverProcesses is the last VisiData call before it.
+_killLeftoverProcesses = VisiData.killLeftoverProcesses
+
+@VisiData.api
+def killLeftoverProcesses(vd):
+    try:
+        if vd.cmdlog.rows and not vd.options.batch:
+            import os, pathlib, time
+            d = pathlib.Path(os.getenv('XDG_STATE_HOME') or '~/.local/state').expanduser() / 'visidata' / 'cmdlogs'
+            d.mkdir(parents=True, exist_ok=True)
+            p = d / time.strftime('%Y-%m-%d_%H-%M-%S.vdj')
+            vd.save_vdj(Path(str(p)), vd.cmdlog)
+            # Why: open-file keeps the path as typed, so a relative one replays only from here
+            with open(p, 'a') as fp:
+                fp.write(f'# cwd: {os.getcwd()}\n')
+            for old in sorted(d.glob('*.vdj'))[:-100]:  # keep the last 100 sessions
+                old.unlink()
+    finally:
+        _killLeftoverProcesses(vd)
