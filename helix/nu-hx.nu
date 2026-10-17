@@ -188,6 +188,115 @@ export def commit [
     ^zellij run --in-place --close-on-exit --block-until-exit --name commit --cwd $dir -- hx-nu -c 'try { git commit --verbose } catch { null | input "press Enter" }' | ignore
 }
 
+# The message `quick-commit` writes: the user's markers (2-char `!!` `??` `%%` at a line
+# start) and CriticMarkup comments (`{>>`) that the diff adds, e.g. `gi: !! 2, {>> 1`.
+# Why counts and not words: in a canvas the instructions live in the text, so the message
+# only indexes the batch for Claude and for the log.
+# Why 2-char only: `!!!` `???` `%%%` are the agent's, which the user does not add.
+export def quick-commit-message []: string -> string {
+    let added = $in | lines | where ($it =~ '^\+(?!\+\+)')
+    let counts = [
+        [tag pattern];
+        ['!!' '^\+\s*!!(?!!)'] ['??' '^\+\s*\?\?(?!\?)'] ['%%' '^\+\s*%%(?!%)']
+    ]
+        | each {|t| {tag: $t.tag n: ($added | where ($it =~ $t.pattern) | length)} }
+        | append {tag: '{>>' n: ($added | each { split row '{>>' | length | $in - 1 } | math sum)}
+        | where n > 0
+    if ($counts | is-empty) { 'gi: edit' } else {
+        $counts | each { $"($in.tag) ($in.n)" } | str join ', ' | $"gi: ($in)"
+    }
+}
+
+# Commit only this file with the `quick-commit-message` (the `+ k` binding): the step that
+# hands a batch of canvas instructions to `+ l`, without a message to write.
+# Why the pathspec on commit: it commits this file alone, never what else is staged.
+export def quick-commit [file: path]: any -> nothing {
+    let file = $file | path expand
+    if ($file | path type) != 'file' { error make {msg: $"not a file on disk: ($file)"} }
+    let root = ^git -C ($file | path dirname) rev-parse --show-toplevel
+    ^git -C $root add -- $file
+    let diff = ^git -C $root diff --cached -- $file
+    if ($diff | is-empty) { error make {msg: $"nothing to commit in ($file | path basename)"} }
+    ^git -C $root commit --quiet --message ($diff | quick-commit-message) -- $file
+}
+
+# What `+ l` sends for a file: the `!git log` line with the user's commits to it that Claude
+# has not been sent, and the ref that remembers the tip once it is sent.
+# The start is the tip of the last send, kept in `refs/gi/sent/<hash of the absolute path>`,
+# else the last Claude commit on the file, else the file's whole history.
+# Why a sent ref, not only the last Claude commit: a user commit made while Claude is
+# mid-turn and sent later sits before Claude's next commit, so that range drops it.
+# Why the absolute path in the hash: worktrees share refs, and one canvas path can be
+# checked out in several of them.
+# Why only the user's commits: Claude's own are no news to Claude; and by author, not by the
+# Co-Authored-By trailer, because early agent commits carry the author only.
+# Why the tip sha, not HEAD: the range is fixed at the keypress, so the remembered tip
+# matches what was sent even when the line waits in Claude's queue.
+# Why -C and the absolute path: Claude's cwd need not be the one of Helix.
+export def tell-claude-line [file: path]: nothing -> record<line: string, ref: string, tip: string> {
+    let file = $file | path expand
+    let root = ^git -C ($file | path dirname) rev-parse --show-toplevel
+    # Why refuse a dirty file: the line shows commits only, so Claude would read an older
+    # text than the one on screen and nothing would say so.
+    if (^git -C $root status --porcelain -- $file | is-not-empty) {
+        error make {msg: $"($file | path basename) has uncommitted changes; commit them with `+ k` first"}
+    }
+    let ref = $"refs/gi/sent/($file | hash sha256 | str substring 0..15)"
+    let tip = ^git -C $root rev-parse --short=12 HEAD
+    # `complete`, because a missing ref is a normal case and git exits 1 for it.
+    let sent = ^git -C $root rev-parse --quiet --verify --short=12 $ref | complete | get stdout | str trim
+    let sent_reachable = ($sent | is-not-empty) and (
+        ^git -C $root merge-base --is-ancestor $sent HEAD | complete | get exit_code
+    ) == 0
+    let base = if $sent_reachable { $sent } else {
+        ^git -C $root log -1 --format=%h --author='^Claude' -- $file
+    }
+    let range = if ($base | is-empty) { $tip } else { $"($base)..($tip)" }
+    let shas = ^git -C $root log --reverse --format=%h --perl-regexp '--author=^(?!Claude)' $range -- $file | lines
+    # Why refuse an empty range: the line alone starts a Claude turn, here over nothing.
+    if ($shas | is-empty) {
+        error make {msg: $"no new commits of yours to ($file | path basename) since ($base)"}
+    }
+    # Why `git show <shas>`, not `git log <range>` with the author filter: the filter needs a
+    # `!` in the line, and the line runs in Claude's bash mode.
+    {line: $"!git -C ($root) show ($shas | str join ' ') -- ($file)" ref: $ref tip: $tip}
+}
+
+# The pane id of the Claude session in the tab of pane `me`, from `zellij action list-panes
+# --json --command`. Among several Claude panes, the one launched for this file wins
+# (`gi open` puts the canvas path in its command line); errors when that leaves 0 or 2+.
+export def tell-claude-pane [file: path me: int]: list<record> -> int {
+    let panes = $in | where is_plugin == false
+    let tab = $panes | where id == $me | get 0.tab_id
+    let claudes = $panes
+        | where tab_id == $tab and id != $me and ($it.pane_command? | default '' | str contains 'claude')
+    let bound = $claudes | where pane_command =~ ($file | path basename)
+    let pick = if ($bound | is-empty) { $claudes } else { $bound }
+    if ($pick | length) != 1 {
+        error make {msg: $"want one Claude pane in this tab, found ($pick | length): ($pick | get title | str join ', ')"}
+    }
+    $pick.0.id
+}
+
+# Type the `tell-claude-line` and Enter into the Claude pane of this tab (the `+ l` binding),
+# so Claude reads the new commits without a switch to its pane; then remember the tip as sent.
+# A file with uncommitted changes is committed first, as `+ k` does: one key per delivery.
+# Why typed into the open pane, not a second `claude --resume`: a second process on the
+# session forks its transcript, and the open pane never sees the turn (tested with -p).
+# Why write-chars, not `zellij action paste`: Claude folds a bracketed paste into a chip.
+export def tell-claude [file: path]: any -> nothing {
+    let pane = ^zellij action list-panes --json --command
+        | from json
+        | tell-claude-pane $file ($env.ZELLIJ_PANE_ID | into int)
+        | $"terminal_($in)"
+    let root = ^git -C ($file | path expand | path dirname) rev-parse --show-toplevel
+    if (^git -C $root status --porcelain -- ($file | path expand) | is-not-empty) { quick-commit $file }
+    let send = tell-claude-line $file
+    ^zellij action write-chars --pane-id $pane $send.line
+    ^zellij action send-keys --pane-id $pane Enter
+    ^git -C $root update-ref $send.ref $send.tip
+}
+
 # List the `+` keys of config.toml with what each does: the `#…→` label a prompt binding
 # shows, else the comment at the end of the key line, else the first sentence of the
 # comment above the key, else the command itself.
