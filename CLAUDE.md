@@ -29,13 +29,16 @@ Body text follows the global intent-preservation rule — include the user's rea
 
 # Pushing configs to the machine
 
-`toolkit.nu push-to-machine` copies every tracked config when it is called with no arguments, so a bare `toolkit push-to-machine --docker` overwrites the user's live settings — including files nobody in this session touched.
-Never run it that way.
+Every file under the `~/.config` paths in `paths-*.csv` comes from this repo, unless the user asked to skip that rule for a change.
+So `~/.config` is a git repo whose HEAD is the last push: each push commits what it wrote there, as `push-to-machine: dotfiles@<change-id>`.
+An uncommitted change under a tracked path is never normal; it is a reason to find out where it came from.
+Other writers own the rest of `~/.config` (cozy writes `nushell/autoload/`, apps write their state), and the rule does not cover them.
 
 - **Call it as a module command, not as a script.** From Bash: `nu --commands 'use toolkit.nu; toolkit push-to-machine zellij --docker --dry-run'`.
   Why: the toolkit defines `push-to-machine`, not `main push-to-machine`, so `nu toolkit.nu push-to-machine …` fails with "Extra positional argument".
 - **Push only what you changed.** The command takes module names: `toolkit push-to-machine zellij --docker`, or a single file: `toolkit push-to-machine helix/config.toml --docker`.
   Scope it to the exact paths your change touched, the same way `git add path/one path/two` does.
-- **Look before you copy.** Run it with `--dry-run` first and read the diff.
-  What comes back is the change the user is about to lose.
-- **A full push is the user's call.** If every module really needs pushing, propose the command and wait — don't run it on your own judgement.
+  Without names it refuses; `--all` pushes everything, and that is the user's call — propose the command and wait.
+- **Commit first.** Push refuses files with uncommitted changes in this repo, because the `~/.config` commit names the dotfiles commit it deploys.
+- **When push stops on a machine edit, find out where it came from.** It prints the diff and two ways out: `pull-from-machine <file>` to keep the edit (then review and commit it here), or `git -C ~/.config checkout -- <file>` to drop it.
+  There is no flag to overwrite without looking.

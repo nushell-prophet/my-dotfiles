@@ -8,7 +8,7 @@
 #
 # Commands:
 #   pull-from-machine        - Copy configs from machine into repo (module names + --docker supported)
-#   push-to-machine          - Copy configs from repo to machine (--dry-run for preview; pass module names to limit)
+#   push-to-machine          - Copy configs from repo to machine; name the modules or pass --all (--dry-run for preview)
 #   gen-no-wrap              - Regenerate helix/config-no-wrap.toml from helix/config.toml
 #   fill-candidates          - Find new config files to potentially track
 #   cleanup-paths-not-in-csv - List repo files not tracked in CSV
@@ -18,7 +18,9 @@ const excluded_locals = [**/.git/** **/.jj/** toolkit.nu macos-fresh/* paths-def
 # Base-relative: glob --exclude matches them against each scanned parent dir.
 const excluded_scan_globs = [.git/**]
 
-const commit_target_dirs = [~/.config]
+# Every file under the tracked ~/.config paths comes from this repo, so the git repo
+# there records what was pushed last: HEAD is the baseline a machine edit is told apart by.
+const config_root = '~/.config'
 
 export def main [] { }
 
@@ -43,39 +45,47 @@ def check-dirty-files [paths: table field: string context: string] {
     if ($dirty | is-not-empty) {
         print $"(ansi red)Error: The following ($context) have uncommitted changes:(ansi reset)"
         $dirty | get $field | each { print $"  ($in)" }
-        print $"\nCommit or stash changes first, or use --commit-existing / --force to overwrite."
+        print $"\nCommit or stash changes first, or use --force to overwrite."
         true
     } else {
         false
     }
 }
 
-# Commit the given files in whatever git repo contains each, grouped by repo root.
-# Why: lets push-to-machine snapshot the machine's current config before it
-# overwrites it, so the prior state stays recoverable in git history instead of
-# being lost. Commits each file with an explicit pathspec, so unrelated dirty
-# files in the same repo are left untouched.
-# Contract: caller passes only in-repo files (filtered via has-uncommitted-changes),
-# so every group has a non-empty repo root and something to commit.
-def commit-in-own-repo [files: list<path> message: string] {
-    $files
-    | group-by {|f| do { cd ($f | path dirname); ^git rev-parse --show-toplevel } | complete | get stdout | str trim }
-    | items {|toplevel group|
-        ^git -C $toplevel add ...$group
-        ^git -C $toplevel commit -m $message -- ...$group
-    }
+# The ones of `paths` that differ from HEAD in the git work tree at `root`:
+# modified, deleted or untracked. Deleted paths count too, unlike has-uncommitted-changes.
+def dirty-paths [root: path paths: list<path>]: nothing -> list<path> {
+    if ($paths | is-empty) { return [] }
+    ^git -C $root status --porcelain=v1 -z --untracked-files=all -- ...$paths
+    | split row (char nul)
+    | where $it != ''
+    | each {|line| $root | path join ($line | str substring 3..) }
 }
 
-# Ensure each config target dir exists and is a git repo. Idempotent — a no-op
-# for dirs that are already repos. Without --create-dirs, a missing dir is skipped.
-def init-target-repos [create_dirs: bool] {
-    $commit_target_dirs | each {|target_dir|
-        let target_dir = $target_dir | path expand --no-symlink
-        if not ($target_dir | path exists) {
-            if $create_dirs { mkdir $target_dir } else { return }
-        }
-        if not ($target_dir | path join '.git' | path exists) { ^git init $target_dir }
-    }
+# On the first push to a machine, make ~/.config a git repo and commit the tracked
+# files already there, so whatever the push overwrites stays in its history.
+# Why an explicit pathspec: ~/.config also holds files nobody tracks, secrets among them.
+def ensure-config-repo [root: path paths: list<path>] {
+    if ($root | path join '.git' | path exists) { return }
+    mkdir $root
+    ^git init --quiet $root
+    let existing = $paths | where { path exists }
+    if ($existing | is-empty) { return }
+    ^git -C $root add -- ...$existing
+    ^git -C $root commit --quiet --message 'push-to-machine: baseline before the first push' -- ...$existing
+}
+
+# Why: cozy bootstrap pushes from ~/repos/dotfiles, a vendored copy with no .git.
+def source-is-repo []: nothing -> bool {
+    let top = ^git rev-parse --show-toplevel | complete
+    $top.exit_code == 0 and ($top.stdout | str trim) == (pwd | path expand)
+}
+
+# The dotfiles commit a push deploys: its Change-Id prefix, or the short sha without one.
+def source-id []: nothing -> string {
+    if not (source-is-repo) { return 'vendored-copy' }
+    let id = ^git log -1 '--format=%(trailers:key=Change-Id,valueonly)' | str trim
+    if $id != '' { $id | str substring 0..7 } else { ^git rev-parse --short HEAD | str trim }
 }
 
 # Derive repo path from full machine path using convention:
@@ -222,15 +232,17 @@ def app-root []: record -> string {
 
 # Copy config files from the repository to the local machine
 export def push-to-machine [
-    ...modules: path # limit push to these repo subdirs or files (e.g. zellij helix/config.toml); omit for all
+    ...modules: path # limit push to these repo subdirs or files (e.g. zellij helix/config.toml)
+    --all # push every tracked config; without it, name the modules
     --create-dirs # also create a missing app dir (e.g. ~/.config/helix); subdirs inside an existing one are always created
-    --force # overwrite files with uncommitted changes
-    --commit-existing # snapshot dirty destination/orphan files in git before pushing (instead of erroring)
     --dry-run # show diff of what would change without copying
     --docker # use paths-docker.csv for Docker sandbox setup
-    --commit-changes # git add + commit in target directories after push
     --delete-orphans # remove machine files whose repo source was deleted
 ] {
+    # Why: a bare push overwrote every tracked config, files nobody in the session touched included.
+    if ($modules | is-empty) and not $all {
+        error make --unspanned {msg: 'Name the modules to push (e.g. `toolkit push-to-machine zellij`), or pass --all to push every tracked config'}
+    }
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
     let paths = expand-paths $paths_file | select-modules $modules
     let to_copy = $paths | where in-repo
@@ -251,6 +263,42 @@ export def push-to-machine [
         return
     }
 
+    # Why: the ~/.config commit names the dotfiles commit it deploys, which is only
+    # true when the pushed files are committed here.
+    let unsaved = if (source-is-repo) {
+        dirty-paths (pwd) ($to_copy.path-in-repo ++ $to_delete.path-in-repo)
+    } else { [] }
+    if ($unsaved | is-not-empty) {
+        error make --unspanned {msg: $"Commit these files in dotfiles before pushing them:\n  ($unsaved | path relative-to (pwd) | str join "\n  ")"}
+    }
+
+    let root = $config_root | path expand --no-symlink
+    let in_root = {|r| $r.full-path | str starts-with $"($root)/" }
+    if not $dry_run { ensure-config-repo $root ($paths | where $in_root | get full-path) }
+
+    # A machine file that equals the repo, or equals HEAD in ~/.config (the last push),
+    # is safe to overwrite; any other difference was made on the machine after the push.
+    # Files outside ~/.config have no baseline and are overwritten as they are.
+    let differs = $to_copy | where {|r|
+        ($r.full-path | path exists) and ((open --raw $r.full-path | into binary) != (open --raw $r.path-in-repo | into binary))
+    }
+    let drift = if ($root | path join '.git' | path exists) {
+        dirty-paths $root ($differs ++ $to_delete | where $in_root | get full-path)
+    } else { [] }
+    if ($drift | is-not-empty) {
+        let pull = if $docker { 'toolkit pull-from-machine --docker' } else { 'toolkit pull-from-machine' }
+        let rows = $differs ++ $to_delete | where full-path in $drift
+        show-push-diff ($rows | where in-repo)
+        error make --unspanned {msg: ([
+            'These files changed on the machine after the last push, and dotfiles does not hold the change:'
+            ...($rows | each {|r| $"  ($r.full-path)" })
+            ''
+            'Every change under the tracked ~/.config paths starts in the dotfiles repo, so find out where this one came from.'
+            $"To keep it: `($pull) ($rows.path-in-repo | str join ' ')`, review and commit it in dotfiles, then push again."
+            $"To drop it: `git -C ($root) checkout -- <file>`, or delete the file if git does not track it, then push again."
+        ] | str join "\n")}
+    }
+
     if $dry_run {
         show-push-diff $to_copy
         if ($to_delete | is-not-empty) {
@@ -258,23 +306,6 @@ export def push-to-machine [
             $to_delete | get full-path | each { print $"  ($in)" }
         }
         return
-    }
-
-    if $commit_existing {
-        # Why: on a fresh machine the target dirs aren't git repos yet, so their
-        # pre-existing files wouldn't register as "uncommitted" and would be lost
-        # on overwrite. Init first — then those files count as untracked and get
-        # snapshotted below, before we copy over them.
-        init-target-repos $create_dirs
-        let dirty = $to_copy | append $to_delete
-            | get full-path
-            | where { has-uncommitted-changes $in }
-        if ($dirty | is-not-empty) {
-            commit-in-own-repo $dirty "push-to-machine: snapshot before overwrite"
-        }
-    } else {
-        if not $force and (check-dirty-files $to_copy full-path "destination files") { return }
-        if not $force and (check-dirty-files $to_delete full-path "orphans") { return }
     }
 
     $to_copy | get full-path | path dirname | uniq | where { not ($in | path exists) } | each { mkdir $in }
@@ -299,27 +330,10 @@ export def push-to-machine [
         }
     }
 
-    # Initialize git repos for config directories (idempotent if --commit-existing already did)
-    init-target-repos $create_dirs
-
-    if $commit_changes {
-        $commit_target_dirs | each {|target_dir|
-            let target_dir = $target_dir | path expand --no-symlink
-            if not ($target_dir | path join '.git' | path exists) { return }
-
-            let touched_files = $to_copy | get full-path
-                | append ($to_delete | get full-path)
-                | where { $in | str starts-with $"($target_dir)/" }
-
-            if ($touched_files | is-empty) { return }
-
-            $touched_files | each { ^git -C $target_dir add $in }
-            ^git -C $target_dir diff --cached --quiet ...$touched_files
-            | complete
-            | if $in.exit_code != 0 {
-                ^git -C $target_dir commit -m "push-to-machine" -- ...$touched_files
-            }
-        }
+    let pending = dirty-paths $root ($to_copy ++ $to_delete | where $in_root | get full-path)
+    if ($pending | is-not-empty) {
+        ^git -C $root add --all -- ...$pending
+        ^git -C $root commit --quiet --message $"push-to-machine: dotfiles@(source-id)" -- ...$pending
     }
 }
 
