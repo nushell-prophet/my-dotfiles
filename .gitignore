@@ -1,5 +1,4 @@
 .DS_Store
 paths-local.csv
-.claude/
 /.sync-state
 claude/mods/*/.claude-plugin/types/
