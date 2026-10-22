@@ -56,10 +56,12 @@ def check-dirty-files [paths: table field: string context: string] {
 # modified, deleted or untracked. Deleted paths count too, unlike has-uncommitted-changes.
 def dirty-paths [root: path paths: list<path>]: nothing -> list<path> {
     if ($paths | is-empty) { return [] }
+    # Why: porcelain paths are relative to the top of the repo, and `root` can be a subdir of the mono.
+    let prefix = ^git -C $root rev-parse --show-prefix | str trim | str length
     ^git -C $root status --porcelain=v1 -z --untracked-files=all -- ...$paths
     | split row (char nul)
     | where $it != ''
-    | each {|line| $root | path join ($line | str substring 3..) }
+    | each {|line| $root | path join ($line | str substring (3 + $prefix)..) }
 }
 
 # On the first push to a machine, make ~/.config a git repo and commit the tracked
@@ -75,17 +77,26 @@ def ensure-config-repo [root: path paths: list<path>] {
     ^git -C $root commit --quiet --message 'push-to-machine: baseline before the first push' -- ...$existing
 }
 
-# Why: cozy bootstrap pushes from ~/repos/dotfiles, a vendored copy with no .git.
+# Whether this directory carries the history of dotfiles: it is the top of its own repo,
+# or the subdir that the monorepo's mono.yml names as the home of a repo.
+# Why: a vendored copy carries no history of its own. cozy bootstrap pushes from
+# ~/repos/dotfiles with no .git, and cozy/vendor/dotfiles sits inside the cozy repo,
+# whose commits only copy files in; a git toplevel alone cannot tell it from the mono.
 def source-is-repo []: nothing -> bool {
     let top = ^git rev-parse --show-toplevel | complete
-    $top.exit_code == 0 and ($top.stdout | str trim) == (pwd | path expand)
+    if $top.exit_code != 0 { return false }
+    let root = $top.stdout | str trim
+    let here = pwd | path expand | path relative-to $root
+    let mono_yml = $root | path join mono.yml
+    $here == '' or (($mono_yml | path exists) and $here in (open $mono_yml | get subdir))
 }
 
 # The dotfiles commit a push deploys: its Change-Id prefix, or the short sha without one.
+# Why `-- .`: in the mono, HEAD can be a commit of any other project.
 def source-id []: nothing -> string {
     if not (source-is-repo) { return 'vendored-copy' }
-    let id = ^git log -1 '--format=%(trailers:key=Change-Id,valueonly)' | str trim
-    if $id != '' { $id | str substring 0..7 } else { ^git rev-parse --short HEAD | str trim }
+    let last = ^git log -1 '--format=%h%x00%(trailers:key=Change-Id,valueonly)' -- . | str trim | split row (char nul)
+    if $last.1 != '' { $last.1 | str substring 0..7 } else { $last.0 }
 }
 
 # Derive repo path from full machine path using convention:
