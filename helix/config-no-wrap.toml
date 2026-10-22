@@ -162,59 +162,6 @@ nu-hx commit r#'%{buffer_name}'#
 # the [scratch] buffer, so nothing wrong is staged. `+ b` and `+ t` wait the same way.
 h = [":update", ":new", ":buffer-close!", ":echo %sh{git-stage-lines r#'%{buffer_name}'# %{selection_line_start} %{selection_line_end}}"] # stage the selected lines
 
-# quick commit for a gi canvas: commit this file alone with a message that counts the markers
-# and comments it adds (`gi: !! 2, {>> 1`), no editor. Waits for the save and reloads as
-# `+ g` does, for the same reason: the gutter. `+ g` stays for commits with a written message.
-# Why no message to write: in a canvas the instructions live in the text; `+ l` then hands
-# the batch to Claude.
-k = [
-  ":update",
-  ":new",
-  ":buffer-close!",
-  "keep_primary_selection",
-  ''':pipe-to #quick commit→
-nu-hx quick-commit r#'%{buffer_name}'#
-''',
-  ":reload",
-]
-
-# let Claude know: type `!git log -p` of this file's commits that Claude was not sent yet
-# into the Claude pane of this Zellij tab, with Enter. Unsaved or uncommitted edits are
-# committed first, as `+ k` does, so one key delivers an edit; `+ k` stays for batches.
-# Waits for the save and reloads as `+ g` does, for the same reason: the gutter.
-# Why a key and not a hook on `+ g`: the user commits several times and tells Claude when done.
-l = [
-  ":update",
-  ":new",
-  ":buffer-close!",
-  "keep_primary_selection",
-  ''':pipe-to #let Claude know→
-nu-hx tell-claude r#'%{buffer_name}'#
-''',
-  ":reload",
-]
-
-# search for the agent's canvas markers (!!! ??? %%%) and CriticMarkup comments (`{>>`, as
-# `+ i` writes them), and the agent's entries from its latest turn (`AA*:`, by the Canvas
-# style); n and N jump to the next and previous.
-# Why only 3-char: those are the agent's, the ones the user has to act on.
-# Why `{>>` and not `{==`: `+ i` writes both, and one comment should be one stop.
-# Why a search, not a selection of all: the user only needs the first hit, n does the rest.
-# Why no line anchor: agents also put markers after a list bullet, in headings, mid-line.
-# Mentions in backticks match too: Helix regex has no lookaround to skip them.
-m = '@/!!!|\?\?\?|%%%|\{<gt><gt>|AA\*:<ret>' # search for the agent's canvas markers, newest AA*: entries and CriticMarkup comments
-
-# comment on the selection in CriticMarkup: `{==selection==}{>><<}`, cursor inside the comment.
-# The one CriticMarkup key: a plain edit already shows in git word by word, so only a remark
-# tied to a span inside a line needs a tag (a marker line cannot point there).
-# A macro, because a :pipe command cannot leave Helix in insert mode at the right place.
-# Why 3h after <esc>: `c … <esc>` leaves the cursor on the char after the typed text,
-# and 3h walks back over the closing `<<}`.
-# Why <gt> and <lt>: a bare > or < starts Helix key notation and fails to parse.
-# Why no spaces inside the tags: in CriticMarkup they become part of the text on accept.
-# With no selection it wraps the one char under the cursor: select the span first.
-i = '@c{==<C-r>"==}{<gt><gt><lt><lt>}<esc>3hi' # comment on the selection (CriticMarkup)
-
 n = ":append-output date now | format date %%J-%%Q" # timestamp
 
 # re-align the columns of a selected markdown table
@@ -236,5 +183,64 @@ t = [ ":update", ":new", ":buffer-close!", ":pipe-to nu-hx copy-link-tag (cozy g
 w = ":set soft-wrap.enable false" # soft-wrap off
 W = ":set soft-wrap.enable true" # soft-wrap on
 
-'?' = ":sh nu-hx keys | format pattern '{key}  {does}' | str join (char newline)" # this list
+'?' = ":sh nu-hx keys '+' | format pattern '{key}  {does}' | str join (char newline)" # this list
 
+[keys.normal."\\"]
+# the gi canvas keys: commit a canvas, hand it to Claude, find the agent's markers,
+# comment a span.
+# Not a submenu of `+` because: a submenu costs one more key on every canvas action.
+
+# quick commit for a gi canvas: commit this file alone with a message that counts the markers
+# and comments it adds (`gi: !! 2, {>> 1`), no editor. Waits for the save and reloads as
+# `+ g` does, for the same reason: the gutter. `+ g` stays for commits with a written message.
+# Why no message to write: in a canvas the instructions live in the text; `\ l` then hands
+# the batch to Claude.
+k = [
+  ":update",
+  ":new",
+  ":buffer-close!",
+  "keep_primary_selection",
+  ''':pipe-to #quick commit→
+nu-hx quick-commit r#'%{buffer_name}'#
+''',
+  ":reload",
+]
+
+# let Claude know: type `!git log -p` of this file's commits that Claude was not sent yet
+# into the Claude pane of this Zellij tab, with Enter. Unsaved or uncommitted edits are
+# committed first, as `\ k` does, so one key delivers an edit; `\ k` stays for batches.
+# Waits for the save and reloads as `+ g` does, for the same reason: the gutter.
+# Why a key and not a hook on `+ g`: the user commits several times and tells Claude when done.
+l = [
+  ":update",
+  ":new",
+  ":buffer-close!",
+  "keep_primary_selection",
+  ''':pipe-to #let Claude know→
+nu-hx tell-claude r#'%{buffer_name}'#
+''',
+  ":reload",
+]
+
+# search for the agent's canvas markers (!!! ??? %%%) and CriticMarkup comments (`{>>`, as
+# `\ i` writes them), and the agent's entries from its latest turn (`AA*:`, by the Canvas
+# style); n and N jump to the next and previous.
+# Why only 3-char: those are the agent's, the ones the user has to act on.
+# Why `{>>` and not `{==`: `\ i` writes both, and one comment should be one stop.
+# Why a search, not a selection of all: the user only needs the first hit, n does the rest.
+# Why no line anchor: agents also put markers after a list bullet, in headings, mid-line.
+# Mentions in backticks match too: Helix regex has no lookaround to skip them.
+m = '@/!!!|\?\?\?|%%%|\{<gt><gt>|AA\*:<ret>' # search for the agent's canvas markers, newest AA*: entries and CriticMarkup comments
+
+# comment on the selection in CriticMarkup: `{==selection==}{>><<}`, cursor inside the comment.
+# The one CriticMarkup key: a plain edit already shows in git word by word, so only a remark
+# tied to a span inside a line needs a tag (a marker line cannot point there).
+# A macro, because a :pipe command cannot leave Helix in insert mode at the right place.
+# Why 3h after <esc>: `c … <esc>` leaves the cursor on the char after the typed text,
+# and 3h walks back over the closing `<<}`.
+# Why <gt> and <lt>: a bare > or < starts Helix key notation and fails to parse.
+# Why no spaces inside the tags: in CriticMarkup they become part of the text on accept.
+# With no selection it wraps the one char under the cursor: select the span first.
+i = '@c{==<C-r>"==}{<gt><gt><lt><lt>}<esc>3hi' # comment on the selection (CriticMarkup)
+
+'?' = ":sh nu-hx keys '\\' | format pattern '{key}  {does}' | str join (char newline)" # this list

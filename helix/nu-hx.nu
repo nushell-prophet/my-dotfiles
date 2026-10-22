@@ -207,8 +207,8 @@ export def quick-commit-message []: string -> string {
     }
 }
 
-# Commit only this file with the `quick-commit-message` (the `+ k` binding): the step that
-# hands a batch of canvas instructions to `+ l`, without a message to write.
+# Commit only this file with the `quick-commit-message` (the `\ k` binding): the step that
+# hands a batch of canvas instructions to `\ l`, without a message to write.
 # Why the pathspec on commit: it commits this file alone, never what else is staged.
 export def quick-commit [file: path]: any -> nothing {
     let file = $file | path expand
@@ -220,7 +220,7 @@ export def quick-commit [file: path]: any -> nothing {
     ^git -C $root commit --quiet --message ($diff | quick-commit-message) -- $file
 }
 
-# What `+ l` sends for a file: the `!git log` line with the user's commits to it that Claude
+# What `\ l` sends for a file: the `!git log` line with the user's commits to it that Claude
 # has not been sent, and the ref that remembers the tip once it is sent.
 # The start is the tip of the last send, kept in `refs/gi/sent/<hash of the absolute path>`,
 # else the last Claude commit on the file, else the file's whole history.
@@ -239,7 +239,7 @@ export def tell-claude-line [file: path]: nothing -> record<line: string, ref: s
     # Why refuse a dirty file: the line shows commits only, so Claude would read an older
     # text than the one on screen and nothing would say so.
     if (^git -C $root status --porcelain -- $file | is-not-empty) {
-        error make {msg: $"($file | path basename) has uncommitted changes; commit them with `+ k` first"}
+        error make {msg: $"($file | path basename) has uncommitted changes; commit them with `\\ k` first"}
     }
     let ref = $"refs/gi/sent/($file | hash sha256 | str substring 0..15)"
     let tip = ^git -C $root rev-parse --short=12 HEAD
@@ -278,9 +278,9 @@ export def tell-claude-pane [file: path me: int]: list<record> -> int {
     $pick.0.id
 }
 
-# Type the `tell-claude-line` and Enter into the Claude pane of this tab (the `+ l` binding),
+# Type the `tell-claude-line` and Enter into the Claude pane of this tab (the `\ l` binding),
 # so Claude reads the new commits without a switch to its pane; then remember the tip as sent.
-# A file with uncommitted changes is committed first, as `+ k` does: one key per delivery.
+# A file with uncommitted changes is committed first, as `\ k` does: one key per delivery.
 # Why typed into the open pane, not a second `claude --resume`: a second process on the
 # session forks its transcript, and the open pane never sees the turn (tested with -p).
 # Why write-chars, not `zellij action paste`: Claude folds a bracketed paste into a chip.
@@ -297,18 +297,21 @@ export def tell-claude [file: path]: any -> nothing {
     ^git -C $root update-ref $send.ref $send.tip
 }
 
-# List the `+` keys of config.toml with what each does: the `#…→` label a prompt binding
-# shows, else the comment at the end of the key line, else the first sentence of the
-# comment above the key, else the command itself.
+# List the keys of one normal-mode table of config.toml (`+`, `\`) with what each does:
+# the `#…→` label a prompt binding shows, else the comment at the end of the key line,
+# else the first sentence of the comment above the key, else the command itself.
 # Why: Helix's own `+` popup shows a multi-command key only as "[Multiple commands]".
+# Why one table: `?` of each table lists only that table's own keys.
 # Parses the raw text, because a TOML parser drops the comments.
 export def keys [
+    table: string # the key that opens the table: `+` or `\`
     config: path = (path self | path dirname | path join config.toml)
 ]: nothing -> table<key: string, does: string> {
+    let header = $"[keys.normal.\"($table | str replace --all '\' '\\')\"]"
     let label = {|line| $line | parse --regex ':[a-z-]+ #(?<l>.*)→$' | get --optional 0.l }
     open --raw $config
     | lines
-    | skip until { $in == '[keys.normal."+"]' }
+    | skip until { $in == $header }
     | skip 1
     | take until { $in starts-with '[' }
     | reduce --fold {rows: [] comment: []} {|line, acc|
