@@ -7,3 +7,26 @@ inherits = "ayu_evolve"
 # and ayu defines neither, so `↪` ends up the colour of normal text.
 # Naming the same palette entry keeps `↪` and `╎` the same grey by definition.
 "ui.virtual.wrap" = "dark_gray"
+
+# Why: ayu gives headings `orange` and quotes `yellow`, two colours too close to tell apart
+# in a markdown file full of quotes. The heading changes, not the quote: a quote is long text
+# and keeps the colour that is easy to read, a heading is short and can take a strong one.
+"markup.heading" = { fg = "blue", modifiers = ["bold"] }
+
+# Why: in a gi canvas the user's lines must lead and the agent's `AA:` entries stay
+# in the background; the scope comes from runtime/queries/markdown/highlights.scm.
+"markup.canvas.agent" = "gray"
+
+# Why: an open canvas marker (`???`, `!!!`, `%%`) waits for an answer, so it must
+# jump out of the page; the scope comes from the same markdown query.
+"markup.canvas.marker" = "red"
+
+# Why: in an imported canvas `## User` and `## Assistant` alternate, and the colour
+# tells whose turn it is; magenta is the one ayu colour no other canvas element uses.
+"markup.heading.user" = { fg = "green", modifiers = ["bold"] }
+"markup.heading.assistant" = { fg = "magenta", modifiers = ["bold"] }
+
+# Why: the black background alone is too weak to see in a canvas.
+# Cyan is the one free ayu colour; it is close to the heading blue, but a heading
+# is a bold line of its own, so the two do not mix.
+"markup.raw.inline" = { fg = "cyan", bg = "black" }
