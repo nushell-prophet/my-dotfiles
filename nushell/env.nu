@@ -4,6 +4,7 @@ def create-left-prompt []: nothing -> string {
     # collapse $in to $mark when it sits under $base; unchanged otherwise
     let collapse = {|base mark|
         let path = $in
+
         do --ignore-errors { $path | path relative-to $base }
         | match $in {
             null => $path
@@ -69,6 +70,7 @@ def create-left-prompt []: nothing -> string {
                 null => $dir
                 $ws => ($dir | do $collapse $ws '~ws')
             }
+
         if (do $fits $dir) { $dir } else {
             $dir | split row (char path_sep)
             | drop 1

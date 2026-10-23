@@ -46,45 +46,48 @@ export def --env br [
     --whale-spotting (-w) # Sort by size, show ignored and hidden files
     --write-default-conf: path # Write default conf files in given directory
     file?: path # Root Directory
-] {
-    mut args = []
-    if $cmd != null { $args = ($args | append $'--cmd=($cmd)') }
-    if $color != null { $args = ($args | append $'--color=($color)') }
-    if $conf != null { $args = ($args | append $'--conf=($conf)') }
-    if $dates { $args = ($args | append $'--dates') }
-    if $no_dates { $args = ($args | append $'--no-dates') }
-    if $only_folders { $args = ($args | append $'--only-folders') }
-    if $no_only_folders { $args = ($args | append $'--no-only-folders') }
-    if $show_git_info { $args = ($args | append $'--show-git-info') }
-    if $no_show_git_info { $args = ($args | append $'--no-show-git-info') }
-    if $git_status { $args = ($args | append $'--git-status') }
-    if $hidden { $args = ($args | append $'--hidden') }
-    if $no_hidden { $args = ($args | append $'--no-hidden') }
-    if $height != null { $args = ($args | append $'--height=($height)') }
-    if $help { $args = ($args | append $'--help') }
-    if $git_ignored { $args = ($args | append $'--git-ignored') }
-    if $no_git_ignored { $args = ($args | append $'--no-git-ignored') }
-    if $install { $args = ($args | append $'--install') }
-    if $no_sort { $args = ($args | append $'--no-sort') }
-    if $permissions { $args = ($args | append $'--permissions') }
-    if $no_permissions { $args = ($args | append $'--no-permissions') }
-    if $print_shell_function != null { $args = ($args | append $'--print-shell-function=($print_shell_function)') }
-    if $sizes { $args = ($args | append $'--sizes') }
-    if $no_sizes { $args = ($args | append $'--no-sizes') }
-    if $set_install_state != null { $args = ($args | append $'--set-install-state=($set_install_state)') }
-    if $show_root_fs { $args = ($args | append $'--show-root-fs') }
-    if $max_depth != null { $args = ($args | append $'--max-depth=($max_depth)') }
-    if $sort_by_count { $args = ($args | append $'--sort-by-count') }
-    if $sort_by_date { $args = ($args | append $'--sort-by-date') }
-    if $sort_by_size { $args = ($args | append $'--sort-by-size') }
-    if $sort_by_type { $args = ($args | append $'--sort-by-type') }
-    if $sort_by_type_dirs_first { $args = ($args | append $'--sort-by-type-dirs-first') }
-    if $sort_by_type_dirs_last { $args = ($args | append $'--sort-by-type-dirs-last') }
-    if $trim_root { $args = ($args | append $'--trim-root') }
-    if $no_trim_root { $args = ($args | append $'--no-trim-root') }
-    if $version { $args = ($args | append $'--version') }
-    if $whale_spotting { $args = ($args | append $'--whale-spotting') }
-    if $write_default_conf != null { $args = ($args | append $'--write-default-conf=($write_default_conf)') }
+]: nothing -> nothing {
+    let args = [[on arg];
+        [($cmd != null) $'--cmd=($cmd)']
+        [($color != null) $'--color=($color)']
+        [($conf != null) $'--conf=($conf)']
+        [$dates --dates]
+        [$no_dates --no-dates]
+        [$only_folders --only-folders]
+        [$no_only_folders --no-only-folders]
+        [$show_git_info --show-git-info]
+        [$no_show_git_info --no-show-git-info]
+        [$git_status --git-status]
+        [$hidden --hidden]
+        [$no_hidden --no-hidden]
+        [($height != null) $'--height=($height)']
+        [$help --help]
+        [$git_ignored --git-ignored]
+        [$no_git_ignored --no-git-ignored]
+        [$install --install]
+        [$no_sort --no-sort]
+        [$permissions --permissions]
+        [$no_permissions --no-permissions]
+        [($print_shell_function != null) $'--print-shell-function=($print_shell_function)']
+        [$sizes --sizes]
+        [$no_sizes --no-sizes]
+        [($set_install_state != null) $'--set-install-state=($set_install_state)']
+        [$show_root_fs --show-root-fs]
+        [($max_depth != null) $'--max-depth=($max_depth)']
+        [$sort_by_count --sort-by-count]
+        [$sort_by_date --sort-by-date]
+        [$sort_by_size --sort-by-size]
+        [$sort_by_type --sort-by-type]
+        [$sort_by_type_dirs_first --sort-by-type-dirs-first]
+        [$sort_by_type_dirs_last --sort-by-type-dirs-last]
+        [$trim_root --trim-root]
+        [$no_trim_root --no-trim-root]
+        [$version --version]
+        [$whale_spotting --whale-spotting]
+        [($write_default_conf != null) $'--write-default-conf=($write_default_conf)']
+    ]
+        | where $it.on
+        | get arg
 
     let cmd_file = (
         if ($env.XDG_RUNTIME_DIR? | is-not-empty) { $env.XDG_RUNTIME_DIR } else { $nu.temp-dir }
@@ -97,11 +100,12 @@ export def --env br [
     } else {
         ^broot --outcmd $cmd_file ...$args $file
     }
-    let $cmd = open $cmd_file | str trim --char (char nl)
+    let out = open $cmd_file | str trim --char (char nl)
+
     rm -p -f $cmd_file
 
-    if not ($cmd | lines | is-empty) {
-        commandline edit --accept $cmd
+    if ($out | is-not-empty) {
+        commandline edit --accept $out
     }
 }
 

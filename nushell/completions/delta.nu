@@ -5,7 +5,8 @@
 
 # delta marks every extension green in --list-languages, so this reads the colour markup rather than the column layout: the name column collapses to a single space for the longest names, and splitting on whitespace silently loses the extensions of "Bourne Again Shell (bash)" and nine others.
 def "nu-complete delta languages" [] {
-    let listed = (^delta --list-languages | complete)
+    let listed = ^delta --list-languages | complete
+
     if $listed.exit_code != 0 { return [] }
 
     $listed.stdout | parse -r '\x1b\[32m(?<value>[^\x1b]+)\x1b\[0m' | get value | uniq
@@ -13,7 +14,8 @@ def "nu-complete delta languages" [] {
 
 # Piped output is a plain "mode<tab>name" table, which is only true off a terminal — where a completer always runs.
 def "nu-complete delta syntax themes" [] {
-    let listed = (^delta --list-syntax-themes | complete)
+    let listed = ^delta --list-syntax-themes | complete
+
     if $listed.exit_code != 0 { return [] }
 
     [{value: none description: "disable all syntax highlighting"}]
@@ -22,7 +24,8 @@ def "nu-complete delta syntax themes" [] {
 
 # A delta theme is just a named feature in git config, and --show-themes renders demo diffs instead of listing names, so the names come from git config. Three-segment keys only: delta.<feature>.<option> is a feature, delta.<option> is the plain section.
 def "nu-complete delta features" [] {
-    let configured = (^git config --get-regexp '^delta\.' | complete)
+    let configured = ^git config --get-regexp '^delta\.' | complete
+
     if $configured.exit_code != 0 { return [] }
 
     $configured.stdout | parse -r '(?m)^delta\.(?<value>.+)\.[^.\s]+\s' | get value | uniq
@@ -30,7 +33,7 @@ def "nu-complete delta features" [] {
 
 # --show-colors lists only the 140 CSS names, so the special colours and the attributes from the STYLES section have to be spelled out here. Left unsorted so the few words you actually type stay ahead of the CSS wall.
 def "nu-complete delta styles" [] {
-    let shown = (^delta --show-colors | complete)
+    let shown = ^delta --show-colors | complete
     let css = if $shown.exit_code == 0 {
         $shown.stdout | ansi strip | parse -r 'color\(\): string \{ return "(?<value>[^"]+)"' | get value | uniq
     } else {

@@ -128,6 +128,7 @@ $env.config.hinter.closure = {|ctx|
         | if $in >= 1 { $" #exit_($in)" } else { '' }
 
     let hint = ($candidate | str substring ($ctx.line | str length)..) + $tag
+
     if $hint == '' { null } else { $hint }
 }
 
@@ -313,7 +314,7 @@ $env.config.keybindings ++= [
     }
 ]
 
-def vars-menu-source [] {
+def vars-menu-source []: nothing -> string {
     let closure = {
         let selected = scope variables
             | where name not-in ($env.ignore-env-vars? | default [])
@@ -348,12 +349,12 @@ $env.config.keybindings ++= [
         mode: [emacs vi_normal vi_insert]
         event: {
             send: executehostcommand
-            cmd: (prompt_to_raw_source)
+            cmd: (prompt-to-raw-source)
         }
     }
 ]
 
-def prompt_to_raw_source [] {
+def prompt-to-raw-source [] {
     let closure = {
         let input = commandline
         # Why: parse --regex is fancy-regex, so \k<open> can demand matching closing hashes
@@ -414,7 +415,7 @@ $env.config.keybindings ++= [
     }
 ]
 
-def fzf-history-source [] {
+def fzf-history-source []: nothing -> string {
     let closure = {
         # Why helper scripts (scripts/fzf-hist-*.nu, deployed next to config.nu):
         # fzf's reload/preview run nu via `sh -c`; inlining nu code there means
@@ -432,7 +433,7 @@ def fzf-history-source [] {
             | str replace --all ' ' '\ '
             | if ($in | is-empty) { '' } else { $'^($in)' }
 
-        let reload = $"reload:nu -n --no-std-lib \"($src_script)\" \"($db)\""
+        let reload = $"reload:nu --no-config-file --no-std-lib \"($src_script)\" \"($db)\""
         let cwd_toggle = (
             $"[ \"$FZF_PROMPT\" = \"cwd> \" ]"
             + $" && echo 'change-prompt\(> )+($reload)'"
@@ -464,7 +465,7 @@ def fzf-history-source [] {
                 $'--bind=start:($reload)'
                 $'--bind=alt-c:transform:($cwd_toggle)'
                 '--preview-window=bottom:30%:wrap'
-                $'--preview=nu -n --no-std-lib "($preview_script)" "($db)" {1} {2..}'
+                $'--preview=nu --no-config-file --no-std-lib "($preview_script)" "($db)" {1} {2..}'
             ] | complete
 
         match $selection.exit_code {
@@ -539,7 +540,7 @@ $env.config.keybindings ++= [
     }
 ]
 
-def broot-source [] {
+def broot-source []: nothing -> string {
     let broot_closure = {
         let cl = commandline
         let pos = commandline get-cursor
@@ -637,7 +638,7 @@ $env.config.menus ++= [
             | reverse # most recent first
             | uniq # Why: dedup before the work below — 11k entries collapse to ~3.7k
             | str replace --all (char nl) ' ' # Why: match after flattening, so a match can span what was a newline
-            | where ($it | str contains $needle)
+            | where $it has $needle
             # drop everything before the last occurrence, so the entry continues what is typed
             | each {|command| $command | str substring ($command | str index-of --end $needle).. }
             | uniq

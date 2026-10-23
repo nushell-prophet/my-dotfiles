@@ -4,7 +4,7 @@ def "nu-complete sandbox-exec profiles" [] {
     ls /usr/share/sandbox/*.sb
     | get name
     | path basename
-    | each {|f| $f | str replace '.sb' '' }
+    | str replace '.sb' ''
     | sort
     | each {|name| {value: $name description: $"Profile: ($name)"} }
 }

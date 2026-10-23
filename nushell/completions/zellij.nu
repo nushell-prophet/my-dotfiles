@@ -21,6 +21,7 @@ def "nu-complete zellij sessions" [] {
 def "nu-complete zellij layouts" [] {
     let config_dir = ($env.ZELLIJ_CONFIG_DIR? | default "~/.config/zellij")
     let layout_dir = $"($config_dir)/layouts"
+
     if ($layout_dir | path exists) {
         ls $layout_dir | where name =~ '\.kdl$' | get name | path basename | str replace '.kdl' ''
     } else {

@@ -1,6 +1,6 @@
 # Helpers behind the Helix `+` keybindings (config.toml [keys.normal."+"]).
 # Loaded by hx-nu via nu-hx-config.nu, so `nu-hx <cmd>` is available in every
-# Helix shell call, including nested `hx-nu -c` evaluations.
+# Helix shell call, including nested `hx-nu --commands` evaluations.
 #
 # Why a module: the bindings used to inline this code in config.toml, pasting the
 # selection into the command text through r###########'%{selection}'########### raw
@@ -21,7 +21,7 @@ export def annotate [
     --abbreviate # keep the first 7 output lines and note how many were dropped
 ]: string -> string {
     let sel = $in
-    let out = hx-nu -c $sel o+e>| lines
+    let out = hx-nu --commands $sel o+e>| lines
     let len = $out | length
 
     $out
@@ -47,7 +47,8 @@ export def clear-annotations []: string -> string {
 # between the pipeline and the continuation.
 export def flatten []: string -> string {
     let cmd = $in | str trim --right | $in + "\n| to nuon"
-    hx-nu -c $cmd o+e>| str trim --right
+
+    hx-nu --commands $cmd o+e>| str trim --right
 }
 
 # Evaluate the selection and write the result as a rectangle on the line(s) below
@@ -58,7 +59,7 @@ export def block-below [
     file: string # buffer path (Helix %{buffer_name})
     line: int # anchor line (Helix %{selection_line_end})
 ]: string -> nothing {
-    hx-nu -c $in | run $HX_BLOCK --below $file $line
+    hx-nu --commands $in | run $HX_BLOCK --below $file $line
 }
 
 # Re-align a selected markdown table so its columns line up (the `+ p` binding).
@@ -70,6 +71,7 @@ export def align-table []: string -> string {
     let rows = $src | each { str trim }
 
     let stray = $rows | enumerate | where not ($it.item starts-with '|')
+
     if ($stray | is-not-empty) {
         error make {msg: $"line ($stray.0.index + 1) is not a table row: ($stray.0.item)"}
     }
@@ -81,6 +83,7 @@ export def align-table []: string -> string {
     let indent = $src | first | parse --regex '^(?<i>\s*)' | get 0.i
     let cells = $rows | each { split-cells }
     let seps = $cells | get 1
+
     if not ($seps | all { $in =~ '^:?-+:?$' }) {
         error make {msg: $"line 2 is not a separator row: ($rows | get 1)"}
     }
@@ -90,7 +93,8 @@ export def align-table []: string -> string {
     let table = $cells | each {|row| $row | append (($row | length)..<$n | each { '' }) }
     let marks = 0..<$n | each {|i|
         let s = $seps | get --optional $i | default '-'
-        {left: ($s starts-with ':'), right: ($s ends-with ':')}
+
+        {left: ($s starts-with ':') right: ($s ends-with ':')}
     }
     # `str length` counts graphemes, not display columns, so a CJK or emoji cell
     # still lands short — every ASCII table lines up
@@ -107,6 +111,7 @@ export def align-table []: string -> string {
         | each {|col|
             let mark = $col.item.0
             let width = $col.item.1
+
             if $row.index == 1 {
                 '' | fill --character '-' --width $width
                 | if $mark.left { ':' + ($in | str substring 1..) } else { }
@@ -117,6 +122,7 @@ export def align-table []: string -> string {
                     [true true] => 'c'
                     _ => 'l'
                 }
+
                 $row.item | get $col.index | fill --width $width --alignment $align
             }
         }
@@ -150,8 +156,10 @@ export def copy-tag [
     let abs = $file | path expand
     let path = if $absolute { $abs } else {
         let res = ^git -C ($abs | path dirname) rev-parse --show-prefix | complete
+
         if $res.exit_code == 0 { $"($res.stdout | str trim)($abs | path basename)" } else { $abs }
     }
+
     $'<selected-text file="($path)" lines="($start)-($end)">($sel)</selected-text>' | pbcopy
 }
 
@@ -182,10 +190,12 @@ export def commit [
     --add # stage the whole file before committing
 ]: any -> nothing {
     let file = $file | path expand
+
     if ($file | path type) != 'file' { error make {msg: $"not a file on disk: ($file)"} }
     let dir = $file | path dirname
+
     if $add { ^git -C $dir add $file }
-    ^zellij run --in-place --close-on-exit --block-until-exit --name commit --cwd $dir -- hx-nu -c 'try { git commit --verbose } catch { null | input "press Enter" }' | ignore
+    ^zellij run --in-place --close-on-exit --block-until-exit --name commit --cwd $dir -- hx-nu --commands 'try { git commit --verbose } catch { null | input "press Enter" }' | ignore
 }
 
 # The message `quick-commit` writes: the user's markers (2-char `!!` `??` `%%` at a line
@@ -194,14 +204,15 @@ export def commit [
 # only indexes the batch for Claude and for the log.
 # Why 2-char only: `!!!` `???` `%%%` are the agent's, which the user does not add.
 export def quick-commit-message []: string -> string {
-    let added = $in | lines | where ($it =~ '^\+(?!\+\+)')
+    let added = $in | lines | where $it =~ '^\+(?!\+\+)'
     let counts = [
         [tag pattern];
         ['!!' '^\+\s*!!(?!!)'] ['??' '^\+\s*\?\?(?!\?)'] ['%%' '^\+\s*%%(?!%)']
     ]
-        | each {|t| {tag: $t.tag n: ($added | where ($it =~ $t.pattern) | length)} }
+        | each {|t| {tag: $t.tag n: ($added | where $it =~ $t.pattern | length)} }
         | append {tag: '{>>' n: ($added | each { split row '{>>' | length | $in - 1 } | math sum)}
         | where n > 0
+
     if ($counts | is-empty) { 'gi: edit' } else {
         $counts | each { $"($in.tag) ($in.n)" } | str join ', ' | $"gi: ($in)"
     }
@@ -212,10 +223,13 @@ export def quick-commit-message []: string -> string {
 # Why the pathspec on commit: it commits this file alone, never what else is staged.
 export def quick-commit [file: path]: any -> nothing {
     let file = $file | path expand
+
     if ($file | path type) != 'file' { error make {msg: $"not a file on disk: ($file)"} }
     let root = ^git -C ($file | path dirname) rev-parse --show-toplevel
+
     ^git -C $root add -- $file
     let diff = ^git -C $root diff --cached -- $file
+
     if ($diff | is-empty) { error make {msg: $"nothing to commit in ($file | path basename)"} }
     ^git -C $root commit --quiet --message ($diff | quick-commit-message) -- $file
 }
@@ -236,10 +250,11 @@ export def quick-commit [file: path]: any -> nothing {
 export def tell-claude-line [file: path]: nothing -> record<line: string, ref: string, tip: string> {
     let file = $file | path expand
     let root = ^git -C ($file | path dirname) rev-parse --show-toplevel
+
     # Why refuse a dirty file: the line shows commits only, so Claude would read an older
     # text than the one on screen and nothing would say so.
     if (^git -C $root status --porcelain -- $file | is-not-empty) {
-        error make {msg: $"($file | path basename) has uncommitted changes; commit them with `\\ k` first"}
+        error make {msg: $"($file | path basename) has uncommitted changes" help: "commit them with `\\ k` first"}
     }
     let ref = $"refs/gi/sent/($file | hash sha256 | str substring 0..15)"
     let tip = ^git -C $root rev-parse --short=12 HEAD
@@ -249,10 +264,11 @@ export def tell-claude-line [file: path]: nothing -> record<line: string, ref: s
         ^git -C $root merge-base --is-ancestor $sent HEAD | complete | get exit_code
     ) == 0
     let base = if $sent_reachable { $sent } else {
-        ^git -C $root log -1 --format=%h --author='^Claude' -- $file
+        ^git -C $root log --max-count=1 --format=%h --author='^Claude' -- $file
     }
     let range = if ($base | is-empty) { $tip } else { $"($base)..($tip)" }
     let shas = ^git -C $root log --reverse --format=%h --perl-regexp '--author=^(?!Claude)' $range -- $file | lines
+
     # Why refuse an empty range: the line alone starts a Claude turn, here over nothing.
     if ($shas | is-empty) {
         error make {msg: $"no new commits of yours to ($file | path basename) since ($base)"}
@@ -272,6 +288,7 @@ export def tell-claude-pane [file: path me: int]: list<record> -> int {
         | where tab_id == $tab and id != $me and ($it.pane_command? | default '' | str contains 'claude')
     let bound = $claudes | where pane_command =~ ($file | path basename)
     let pick = if ($bound | is-empty) { $claudes } else { $bound }
+
     if ($pick | length) != 1 {
         error make {msg: $"want one Claude pane in this tab, found ($pick | length): ($pick | get title | str join ', ')"}
     }
@@ -290,8 +307,10 @@ export def tell-claude [file: path]: any -> nothing {
         | tell-claude-pane $file ($env.ZELLIJ_PANE_ID | into int)
         | $"terminal_($in)"
     let root = ^git -C ($file | path expand | path dirname) rev-parse --show-toplevel
+
     if (^git -C $root status --porcelain -- ($file | path expand) | is-not-empty) { quick-commit $file }
     let send = tell-claude-line $file
+
     ^zellij action write-chars --pane-id $pane $send.line
     ^zellij action send-keys --pane-id $pane Enter
     ^git -C $root update-ref $send.ref $send.tip
@@ -309,12 +328,13 @@ export def keys [
 ]: nothing -> table<key: string, does: string> {
     let header = $"[keys.normal.\"($table | str replace --all '\' '\\')\"]"
     let label = {|line| $line | parse --regex ':[a-z-]+ #(?<l>.*)→$' | get --optional 0.l }
+
     open --raw $config
     | lines
     | skip until { $in == $header }
     | skip 1
     | take until { $in starts-with '[' }
-    | reduce --fold {rows: [] comment: []} {|line, acc|
+    | reduce --fold {rows: [] comment: []} {|line acc|
         if ($line starts-with '#') {
             $acc | update comment { append ($line | str replace --regex '^#\s?' '') }
         } else if ($line =~ '^\S+ = ') {
@@ -326,9 +346,11 @@ export def keys [
                 about: ($acc.comment | str join ' ' | split row --regex '(?<=\.)\s' | first)
                 value: $kv.value
             }
+
             $acc | update rows { append $row } | update comment []
         } else {
             let l = do $label $line
+
             $acc
             | if $l != null and ($acc.rows | last | get label) == null {
                 update rows { update ($in | length | $in - 1) { update label $l } }
@@ -339,6 +361,7 @@ export def keys [
     | get rows
     | each {|r|
         let does = [$r.label $r.trailing $r.about $r.value] | where $it not-in [null '']
-        {key: $r.key, does: ($does | first)}
+
+        {key: $r.key does: ($does | first)}
     }
 }

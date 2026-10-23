@@ -22,7 +22,7 @@ $env.config.hooks = {
                   let name = if ($used | is-empty) or (1 not-in $used) {
                       $base
                   } else {
-                      let n = 2.. | where { $in not-in $used } | first;
+                      let n = 2.. | where $it not-in $used | first;
                       $'($base)·($n)'
                   };
 

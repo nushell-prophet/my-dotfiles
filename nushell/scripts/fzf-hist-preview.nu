@@ -16,6 +16,7 @@ def main [
     let when = $meta.start_timestamp * 1_000_000 | into datetime | format date '%y-%m-%d %H:%M:%S'
     let dur = $meta.duration_ms | if $in == null { '?' } else { into duration --unit ms }
     let status = $meta.exit_status | default '?'
+
     print $"(ansi dark_gray)($when) • ($dur) • exit ($status) • ($meta.cwd)(ansi reset)"
     $command | nu-highlight
 }

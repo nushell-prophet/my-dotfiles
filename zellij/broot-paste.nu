@@ -22,5 +22,6 @@ if ($selection | is-not-empty) {
     # pasted form; pbcopy is native on macOS and an OSC 52 shim in cozy
     $selection | pbcopy
     let to_paste = $selection | if $in starts-with $pwd { path relative-to $pwd } else { }
+
     zellij action write-chars $to_paste --pane-id $"terminal_($target)"
 }

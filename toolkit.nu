@@ -25,23 +25,26 @@ const config_root = '~/.config'
 export def main [] { }
 
 # Check if a file has uncommitted changes in its git repository
-def has-uncommitted-changes [path: path] {
+def has-uncommitted-changes [path: path]: nothing -> bool {
     if not ($path | path exists) { return false }
 
     let dir = if ($path | path type) == 'dir' { $path } else { $path | path dirname }
 
     # Check if inside a git repo
     let git_check = do { cd $dir; ^git rev-parse --git-dir } | complete
+
     if $git_check.exit_code != 0 { return false }
 
     # Check for uncommitted changes (staged or unstaged)
     let status = do { cd $dir; ^git status --porcelain -- $path } | complete
+
     ($status.stdout | str trim | is-not-empty)
 }
 
 # Check paths for uncommitted changes, print error if found. Returns true if dirty.
-def check-dirty-files [paths: table field: string context: string] {
+def check-dirty-files [paths: table field: cell-path context: string]: nothing -> bool {
     let dirty = $paths | where { has-uncommitted-changes ($in | get $field) }
+
     if ($dirty | is-not-empty) {
         print $"(ansi red)Error: The following ($context) have uncommitted changes:(ansi reset)"
         $dirty | get $field | each { print $"  ($in)" }
@@ -58,7 +61,8 @@ def dirty-paths [root: path paths: list<path>]: nothing -> list<path> {
     if ($paths | is-empty) { return [] }
     # Why: porcelain paths are relative to the top of the repo, and `root` can be a subdir of the mono.
     let prefix = ^git -C $root rev-parse --show-prefix | str trim | str length
-    ^git -C $root status --porcelain=v1 -z --untracked-files=all -- ...$paths
+
+    ^git -C $root status --porcelain=v1 --null --untracked-files=all -- ...$paths
     | split row (char nul)
     | where $it != ''
     | each {|line| $root | path join ($line | str substring (3 + $prefix)..) }
@@ -72,6 +76,7 @@ def ensure-config-repo [root: path paths: list<path>] {
     mkdir $root
     ^git init --quiet $root
     let existing = $paths | where { path exists }
+
     if ($existing | is-empty) { return }
     ^git -C $root add -- ...$existing
     ^git -C $root commit --quiet --message 'push-to-machine: baseline before the first push' -- ...$existing
@@ -84,10 +89,12 @@ def ensure-config-repo [root: path paths: list<path>] {
 # whose commits only copy files in; a git toplevel alone cannot tell it from the mono.
 def source-is-repo []: nothing -> bool {
     let top = ^git rev-parse --show-toplevel | complete
+
     if $top.exit_code != 0 { return false }
     let root = $top.stdout | str trim
     let here = pwd | path expand | path relative-to $root
     let mono_yml = $root | path join mono.yml
+
     $here == '' or (($mono_yml | path exists) and $here in (open $mono_yml | get subdir))
 }
 
@@ -96,13 +103,14 @@ def source-is-repo []: nothing -> bool {
 def source-id []: nothing -> string {
     if not (source-is-repo) { return 'vendored-copy' }
     let last = ^git log -1 '--format=%h%x00%(trailers:key=Change-Id,valueonly)' -- . | str trim | split row (char nul)
+
     if $last.1 != '' { $last.1 | str substring 0..7 } else { $last.0 }
 }
 
 # Derive repo path from full machine path using convention:
 #   ~/.config/X/... → X/...
 #   ~/.X/...        → X/...
-def derive-repo-path [fullpath: string] {
+def derive-repo-path [fullpath: string]: nothing -> string {
     let expanded = $fullpath | path expand --no-symlink
     let home = $nu.home-dir
     let config_prefix = $home | path join '.config'
@@ -117,16 +125,17 @@ def derive-repo-path [fullpath: string] {
 }
 
 # Extract static prefix from glob pattern (everything before first glob char)
-def glob-base [pattern: string] {
+def glob-base [pattern: string]: nothing -> string {
     $pattern | str replace -r '[\*\?\[\{].*$' ''
 }
 
 # Read paths-default.csv, expand globs, and derive repo paths
-def open-configs [paths_file: string = 'paths-default.csv'] {
+def open-configs [paths_file: string = 'paths-default.csv']: nothing -> table<full-path: string, path-in-repo: string> {
     open $paths_file
     | get full-path
     | each {|pattern|
         let expanded = $pattern | path expand --no-symlink
+
         if ($pattern !~ '[\*\?\[\{]') {
             return [{full-path: $expanded path-in-repo: (derive-repo-path $expanded)}]
         }
@@ -143,6 +152,7 @@ def open-configs [paths_file: string = 'paths-default.csv'] {
             | each {|f|
                 let repo_path = $f | path relative-to (pwd)
                 let rel = $repo_path | path relative-to $repo_base
+
                 {path-in-repo: $repo_path full-path: ($machine_base | path join $rel)}
             }
 
@@ -152,14 +162,14 @@ def open-configs [paths_file: string = 'paths-default.csv'] {
 }
 
 # Read paths-local.csv if it exists, otherwise return empty list
-def open-local-configs [] {
+def open-local-configs []: nothing -> table {
     if ('paths-local.csv' | path exists) {
         open paths-local.csv | update full-path { path expand --no-symlink }
     } else { [] }
 }
 
 # {full-path, path-in-repo, in-repo, on-machine, status?}
-def expand-paths [paths_file: string = 'paths-default.csv'] {
+def expand-paths [paths_file: string = 'paths-default.csv']: nothing -> table {
     let local_statuses = open-local-configs
         | where status =~ '^update|ignore'
         | select full-path status
@@ -174,8 +184,9 @@ def expand-paths [paths_file: string = 'paths-default.csv'] {
 # Filter expanded paths to the given module names (repo subdirs or exact files).
 # Empty names = no filter. A name matching no tracked path fails fast — a typo
 # would otherwise silently select nothing for it.
-def select-modules [modules: list<string>] {
+def select-modules [modules: list<string>]: table -> table {
     let paths = $in
+
     if ($modules | is-empty) { return $paths }
 
     # Why: modules are typed as `path`, so file completion fills them in — and it
@@ -190,6 +201,7 @@ def select-modules [modules: list<string>] {
     let unmatched = $modules | where {|m|
         not ($selected.path-in-repo | any { $in == $m or ($in | str starts-with $"($m)/") })
     }
+
     if ($unmatched | is-not-empty) {
         error make {msg: $"No tracked paths match: ($unmatched | str join ', ')"}
     }
@@ -201,26 +213,22 @@ export def pull-from-machine [
     ...modules: path # limit pull to these repo subdirs or files (e.g. zellij helix/config.toml); omit for all
     --force # overwrite files with uncommitted changes
     --docker # use paths-docker.csv (pulling inside the sandbox VM)
-] {
+]: nothing -> list {
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
-    let paths = expand-paths $paths_file | select-modules $modules | where on-machine
+    let paths = expand-paths $paths_file | select-modules $modules | where $it.on-machine
 
     if not $force and (check-dirty-files $paths path-in-repo "repo files") { return }
 
-    $paths
-    | group-by { $in.path-in-repo | path dirname }
-    | items {|dirname v|
-        if ($dirname | path exists) { $v } else { mkdir $dirname; $v }
-    }
-    | flatten
-    | each { cp $in.full-path $in.path-in-repo }
+    $paths.path-in-repo | path dirname | uniq | each { mkdir $in }
+    $paths | each { cp $in.full-path $in.path-in-repo }
 }
 
 # Show diff preview for a list of paths (repo → machine)
-def show-push-diff [paths: table] {
+def show-push-diff [paths: table]: nothing -> list {
     $paths | each {|row|
         if ($row.full-path | path exists) {
             let diff = ^git diff --no-index $row.full-path $row.path-in-repo | complete
+
             if ($diff.stdout | is-not-empty) {
                 print $"\n=== ($row.full-path) ==="
                 $diff.stdout | lines | skip 4 | str join (char newline) | print
@@ -238,6 +246,7 @@ def show-push-diff [paths: table] {
 # Machine dir of the app a row belongs to: ~/.config/helix for helix/runtime/themes/x.toml
 def app-root []: record -> string {
     let depth = $in.path-in-repo | path split | skip 1 | length
+
     $in.full-path | path split | drop $depth | path join
 }
 
@@ -249,15 +258,16 @@ export def push-to-machine [
     --dry-run # show diff of what would change without copying
     --docker # use paths-docker.csv for Docker sandbox setup
     --delete-orphans # remove machine files whose repo source was deleted
-] {
+]: nothing -> nothing {
     # Why: a bare push overwrote every tracked config, files nobody in the session touched included.
     if ($modules | is-empty) and not $all {
         error make --unspanned {msg: 'Name the modules to push (e.g. `toolkit push-to-machine zellij`), or pass --all to push every tracked config'}
     }
     let paths_file = if $docker { 'paths-docker.csv' } else { 'paths-default.csv' }
     let paths = expand-paths $paths_file | select-modules $modules
-    let to_copy = $paths | where in-repo
-    if ($to_copy.path-in-repo | any { $in == 'helix/config-no-wrap.toml' }) { check-no-wrap }
+    let to_copy = $paths | where $it.in-repo
+
+    if 'helix/config-no-wrap.toml' in $to_copy.path-in-repo { check-no-wrap }
     let to_delete = if $delete_orphans {
         $paths | where {|r| (not $r.in-repo) and $r.on-machine }
     } else { [] }
@@ -267,6 +277,7 @@ export def push-to-machine [
     # does not live on this machine, so that one stays the user's call.
     # Checked before --dry-run returns, so the preview and the real run agree.
     let no_app_dir = $to_copy | where {|r| not ($r | app-root | path exists) }
+
     if not $create_dirs and ($no_app_dir | is-not-empty) {
         print $"(ansi red)Error: these files belong to app dirs missing on this machine:(ansi reset)"
         $no_app_dir | each {|r| print $"  ($r.full-path)" }
@@ -279,12 +290,14 @@ export def push-to-machine [
     let unsaved = if (source-is-repo) {
         dirty-paths (pwd) ($to_copy.path-in-repo ++ $to_delete.path-in-repo)
     } else { [] }
+
     if ($unsaved | is-not-empty) {
         error make --unspanned {msg: $"Commit these files in dotfiles before pushing them:\n  ($unsaved | path relative-to (pwd) | str join "\n  ")"}
     }
 
     let root = $config_root | path expand --no-symlink
     let in_root = {|r| $r.full-path | str starts-with $"($root)/" }
+
     if not $dry_run { ensure-config-repo $root ($paths | where $in_root | get full-path) }
 
     # A machine file that equals the repo, or equals HEAD in ~/.config (the last push),
@@ -296,18 +309,23 @@ export def push-to-machine [
     let drift = if ($root | path join '.git' | path exists) {
         dirty-paths $root ($differs ++ $to_delete | where $in_root | get full-path)
     } else { [] }
+
     if ($drift | is-not-empty) {
         let pull = if $docker { 'toolkit pull-from-machine --docker' } else { 'toolkit pull-from-machine' }
         let rows = $differs ++ $to_delete | where full-path in $drift
-        show-push-diff ($rows | where in-repo)
-        error make --unspanned {msg: ([
-            'These files changed on the machine after the last push, and dotfiles does not hold the change:'
-            ...($rows | each {|r| $"  ($r.full-path)" })
-            ''
-            'Every change under the tracked ~/.config paths starts in the dotfiles repo, so find out where this one came from.'
-            $"To keep it: `($pull) ($rows.path-in-repo | str join ' ')`, review and commit it in dotfiles, then push again."
-            $"To drop it: `git -C ($root) checkout -- <file>`, or delete the file if git does not track it, then push again."
-        ] | str join "\n")}
+
+        show-push-diff ($rows | where $it.in-repo)
+        error make --unspanned {
+            msg: ([
+                'These files changed on the machine after the last push, and dotfiles does not hold the change:'
+                ...($rows | each {|r| $"  ($r.full-path)" })
+            ] | str join "\n")
+            help: ([
+                'Every change under the tracked ~/.config paths starts in the dotfiles repo, so find out where this one came from.'
+                $"To keep it: `($pull) ($rows.path-in-repo | str join ' ')`, review and commit it in dotfiles, then push again."
+                $"To drop it: `git -C ($root) checkout -- <file>`, or delete the file if git does not track it, then push again."
+            ] | str join "\n")
+        }
     }
 
     if $dry_run {
@@ -319,7 +337,7 @@ export def push-to-machine [
         return
     }
 
-    $to_copy | get full-path | path dirname | uniq | where { not ($in | path exists) } | each { mkdir $in }
+    $to_copy | get full-path | path dirname | uniq | each { mkdir $in }
     $to_copy | each { cp $in.path-in-repo $in.full-path }
 
     $to_delete | each { rm $in.full-path }
@@ -335,6 +353,7 @@ export def push-to-machine [
     ] | each {|s|
         let target = $s.target | path expand
         let link = $s.link | path expand --no-symlink
+
         if ($target | path exists) {
             mkdir ($link | path dirname)
             ^ln -sfn $target $link
@@ -342,6 +361,7 @@ export def push-to-machine [
     }
 
     let pending = dirty-paths $root ($to_copy ++ $to_delete | where $in_root | get full-path)
+
     if ($pending | is-not-empty) {
         ^git -C $root add --all -- ...$pending
         ^git -C $root commit --quiet --message $"push-to-machine: dotfiles@(source-id)" -- ...$pending
@@ -353,6 +373,7 @@ export def push-to-machine [
 def no-wrap-config []: nothing -> string {
     let src = open --raw helix/config.toml
     let flipped = $src | str replace "[editor.soft-wrap]\nenable = true" "[editor.soft-wrap]\nenable = false"
+
     if $flipped == $src {
         error make {msg: 'helix/config.toml: `enable = true` is not the first line of [editor.soft-wrap]'}
     }
@@ -368,12 +389,12 @@ export def gen-no-wrap [] {
 # regenerate it; push is the last point before the drift reaches the machine.
 def check-no-wrap [] {
     if (open --raw helix/config-no-wrap.toml) != (no-wrap-config) {
-        error make {msg: 'helix/config-no-wrap.toml is out of date: run `nu --commands "use toolkit.nu; toolkit gen-no-wrap"` and commit it'}
+        error make {msg: 'helix/config-no-wrap.toml is out of date' help: 'run `nu --commands "use toolkit.nu; toolkit gen-no-wrap"` and commit it'}
     }
 }
 
 # Scan tracked directories for new config files and update paths-local.csv
-export def fill-candidates [] {
+export def fill-candidates []: nothing -> nothing {
     let configs = open-configs
 
     let local_configs = open-local-configs
@@ -409,7 +430,7 @@ export def fill-candidates [] {
         | wrap full-path
 
     $local_configs
-    | where full-path? !~ $ignored_folders_regex and status? not-in ['ignore']
+    | where full-path? !~ $ignored_folders_regex and status? != 'ignore'
     | prepend ($ignored_paths | select full-path status --optional)
     | append $candidates
     | uniq-by full-path
@@ -421,7 +442,7 @@ export def fill-candidates [] {
 # List repo files not tracked in any paths-*.csv, optionally delete them
 export def cleanup-paths-not-in-csv [
     --delete # git rm orphan files instead of just listing them
-] {
+]: nothing -> list<string> {
     let exist_paths = glob **/* --exclude $excluded_locals --no-dir
 
     let paths_in_csv = glob paths-*.csv

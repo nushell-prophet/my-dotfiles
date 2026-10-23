@@ -27,6 +27,7 @@ def main [file: path] {
     # Find the marker as a LINE, not as a substring: a copy of it inside the response always
     # carries Claude Code's own `# ` in front, so `# # ─── Write…` cannot be mistaken for it.
     let at = $lines | enumerate | where { $in.item | str starts-with $MARKER } | get --optional 0.index
+
     # no marker -> a plain prompt file (ctrl+x ctrl+e with nothing quoted), or not ours at all
     if $at == null or $at == 0 { return }
 

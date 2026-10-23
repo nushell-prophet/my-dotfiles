@@ -46,6 +46,7 @@ export def "main history import" [
     sqlite3 $output_file "PRAGMA journal_mode=WAL;" | print
 
     let count = sqlite3 $output_file "SELECT COUNT(*) FROM history;"
+
     print $"Imported ($count) history entries to ($output_file)"
     print $"To use it: cp ($output_file) history.sqlite3"
 }

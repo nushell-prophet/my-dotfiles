@@ -1,5 +1,5 @@
 # list active todo files
-export def lstd [] {
+export def lstd []: nothing -> string {
     'todo' | path exists | if not $in { return }
 
     ls todo
@@ -37,7 +37,7 @@ export def title-slug []: string -> string {
     | str trim --char '-'
 }
 
-export def create-todo [] {
+export def create-todo []: nothing -> nothing {
     # Why asked before anything is written: the path is final while the file is open,
     # so it can be copied from the editor without a `:mv` first.
     let title = input 'title: ' | str trim
@@ -64,7 +64,7 @@ export def create-todo [] {
     # Why the second empty line: the cursor must land on a real line. Without it the last
     # line is the phantom line after the final newline, where helix computes no indent, so
     # list continuation lines start at column 0.
-    let $template = $"---
+    let template = $"---
 status: draft #draft | in_progress | completed | rejected
 agents-mode: co-editing #read-only | grammar-fixes | co-editing
 updated: '($date)' #yyyyMMdd
