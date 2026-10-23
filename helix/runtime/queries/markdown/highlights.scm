@@ -62,18 +62,16 @@
 (pipe_table_delimiter_row) @punctuation.special
 
 ; Canvas protocol (the gi Canvas style). Kept at the end: for one node the
-; last matching pattern wins in helix 25.07, so an indented `AA:` entry, which
-; markdown parses as an indented code block, takes this scope instead of
-; `markup.raw.block`.
+; last matching pattern wins in helix 25.07.
+; Not `indented_code_block` too: an `AA:` line indented after a blank line is
+; one, but the block runs on over blank lines through every deeper indented
+; line under it, and helix has no node for one line, so the user's text there
+; would take the colour of the entry.
 ((paragraph) @markup.canvas.agent
-  (#match? @markup.canvas.agent "^\\s*AA:"))
-((indented_code_block) @markup.canvas.agent
   (#match? @markup.canvas.agent "^\\s*AA:"))
 
 ; Open markers: `??`/`???`, `!!`/`!!!`, `%%`/`%%%` start their line.
 ((paragraph) @markup.canvas.marker
-  (#match? @markup.canvas.marker "^\\s*(\\?\\?|!!|%%)"))
-((indented_code_block) @markup.canvas.marker
   (#match? @markup.canvas.marker "^\\s*(\\?\\?|!!|%%)"))
 
 ; Turn headings of an imported canvas: whose turn it is.
