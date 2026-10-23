@@ -15,7 +15,9 @@ def create-left-prompt []: nothing -> string {
 
     let dir = pwd | do $collapse $nu.home-dir '~'
 
-    let git_status = git status --branch --porcelain
+    # Why --untracked-files=no: only the `##` branch line is used, and the scan
+    # for untracked files never changes it.
+    let git_status = git status --branch --porcelain --untracked-files=no
         | complete
         | if $in.exit_code == 0 {
             $in.stdout
