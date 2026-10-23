@@ -316,6 +316,34 @@ export def tell-claude [file: path]: any -> nothing {
     ^git -C $root update-ref $send.ref $send.tip
 }
 
+# The pane id of the one nu shell in the tab of pane `me`, from `zellij action list-panes
+# --json --command`; errors when the tab has 0 or 2+ of them.
+export def nu-pane [me: int]: list<record> -> int {
+    let panes = $in | where is_plugin == false
+    let tab = $panes | where id == $me | get 0.tab_id
+    let shells = $panes
+        | where tab_id == $tab and id != $me
+        | where ($it.pane_command? | default '' | split row ' ' | first | path basename) == 'nu'
+
+    if ($shells | length) != 1 {
+        error make {msg: $"want one nu pane in this tab, found ($shells | length): ($shells | get title | str join ', ')"}
+    }
+    $shells.0.id
+}
+
+# Paste the file into the nu pane of this tab and press Enter there (the `+ r` binding).
+# Why paste, not write-chars: a typed newline submits the line in nu, so a pipeline over
+# several lines would run only its first line; a bracketed paste keeps it one entry.
+export def send-to-nu [file: path]: any -> nothing {
+    let pane = ^zellij action list-panes --json --command
+        | from json
+        | nu-pane ($env.ZELLIJ_PANE_ID | into int)
+        | $"terminal_($in)"
+
+    ^zellij action paste --pane-id $pane (open --raw $file | str trim --right)
+    ^zellij action send-keys --pane-id $pane Enter
+}
+
 # List the keys of one normal-mode table of config.toml (`+`, `\`) with what each does:
 # the `#…→` label a prompt binding shows, else the comment at the end of the key line,
 # else the first sentence of the comment above the key, else the command itself.
