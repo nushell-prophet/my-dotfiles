@@ -164,6 +164,12 @@ h = [":update", ":new", ":buffer-close!", ":echo %sh{git-stage-lines r#'%{buffer
 
 n = ":append-output date now | format date %%J-%%Q" # timestamp
 
+# run the whole file in the nu pane of this Zellij tab: paste it there and press Enter.
+# Saves first and waits for the save, as `+ b` does, because the text comes from the file on disk.
+# Why: a long pipeline is tweaked run after run, and in the nu prompt the cursor goes back to
+# the edit point each time; in Helix it stays where it was.
+r = [":update", ":new", ":buffer-close!", ":sh nu-hx send-to-nu r#'%{buffer_name}'#"] # run the file in the nu pane of this tab
+
 # re-align the columns of a selected markdown table
 p = ":pipe nu-hx align-table"
 
