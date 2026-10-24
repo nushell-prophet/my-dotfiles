@@ -325,6 +325,12 @@ local quick_select_patterns = {
   -- Cost: a real directory named a or b loses its first segment.
   "(?<![.\\w\\-@~])[ab]/([^/\\s│]+(?:/+[^/\\s│]+)*)(?<![.,;:!?)\\]>\"'`])",
 
+  -- Markdown inline code: copies the text between the backticks. One line only;
+  -- 2+ characters so a ``` fence line matches nothing.
+  -- Cost: the span starts left of its content, so a hash or range inside it
+  -- gets no label of its own -- only the whole span.
+  "`([^`\\n]{2,200}?)`",
+
   -- File paths: absolute, relative and ~-prefixed; strips trailing punctuation
   -- (. , ; : " ' `) via lookbehind.
   -- Why the leading (?:[.\w\-@~]+)?: wezterm concatenates our patterns and its
