@@ -28,15 +28,18 @@ export def main [] { }
 def has-uncommitted-changes [path: path]: nothing -> bool {
     if not ($path | path exists) { return false }
 
+    # Why absolute: git reads a relative pathspec against `-C $dir`, not against
+    # the cwd the path is relative to, so a dirty file in a subfolder went unseen.
+    let path = $path | path expand --no-symlink
     let dir = if ($path | path type) == 'dir' { $path } else { $path | path dirname }
 
     # Check if inside a git repo
-    let git_check = do { cd $dir; ^git rev-parse --git-dir } | complete
+    let git_check = ^git -C $dir rev-parse --git-dir | complete
 
     if $git_check.exit_code != 0 { return false }
 
     # Check for uncommitted changes (staged or unstaged)
-    let status = do { cd $dir; ^git status --porcelain -- $path } | complete
+    let status = ^git -C $dir status --porcelain -- $path | complete
 
     ($status.stdout | str trim | is-not-empty)
 }
