@@ -1,3 +1,8 @@
+; A whole copy of helix's runtime/queries/markdown/highlights.scm, with the
+; canvas patterns added at the end. This file replaces the built-in one, so a
+; later upstream fix to markdown highlighting does not reach here: after a helix
+; upgrade, copy the upstream file again and keep the canvas section.
+; The copied part matched helix d76affac7 (25.07-990) on 2026-10-24.
 
 (setext_heading (paragraph) @markup.heading.1 (setext_h1_underline) @markup.heading.marker)
 (setext_heading (paragraph) @markup.heading.2 (setext_h2_underline) @markup.heading.marker)
